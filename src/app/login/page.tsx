@@ -30,7 +30,7 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-6 text-center text-gray-400">
-          <p className="mb-4">Don't have an account?</p>
+          <p className="mb-4">Don&apos;t have an account?</p>
           <button className="text-primary-400 hover:text-primary-300 transition font-semibold">
             Sign Up
           </button>

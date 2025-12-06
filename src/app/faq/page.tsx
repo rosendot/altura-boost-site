@@ -91,7 +91,7 @@ export default function FAQ() {
       <div className="mt-12 bg-gradient-to-r from-primary-900/50 to-primary-800/50 border border-primary-700 rounded-lg p-6">
         <h2 className="text-2xl font-semibold mb-2 text-white">Still have questions?</h2>
         <p className="text-gray-300 mb-4">
-          Can't find what you're looking for? Feel free to reach out to our support team.
+          Can&apos;t find what you&apos;re looking for? Feel free to reach out to our support team.
         </p>
         <button className="px-6 py-3 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold">
           CONTACT SUPPORT

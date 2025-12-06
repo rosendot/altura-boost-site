@@ -8,7 +8,7 @@ export default function TermsOfService() {
         <section>
           <h2 className="text-2xl font-semibold mb-4 text-primary-400">1. Acceptance of Terms</h2>
           <p className="text-gray-300">
-            By accessing and using Altura Boost's services, you agree to be bound by these Terms of
+            By accessing and using Altura Boost&apos;s services, you agree to be bound by these Terms of
             Service. If you do not agree to these terms, please do not use our services.
           </p>
         </section>

@@ -31,7 +31,7 @@ export default function Home() {
           </div>
           <h2 className="text-3xl font-bold mb-4 text-primary-300">MONEY-BACK GUARANTEE</h2>
           <p className="text-gray-300 text-lg">
-            Either you're satisfied with your results or your money back!
+            Either you&apos;re satisfied with your results or your money back!
           </p>
         </div>
       </section>

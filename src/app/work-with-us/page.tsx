@@ -20,7 +20,7 @@ export default function WorkWithUs() {
             <div className="bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow">
               <h3 className="text-xl font-semibold mb-2 text-white">Flexible Schedule</h3>
               <p className="text-gray-300">
-                Work on your own time. Accept jobs when you're available and set your own hours.
+                Work on your own time. Accept jobs when you&apos;re available and set your own hours.
               </p>
             </div>
             <div className="bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow">
@@ -59,7 +59,7 @@ export default function WorkWithUs() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4 text-primary-400">How to Apply</h2>
           <p className="text-gray-300 mb-6">
-            Ready to join our team? Click the button below to start your application. You'll need to:
+            Ready to join our team? Click the button below to start your application. You&apos;ll need to:
           </p>
           <ol className="list-decimal list-inside space-y-2 text-gray-300 mb-6">
             <li>Complete our booster application form</li>
