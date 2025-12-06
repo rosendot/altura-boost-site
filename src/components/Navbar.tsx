@@ -10,17 +10,9 @@ export default function Navbar() {
             Altura Boost
           </Link>
 
-          {/* Game Selector Dropdown */}
-          <div className="relative group">
-            <button className="px-6 py-2.5 gradient-purple text-white rounded-md hover:opacity-90 transition-all duration-200 font-semibold text-sm tracking-wide shadow-lg hover:shadow-primary-600/50">
-              CHOOSE YOUR GAME ▾
-            </button>
-            <div className="absolute left-0 mt-2 w-56 bg-gray-900 border border-primary-700/50 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
-              <Link href="/games/black-ops-7" className="block px-5 py-3 text-white hover:bg-primary-700/50 transition-colors duration-150 border-b border-gray-800 last:border-b-0">
-                Black Ops 7
-              </Link>
-            </div>
-          </div>
+          <Link href="/games" className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">
+            Games
+          </Link>
 
           {/* Booster Hub Link (visible to boosters only) */}
           <Link href="/booster/hub" className="px-6 py-2.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-sm tracking-wide shadow-md hover:shadow-lg hover:shadow-primary-600/30">
