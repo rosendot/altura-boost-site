@@ -2,54 +2,61 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <nav className="w-full p-4 border-b border-primary-900/20 bg-black/90 backdrop-blur-sm shadow-lg">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Left side - Logo and Game Selector */}
-        <div className="flex items-center gap-6">
-          <Link href="/" className="font-bold text-xl text-white hover:text-primary-400 transition">
+    <nav className="w-full py-4 px-6 border-b border-primary-900/20 bg-black/90 backdrop-blur-sm shadow-lg">
+      <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-8">
+        {/* Left side - Logo and Primary Actions */}
+        <div className="flex items-center gap-8">
+          <Link href="/" className="font-bold text-2xl text-white hover:text-primary-400 transition-colors duration-200">
             Altura Boost
           </Link>
 
           {/* Game Selector Dropdown */}
           <div className="relative group">
-            <button className="px-4 py-2 gradient-purple text-white rounded hover:opacity-90 transition font-semibold">
+            <button className="px-6 py-2.5 gradient-purple text-white rounded-md hover:opacity-90 transition-all duration-200 font-semibold text-sm tracking-wide shadow-lg hover:shadow-primary-600/50">
               CHOOSE YOUR GAME ▾
             </button>
-            <div className="absolute left-0 mt-2 w-48 bg-gray-900 border border-primary-700 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <Link href="/games/black-ops-7" className="block px-4 py-2 text-white hover:bg-primary-700 transition">
+            <div className="absolute left-0 mt-2 w-56 bg-gray-900 border border-primary-700/50 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+              <Link href="/games/black-ops-7" className="block px-5 py-3 text-white hover:bg-primary-700/50 transition-colors duration-150 border-b border-gray-800 last:border-b-0">
                 Black Ops 7
               </Link>
             </div>
           </div>
 
           {/* Booster Hub Link (visible to boosters only) */}
-          <Link href="/booster/hub" className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition font-semibold">
+          <Link href="/booster/hub" className="px-6 py-2.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-sm tracking-wide shadow-md hover:shadow-lg hover:shadow-primary-600/30">
             BOOSTER HUB
           </Link>
         </div>
 
-        {/* Right side - Info buttons, Login, Cart */}
-        <div className="flex items-center gap-4">
-          <Link href="/work-with-us" className="text-gray-300 hover:text-primary-400 transition">
-            Work with us
-          </Link>
-          <Link href="/faq" className="text-gray-300 hover:text-primary-400 transition">
-            FAQ
-          </Link>
-          <Link href="/terms" className="text-gray-300 hover:text-primary-400 transition">
-            Terms of Service
-          </Link>
+        {/* Right side - Info Links, Login, Cart */}
+        <div className="flex items-center gap-6">
+          {/* Info Links */}
+          <div className="flex items-center gap-6">
+            <Link href="/work-with-us" className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">
+              Work with us
+            </Link>
+            <Link href="/faq" className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">
+              FAQ
+            </Link>
+            <Link href="/terms" className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">
+              Terms of Service
+            </Link>
+          </div>
 
-          <Link href="/login" className="px-4 py-2 bg-gray-800 text-white border border-primary-600 rounded hover:bg-primary-600 transition font-semibold">
+          {/* Divider */}
+          <div className="h-8 w-px bg-gray-700"></div>
+
+          {/* Login Button */}
+          <Link href="/login" className="px-5 py-2.5 bg-gray-800/50 text-white border border-primary-600/50 rounded-md hover:bg-primary-600/20 hover:border-primary-600 transition-all duration-200 font-semibold text-sm tracking-wide">
             LOGIN
           </Link>
 
           {/* Cart Icon */}
-          <Link href="/cart" className="relative">
-            <svg className="w-6 h-6 text-gray-300 hover:text-primary-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Link href="/cart" className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group">
+            <svg className="w-6 h-6 text-gray-300 group-hover:text-primary-400 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
               0
             </span>
           </Link>
