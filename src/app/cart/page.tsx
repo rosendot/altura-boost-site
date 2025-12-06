@@ -2,17 +2,17 @@ import Link from "next/link";
 
 export default function CartPage() {
   return (
-    <main className="min-h-screen max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">Shopping Cart</h1>
+    <main className="min-h-screen bg-black max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold mb-8 text-white">Shopping Cart</h1>
 
       {/* Cart Items Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2">
           {/* Empty Cart State */}
-          <div className="border rounded-lg p-8 text-center">
+          <div className="bg-gray-900 border border-primary-700 rounded-lg p-8 text-center">
             <svg
-              className="w-24 h-24 mx-auto mb-4 text-gray-300"
+              className="w-24 h-24 mx-auto mb-4 text-primary-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -24,10 +24,10 @@ export default function CartPage() {
                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
-            <p className="text-xl text-gray-600 mb-4">Your cart is empty</p>
+            <p className="text-xl text-gray-300 mb-4">Your cart is empty</p>
             <Link
               href="/games/black-ops-7"
-              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="inline-block px-6 py-3 gradient-purple text-white rounded-lg hover:opacity-90 transition font-semibold"
             >
               Browse Services
             </Link>
@@ -53,34 +53,34 @@ export default function CartPage() {
 
         {/* Order Summary */}
         <div className="lg:col-span-1">
-          <div className="border rounded-lg p-6 sticky top-4">
-            <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
+          <div className="bg-gray-900 border border-primary-700 rounded-lg p-6 sticky top-4">
+            <h2 className="text-2xl font-bold mb-4 text-white">Order Summary</h2>
 
             <div className="space-y-2 mb-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-semibold">$0.00</span>
+                <span className="text-gray-400">Subtotal</span>
+                <span className="font-semibold text-white">$0.00</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Tax</span>
-                <span className="font-semibold">$0.00</span>
+                <span className="text-gray-400">Tax</span>
+                <span className="font-semibold text-white">$0.00</span>
               </div>
-              <div className="border-t pt-2 flex justify-between text-lg">
-                <span className="font-bold">Total</span>
-                <span className="font-bold">$0.00</span>
+              <div className="border-t border-primary-700 pt-2 flex justify-between text-lg">
+                <span className="font-bold text-white">Total</span>
+                <span className="font-bold text-primary-400">$0.00</span>
               </div>
             </div>
 
             <button
               disabled
-              className="w-full py-3 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed mb-3"
+              className="w-full py-3 bg-gray-700 text-gray-500 rounded-lg cursor-not-allowed mb-3"
             >
               Checkout
             </button>
 
             <Link
               href="/"
-              className="block text-center text-blue-600 hover:underline"
+              className="block text-center text-primary-400 hover:text-primary-300 transition"
             >
               Continue Shopping
             </Link>

@@ -49,22 +49,22 @@ export default function FAQ() {
   ];
 
   return (
-    <main className="min-h-screen max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-6">Frequently Asked Questions</h1>
-      <p className="text-gray-600 mb-8">
+    <main className="min-h-screen bg-black max-w-4xl mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold mb-6 text-white">Frequently Asked Questions</h1>
+      <p className="text-gray-400 mb-8">
         Find answers to common questions about our services
       </p>
 
       <div className="space-y-4">
         {faqs.map((faq, index) => (
-          <div key={index} className="border rounded-lg">
+          <div key={index} className="bg-gray-900 border border-primary-700 rounded-lg">
             <button
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
-              className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition"
+              className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-800 transition"
             >
-              <span className="font-semibold text-lg">{faq.question}</span>
+              <span className="font-semibold text-lg text-white">{faq.question}</span>
               <svg
-                className={`w-5 h-5 transition-transform ${
+                className={`w-5 h-5 transition-transform text-primary-400 ${
                   openIndex === index ? "transform rotate-180" : ""
                 }`}
                 fill="none"
@@ -80,7 +80,7 @@ export default function FAQ() {
               </svg>
             </button>
             {openIndex === index && (
-              <div className="px-6 pb-4 text-gray-700">
+              <div className="px-6 pb-4 text-gray-300">
                 <p>{faq.answer}</p>
               </div>
             )}
@@ -88,13 +88,13 @@ export default function FAQ() {
         ))}
       </div>
 
-      <div className="mt-12 bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h2 className="text-2xl font-semibold mb-2">Still have questions?</h2>
-        <p className="text-gray-700 mb-4">
+      <div className="mt-12 bg-gradient-to-r from-primary-900/50 to-primary-800/50 border border-primary-700 rounded-lg p-6">
+        <h2 className="text-2xl font-semibold mb-2 text-white">Still have questions?</h2>
+        <p className="text-gray-300 mb-4">
           Can't find what you're looking for? Feel free to reach out to our support team.
         </p>
-        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-          Contact Support
+        <button className="px-6 py-3 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold">
+          CONTACT SUPPORT
         </button>
       </div>
     </main>

@@ -3,15 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
@@ -24,4 +17,22 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Purple gradient backgrounds */
+.gradient-purple {
+  background: linear-gradient(135deg, #6D28D9 0%, #8B5CF6 50%, #A855F7 100%);
+}
+
+.gradient-purple-dark {
+  background: linear-gradient(135deg, #4C1D95 0%, #6D28D9 50%, #7C3AED 100%);
+}
+
+/* Card with purple glow effect */
+.card-glow {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.card-glow:hover {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
 }

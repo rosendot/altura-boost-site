@@ -7,17 +7,17 @@ export default function BoosterJobs() {
   const [earningsFilter, setEarningsFilter] = useState({ month: "12", year: "2024" });
 
   return (
-    <main className="min-h-screen max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">My Jobs</h1>
+    <main className="min-h-screen bg-black max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold mb-8 text-white">My Jobs</h1>
 
       {/* Tab Navigation */}
-      <div className="flex gap-4 mb-8 border-b">
+      <div className="flex gap-4 mb-8 border-b border-primary-700">
         <button
           onClick={() => setActiveTab("active")}
           className={`pb-4 px-6 font-semibold transition ${
             activeTab === "active"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-600 hover:text-gray-900"
+              ? "border-b-2 border-primary-500 text-primary-400"
+              : "text-gray-400 hover:text-white"
           }`}
         >
           Active Jobs
@@ -26,8 +26,8 @@ export default function BoosterJobs() {
           onClick={() => setActiveTab("past")}
           className={`pb-4 px-6 font-semibold transition ${
             activeTab === "past"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-600 hover:text-gray-900"
+              ? "border-b-2 border-primary-500 text-primary-400"
+              : "text-gray-400 hover:text-white"
           }`}
         >
           Past Jobs
@@ -36,8 +36,8 @@ export default function BoosterJobs() {
           onClick={() => setActiveTab("earnings")}
           className={`pb-4 px-6 font-semibold transition ${
             activeTab === "earnings"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-600 hover:text-gray-900"
+              ? "border-b-2 border-primary-500 text-primary-400"
+              : "text-gray-400 hover:text-white"
           }`}
         >
           Earnings
@@ -48,14 +48,14 @@ export default function BoosterJobs() {
       {activeTab === "active" && (
         <div className="space-y-4">
           {/* Sample Active Job */}
-          <div className="border rounded-lg p-6">
+          <div className="bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-xl font-semibold mb-1">Black Ops 7 - Weapon Leveling</h3>
-                <p className="text-gray-600">5 Weapons to Max Level</p>
+                <h3 className="text-xl font-semibold mb-1 text-white">Black Ops 7 - Weapon Leveling</h3>
+                <p className="text-gray-400">5 Weapons to Max Level</p>
               </div>
               <div className="text-right">
-                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                <span className="px-3 py-1 bg-green-900/30 border border-green-600 text-green-400 rounded-full text-sm font-semibold">
                   In Progress
                 </span>
               </div>
@@ -64,35 +64,35 @@ export default function BoosterJobs() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <p className="text-sm text-gray-500">Payout</p>
-                <p className="text-xl font-bold text-green-600">$35.00</p>
+                <p className="text-xl font-bold text-green-400">$35.00</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Started</p>
-                <p className="font-semibold">Dec 6, 2024</p>
+                <p className="font-semibold text-white">Dec 6, 2024</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Due Date</p>
-                <p className="font-semibold">Dec 9, 2024</p>
+                <p className="font-semibold text-white">Dec 9, 2024</p>
               </div>
             </div>
 
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Progress</span>
-                <span className="font-semibold">60%</span>
+                <span className="text-gray-400">Progress</span>
+                <span className="font-semibold text-primary-400">60%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div className="bg-blue-600 h-3 rounded-full" style={{ width: "60%" }}></div>
+              <div className="w-full bg-gray-700 rounded-full h-3">
+                <div className="gradient-purple h-3 rounded-full" style={{ width: "60%" }}></div>
               </div>
             </div>
 
-            <button className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-              Update Progress
+            <button className="w-full py-3 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold">
+              UPDATE PROGRESS
             </button>
           </div>
 
           {/* Empty State */}
-          <div className="border rounded-lg p-8 text-center text-gray-500">
+          <div className="bg-gray-900 border border-primary-700 rounded-lg p-8 text-center text-gray-400">
             <p className="text-xl">No active jobs</p>
             <p className="text-sm mt-2">Visit the Booster Hub to accept new jobs</p>
           </div>
@@ -103,14 +103,14 @@ export default function BoosterJobs() {
       {activeTab === "past" && (
         <div className="space-y-4">
           {/* Sample Past Job */}
-          <div className="border rounded-lg p-6 bg-gray-50">
+          <div className="bg-gray-900 border border-primary-700 rounded-lg p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-xl font-semibold mb-1">Black Ops 7 - Camo Unlock</h3>
-                <p className="text-gray-600">Gold Camo for 3 Weapons</p>
+                <h3 className="text-xl font-semibold mb-1 text-white">Black Ops 7 - Camo Unlock</h3>
+                <p className="text-gray-400">Gold Camo for 3 Weapons</p>
               </div>
               <div className="text-right">
-                <span className="px-3 py-1 bg-gray-200 text-gray-800 rounded-full text-sm font-semibold">
+                <span className="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-sm font-semibold">
                   Completed
                 </span>
               </div>
@@ -119,21 +119,21 @@ export default function BoosterJobs() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Earned</p>
-                <p className="text-xl font-bold text-green-600">$45.00</p>
+                <p className="text-xl font-bold text-green-400">$45.00</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Completed On</p>
-                <p className="font-semibold">Dec 4, 2024</p>
+                <p className="font-semibold text-white">Dec 4, 2024</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Duration</p>
-                <p className="font-semibold">2 days</p>
+                <p className="font-semibold text-white">2 days</p>
               </div>
             </div>
           </div>
 
           {/* Empty State */}
-          <div className="border rounded-lg p-8 text-center text-gray-500">
+          <div className="bg-gray-900 border border-primary-700 rounded-lg p-8 text-center text-gray-400">
             <p className="text-xl">No past jobs</p>
           </div>
         </div>
@@ -145,11 +145,11 @@ export default function BoosterJobs() {
           {/* Filter Controls */}
           <div className="flex gap-4 mb-6">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Month</label>
+              <label className="block text-sm text-gray-400 mb-1">Month</label>
               <select
                 value={earningsFilter.month}
                 onChange={(e) => setEarningsFilter({ ...earningsFilter, month: e.target.value })}
-                className="border rounded-lg px-4 py-2"
+                className="bg-gray-900 border border-primary-700 text-white rounded-lg px-4 py-2"
               >
                 <option value="1">January</option>
                 <option value="2">February</option>
@@ -166,11 +166,11 @@ export default function BoosterJobs() {
               </select>
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Year</label>
+              <label className="block text-sm text-gray-400 mb-1">Year</label>
               <select
                 value={earningsFilter.year}
                 onChange={(e) => setEarningsFilter({ ...earningsFilter, year: e.target.value })}
-                className="border rounded-lg px-4 py-2"
+                className="bg-gray-900 border border-primary-700 text-white rounded-lg px-4 py-2"
               >
                 <option value="2024">2024</option>
                 <option value="2025">2025</option>
@@ -180,26 +180,26 @@ export default function BoosterJobs() {
 
           {/* Earnings Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="border rounded-lg p-6">
-              <p className="text-gray-600 mb-2">Total Earnings</p>
-              <p className="text-4xl font-bold text-green-600">$0.00</p>
+            <div className="bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow">
+              <p className="text-gray-400 mb-2">Total Earnings</p>
+              <p className="text-4xl font-bold text-green-400">$0.00</p>
             </div>
-            <div className="border rounded-lg p-6">
-              <p className="text-gray-600 mb-2">Jobs Completed</p>
-              <p className="text-4xl font-bold">0</p>
+            <div className="bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow">
+              <p className="text-gray-400 mb-2">Jobs Completed</p>
+              <p className="text-4xl font-bold text-primary-400">0</p>
             </div>
-            <div className="border rounded-lg p-6">
-              <p className="text-gray-600 mb-2">Average Per Job</p>
-              <p className="text-4xl font-bold">$0.00</p>
+            <div className="bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow">
+              <p className="text-gray-400 mb-2">Average Per Job</p>
+              <p className="text-4xl font-bold text-white">$0.00</p>
             </div>
           </div>
 
           {/* Earnings History */}
-          <div className="border rounded-lg">
-            <div className="p-4 border-b bg-gray-50">
-              <h3 className="font-semibold">Earnings History</h3>
+          <div className="bg-gray-900 border border-primary-700 rounded-lg">
+            <div className="p-4 border-b border-primary-700">
+              <h3 className="font-semibold text-white">Earnings History</h3>
             </div>
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-gray-400">
               <p>No earnings data for the selected period</p>
             </div>
           </div>
