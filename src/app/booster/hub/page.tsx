@@ -139,7 +139,7 @@ export default function BoosterHub() {
                 Confirm Job Acceptance
               </h3>
               <p className="text-gray-400 mb-6">
-                Are you sure you want to accept this job? Once accepted, you'll be
+                Are you sure you want to accept this job? Once accepted, you&apos;ll be
                 responsible for completing it within the estimated timeframe.
               </p>
               <div className="flex gap-4">
