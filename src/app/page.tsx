@@ -1,4 +1,5 @@
 import Link from "next/link";
+import GameCarousel from "@/components/GameCarousel";
 
 export default function Home() {
   return (
@@ -28,64 +29,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Service Card */}
+      {/* Featured Game Cards */}
       <section className="max-w-7xl mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
-          <Link
-            href="/games/black-ops-7"
-            className="group block relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-black border border-primary-700/50 hover:border-primary-500 transition-all duration-500"
-          >
-            <div className="relative p-8 md:p-12">
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute inset-0" style={{
-                  backgroundImage: 'radial-gradient(circle at 2px 2px, rgb(139, 92, 246) 1px, transparent 0)',
-                  backgroundSize: '40px 40px'
-                }}></div>
-              </div>
-
-              {/* Content */}
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                <div className="flex-1 text-center md:text-left">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-600 rounded-full text-sm font-bold mb-4">
-                    <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                    TRENDING NOW
-                  </div>
-                  <h2 className="text-4xl md:text-5xl font-bold text-white mb-3">
-                    Call of Duty
-                  </h2>
-                  <h3 className="text-5xl md:text-6xl font-bold bg-clip-text gradient-purple mb-4">
-                    Black Ops 7
-                  </h3>
-                  <p className="text-gray-400 text-lg mb-6">
-                    Weapon camos, rank boosts, challenges & more
-                  </p>
-                  <div className="inline-flex items-center gap-2 text-primary-400 font-semibold group-hover:gap-3 transition-all">
-                    View All Services
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Icon/Visual Element */}
-                <div className="relative">
-                  <div className="w-32 h-32 rounded-full gradient-purple opacity-20 blur-2xl absolute -top-8 -right-8"></div>
-                  <div className="relative w-24 h-24 rounded-2xl gradient-purple flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
-                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Glow Effect */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-600/10 to-primary-400/10"></div>
-              </div>
-            </div>
-          </Link>
-        </div>
+        <GameCarousel />
       </section>
 
       {/* Trust Badges */}
