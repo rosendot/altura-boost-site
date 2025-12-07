@@ -74,12 +74,13 @@ interface GameData {
   features: string[];
 }
 
-export default function GameDetailPage({
+export default async function GameDetailPage({
   params,
 }: {
-  params: { gameId: string };
+  params: Promise<{ gameId: string }>;
 }) {
-  const game = gamesData[params.gameId];
+  const { gameId } = await params;
+  const game = gamesData[gameId];
 
   if (!game) {
     notFound();
