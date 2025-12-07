@@ -1,2 +1,75 @@
-# altura-boost-site
-Front-end website for Altura Boost, built as a modern redesign of the client’s Squarespace site with improved performance, SEO, and scalable components.
+# Altura Boost
+
+A modern gaming boost service platform that connects skilled boosters with customers who need professional gaming services. Built as a redesign of the client's Squarespace site with improved performance, SEO, and scalability.
+
+## What It Is
+
+Altura Boost is a two-sided marketplace where:
+- **Customers** browse and purchase boosting services for games like Call of Duty Black Ops 7 (weapon camos, rank boosts, challenges, battle passes)
+- **Boosters** apply to join the platform, accept jobs from the job board, and earn competitive pay for their gaming skills
+
+The platform features secure payment processing via Stripe and user authentication through Supabase.
+
+## Tech Stack
+
+- **Framework:** Next.js 15 (App Router)
+- **Frontend:** React 18, TypeScript 5
+- **Styling:** Tailwind CSS 3.4
+- **Database:** Supabase 2.86
+- **Payments:** Stripe 20.0
+- **Deployment:** Vercel-ready
+
+## Structure
+
+```
+src/
+├── app/
+│   ├── page.tsx                    # Homepage (hero, game carousel, trust badges)
+│   ├── layout.tsx                  # Root layout (navbar + footer wrapper)
+│   ├── login/                      # Authentication
+│   ├── signup/
+│   │   ├── customer/               # Customer registration
+│   │   └── booster/                # Booster application with questionnaire
+│   ├── games/
+│   │   └── [gameId]/               # Dynamic game pages with services
+│   ├── booster/
+│   │   └── hub/                    # Booster job dashboard
+│   ├── cart/                       # Shopping cart
+│   ├── faq/                        # FAQ page
+│   ├── work-with-us/               # Booster recruitment
+│   ├── terms/                      # Terms of service
+│   └── api/webhooks/stripe/        # Stripe webhooks
+├── components/
+│   ├── Navbar.tsx                  # Fixed nav with mega menu
+│   ├── Footer.tsx                  # Site footer
+│   └── GameCarousel.tsx            # Interactive game showcase
+└── lib/
+    ├── stripe.ts                   # Stripe config
+    └── supabase.ts                 # Supabase config
+```
+
+## Future Roadmap
+
+### Phase 1: Core Functionality
+- Complete shopping cart and checkout flow
+- Implement full Stripe payment processing
+- Connect authentication to Supabase backend
+- Build order management system
+
+### Phase 2: Enhanced Features
+- Real-time order tracking and progress updates
+- User dashboards (customer orders, booster earnings)
+- Notification system (email + Discord)
+- Review and rating system
+
+### Phase 3: Platform Expansion
+- Admin panel for managing jobs, users, and payments
+- Multiple game support (expand beyond Black Ops 7)
+- Advanced booster matching algorithm
+- Analytics and reporting tools
+
+### Phase 4: Community & Growth
+- Live chat support
+- Referral program
+- Booster leaderboards and achievements
+- Mobile app development
