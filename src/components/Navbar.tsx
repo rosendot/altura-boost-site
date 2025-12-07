@@ -36,9 +36,15 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Booster Hub Link (visible to boosters only) */}
-          <Link href="/booster/hub" className="px-6 py-2.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-sm tracking-wide shadow-md hover:shadow-lg hover:shadow-primary-600/30">
+          {/* Testing Links - For Development Only */}
+          <Link href="/booster/hub" className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-xs tracking-wide">
             BOOSTER HUB
+          </Link>
+          <Link href="/booster/jobs" className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-all duration-200 font-semibold text-xs tracking-wide">
+            MY JOBS
+          </Link>
+          <Link href="/customer/orders" className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-all duration-200 font-semibold text-xs tracking-wide">
+            MY ORDERS
           </Link>
         </div>
 

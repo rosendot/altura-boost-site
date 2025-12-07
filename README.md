@@ -66,16 +66,24 @@ src/
 - ✅ Responsive cart icon with item badge
 - ✅ Complete page structure (Home, Games, Cart, Login, FAQ, Terms, Work with Us)
 
+### Authentication & Signup Pages
+- ✅ Login page with email/password form
+- ✅ Customer signup link on login page
+- ✅ Booster signup link on login page
+- ✅ Customer registration page at /signup/customer
+- ✅ Booster application page with 2-step questionnaire at /signup/booster
+- ✅ Booster Hub button in navbar
+
+
 ## Development Roadmap
 
 ### Phase 1: Frontend Features with Mock Data (In Progress)
 - ✅ Shopping cart system with add/remove/update functionality
 - ✅ Cart persistence with localStorage
 - ✅ Navigation and page structure
-- ⏳ Complete checkout flow UI (without payment processing)
-- ⏳ Customer dashboard mockup (order history, tracking)
-- ⏳ Booster dashboard mockup (job board, earnings)
-- ⏳ Additional game pages with services
+- ✅ Checkout button UI (ready for Stripe integration)
+- ✅ Customer dashboard mockup (order history, tracking)
+- ✅ Booster dashboard mockup (job board, earnings)
 
 ### Phase 2: Supabase Infrastructure
 - Create database schema and tables:
