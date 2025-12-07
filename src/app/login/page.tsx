@@ -1,7 +1,17 @@
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-black flex items-center justify-center px-4 py-8">
-      <div className="max-w-md w-full bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow">
+    <main className="fixed inset-0 bg-black flex items-center justify-center px-4 overflow-hidden">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-60"
+        style={{ backgroundImage: "url('/assets/images/login_page_background.webp')" }}
+      ></div>
+
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
+
+      {/* Login Form */}
+      <div className="max-w-md w-full bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow relative z-10 max-h-[calc(100vh-2rem)] overflow-y-auto">
         <h1 className="text-3xl font-bold mb-4 text-center text-white">Login</h1>
 
         <div className="space-y-3">
