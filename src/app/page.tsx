@@ -1,7 +1,16 @@
 import Link from "next/link";
 import GameCarousel from "@/components/GameCarousel";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+
+  // Fetch active games from database
+    .from('games')
+    .select('*')
+    .eq('active', true)
+    .order('created_at', { ascending: false});
+
   return (
     <main className="min-h-screen bg-black">
       {/* Hero Section */}
@@ -31,7 +40,7 @@ export default function Home() {
 
       {/* Featured Game Cards */}
       <section className="max-w-7xl mx-auto px-4 py-12">
-        <GameCarousel />
+        <GameCarousel games={games || []} />
       </section>
 
       {/* Trust Badges */}

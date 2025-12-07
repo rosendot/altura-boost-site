@@ -2,62 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { getGameImageUrl } from "@/lib/supabase/storage";
 
-const games = [
-  {
-    title: "Call of Duty",
-    subtitle: "Black Ops 7",
-    description: "Weapon camos, rank boosts, challenges & more",
-    href: "/games/black-ops-7",
-    badge: "TRENDING NOW"
-  },
-  {
-    title: "Call of Duty",
-    subtitle: "Black Ops 7",
-    description: "Weapon camos, rank boosts, challenges & more",
-    href: "/games/black-ops-7",
-    badge: "TRENDING NOW"
-  },
-  {
-    title: "Call of Duty",
-    subtitle: "Black Ops 7",
-    description: "Weapon camos, rank boosts, challenges & more",
-    href: "/games/black-ops-7",
-    badge: "TRENDING NOW"
-  }, {
-    title: "Call of Duty",
-    subtitle: "Black Ops 7",
-    description: "Weapon camos, rank boosts, challenges & more",
-    href: "/games/black-ops-7",
-    badge: "TRENDING NOW"
-  }, {
-    title: "Call of Duty",
-    subtitle: "Black Ops 7",
-    description: "Weapon camos, rank boosts, challenges & more",
-    href: "/games/black-ops-7",
-    badge: "TRENDING NOW"
-  }, {
-    title: "Call of Duty",
-    subtitle: "Black Ops 7",
-    description: "Weapon camos, rank boosts, challenges & more",
-    href: "/games/black-ops-7",
-    badge: "TRENDING NOW"
-  }, {
-    title: "Call of Duty",
-    subtitle: "Black Ops 7",
-    description: "Weapon camos, rank boosts, challenges & more",
-    href: "/games/black-ops-7",
-    badge: "TRENDING NOW"
-  }, {
-    title: "Call of Duty",
-    subtitle: "Black Ops 7",
-    description: "Weapon camos, rank boosts, challenges & more",
-    href: "/games/black-ops-7",
-    badge: "TRENDING NOW"
-  }
-];
+interface Game {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+  active: boolean;
+  created_at: string;
+}
 
-export default function GameCarousel() {
+interface GameCarouselProps {
+  games: Game[];
+}
+
+export default function GameCarousel({ games }: GameCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const cardsPerPage = 4;
@@ -71,6 +32,15 @@ export default function GameCarousel() {
     setCurrentIndex((prev) => (prev === totalPages - 1 ? 0 : prev + 1));
   };
 
+  // Show empty state if no games
+  if (games.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-400">No games available at the moment.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <div className="overflow-hidden">
@@ -78,62 +48,55 @@ export default function GameCarousel() {
           className="flex gap-6 transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
-          {games.map((game, index) => (
-            <div key={index} className="flex-shrink-0 w-64">
-              <Link
-                href={game.href}
-                className="group block relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-900 via-gray-800 to-black border border-primary-700/50 hover:border-primary-500 transition-all duration-500 aspect-square"
-              >
-                <div className="absolute inset-0 p-6 flex flex-col items-center justify-center text-center">
-                  {/* Background Pattern */}
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute inset-0" style={{
-                      backgroundImage: 'radial-gradient(circle at 2px 2px, rgb(139, 92, 246) 1px, transparent 0)',
-                      backgroundSize: '30px 30px'
-                    }}></div>
+          {games.map((game) => {
+            const imageUrl = getGameImageUrl(game.image_url);
+
+            return (
+              <div key={game.id} className="flex-shrink-0 w-64">
+                <Link
+                  href={`/games/${game.slug}`}
+                  className="group block relative overflow-hidden rounded-xl border border-primary-700/50 hover:border-primary-500 transition-all duration-500 aspect-[2/3]"
+                >
+                  {/* Game Cover Image */}
+                  <div className="absolute inset-0">
+                    <Image
+                      src={imageUrl}
+                      alt={game.name}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      sizes="256px"
+                    />
+                    {/* Overlay gradient for text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                   </div>
 
-                  {/* Content */}
-                  <div className="relative z-10">
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-red-600 rounded-full text-xs font-bold mb-3">
-                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                      {game.badge}
-                    </div>
-                    <h2 className="text-xl font-bold text-white mb-1">
-                      {game.title}
-                    </h2>
-                    <h3 className="text-2xl font-bold bg-clip-text gradient-purple mb-3">
-                      {game.subtitle}
-                    </h3>
-                    <p className="text-gray-400 text-sm mb-4">
-                      {game.description}
-                    </p>
-                    <div className="inline-flex items-center gap-1.5 text-primary-400 text-sm font-semibold group-hover:gap-2 transition-all">
-                      View Services
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Icon/Visual Element */}
-                  <div className="absolute bottom-4 right-4">
-                    <div className="w-16 h-16 rounded-full gradient-purple opacity-20 blur-xl absolute -top-4 -right-4"></div>
-                    <div className="relative w-12 h-12 rounded-xl gradient-purple flex items-center justify-center shadow-xl transform group-hover:scale-110 transition-transform">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
+                  {/* Content Overlay */}
+                  <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                    <div className="relative z-10">
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-red-600 rounded-full text-xs font-bold mb-3">
+                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                        AVAILABLE NOW
+                      </div>
+                      <h2 className="text-2xl font-bold text-white mb-2">
+                        {game.name}
+                      </h2>
+                      <div className="inline-flex items-center gap-1.5 text-primary-400 text-sm font-semibold group-hover:gap-2 transition-all">
+                        View Services
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
 
                   {/* Glow Effect */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-600/10 to-primary-400/10"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-primary-400/20"></div>
                   </div>
-                </div>
-              </Link>
-            </div>
-          ))}
+                </Link>
+              </div>
+            );
+          })}
         </div>
       </div>
 
