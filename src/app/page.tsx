@@ -6,6 +6,7 @@ export default async function Home() {
   const supabase = await createClient();
 
   // Fetch active games from database
+  const { data: games, error } = await supabase
     .from('games')
     .select('*')
     .eq('active', true)
