@@ -1,5 +1,8 @@
+'use client';
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { useCart } from "@/contexts/CartContext";
 
 // Mock game data with detailed information
 const gamesData: Record<string, GameData> = {
@@ -74,17 +77,29 @@ interface GameData {
   features: string[];
 }
 
-export default async function GameDetailPage({
+export default function GameDetailPage({
   params,
 }: {
-  params: Promise<{ gameId: string }>;
+  params: { gameId: string };
 }) {
-  const { gameId } = await params;
+  const { gameId } = params;
   const game = gamesData[gameId];
+  const { addToCart } = useCart();
 
   if (!game) {
     notFound();
   }
+
+  const handleAddToCart = (service: Service) => {
+    addToCart({
+      id: `${game.id}-${service.id}`,
+      gameId: game.id,
+      gameName: game.title,
+      serviceName: service.name,
+      price: parseFloat(service.price.replace('$', '')),
+      deliveryTime: service.duration,
+    });
+  };
 
   return (
     <main className="min-h-screen bg-black">
@@ -173,7 +188,10 @@ export default async function GameDetailPage({
                 <div className="text-sm text-gray-500">⏱️ {service.duration}</div>
               </div>
 
-              <button className="w-full py-3 px-4 gradient-purple text-white font-semibold rounded-lg hover:opacity-90 transition-opacity">
+              <button
+                onClick={() => handleAddToCart(service)}
+                className="w-full py-3 px-4 gradient-purple text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
+              >
                 Order Now
               </button>
             </div>
