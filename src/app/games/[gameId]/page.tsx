@@ -1,5 +1,6 @@
 'use client';
 
+import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
@@ -80,9 +81,9 @@ interface GameData {
 export default function GameDetailPage({
   params,
 }: {
-  params: { gameId: string };
+  params: Promise<{ gameId: string }>;
 }) {
-  const { gameId } = params;
+  const { gameId } = use(params);
   const game = gamesData[gameId];
   const { addToCart } = useCart();
 
