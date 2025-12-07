@@ -41,15 +41,15 @@ export default function LoginPage() {
         <div className="mt-4 text-center text-sm space-y-2">
           <p className="text-gray-400">
             Don&apos;t have an account?{" "}
-            <button className="text-primary-400 hover:text-primary-300 transition font-semibold">
+            <a href="/signup/customer" className="text-primary-400 hover:text-primary-300 transition font-semibold">
               Sign Up
-            </button>
+            </a>
           </p>
           <p className="text-gray-400">
             Want to become a booster?{" "}
-            <button className="text-primary-400 hover:text-primary-300 transition font-semibold">
-              Click Here
-            </button>
+            <a href="/signup/booster" className="text-primary-400 hover:text-primary-300 transition font-semibold">
+              Apply Here
+            </a>
           </p>
         </div>
       </div>
