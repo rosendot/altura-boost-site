@@ -66,28 +66,69 @@ src/
 - ✅ Responsive cart icon with item badge
 - ✅ Complete page structure (Home, Games, Cart, Login, FAQ, Terms, Work with Us)
 
-## Future Roadmap
+## Development Roadmap
 
-### Phase 1: Core Functionality (In Progress)
-- ⏳ Complete checkout flow with payment collection
-- ⏳ Implement full Stripe payment processing
-- ⏳ Connect authentication to Supabase backend
-- ⏳ Build order management system
+### Phase 1: Frontend Features with Mock Data (In Progress)
+- ✅ Shopping cart system with add/remove/update functionality
+- ✅ Cart persistence with localStorage
+- ✅ Navigation and page structure
+- ⏳ Complete checkout flow UI (without payment processing)
+- ⏳ Customer dashboard mockup (order history, tracking)
+- ⏳ Booster dashboard mockup (job board, earnings)
+- ⏳ Additional game pages with services
 
-### Phase 2: Enhanced Features
-- Real-time order tracking and progress updates
-- User dashboards (customer orders, booster earnings)
-- Notification system (email + Discord)
+### Phase 2: Supabase Infrastructure
+- Create database schema and tables:
+  - Users (customers and boosters)
+  - Games and Services
+  - Orders and Order Items
+  - Booster Applications
+  - Job Assignments
+  - Transactions and Payments
+- Set up Row Level Security (RLS) policies
+- Configure authentication providers
+- Create database functions and triggers
+
+### Phase 3: Connect Frontend to Supabase
+- Replace mock data with Supabase queries
+- Implement real-time data fetching
+- Connect cart to database (replace localStorage)
+- Build order management system
+- Set up API routes for server actions
+- Implement proper error handling and loading states
+
+### Phase 4: Authentication & User Infrastructure
+- Implement Supabase Auth (email/password, OAuth)
+- Build user registration flows (customer and booster)
+- Create protected routes and role-based access
+- Build user profile management
+- Test account creation, login, and session management
+- Implement password reset and email verification
+
+### Phase 5: Live Updates on Booster Dashboard
+- Set up Supabase real-time subscriptions
+- Implement live job board updates
+- Add real-time order status changes
+- Create notification system for new jobs
+- Build booster earnings tracker with live updates
+- Add WebSocket connections for instant updates
+
+### Phase 6: Stripe Integration & Payment Testing
+- Set up Stripe Connect for booster payouts
+- Implement Stripe Checkout for customer payments
+- Build webhook handlers for payment events
+- Create transaction logging and reconciliation
+- Test payment flows (sandbox mode)
+- Implement refund and dispute handling
+- Set up automated booster payouts
+- Add payment method management
+
+### Phase 7: Production & Enhancement
+- Admin panel for platform management
+- Analytics and reporting dashboard
+- Email notification system
 - Review and rating system
-
-### Phase 3: Platform Expansion
-- Admin panel for managing jobs, users, and payments
-- Multiple game support (expand beyond Black Ops 7)
-- Advanced booster matching algorithm
-- Analytics and reporting tools
-
-### Phase 4: Community & Growth
-- Live chat support
-- Referral program
-- Booster leaderboards and achievements
-- Mobile app development
+- Mobile responsive optimization
+- Performance optimization and caching
+- Security audit and penetration testing
+- Launch to production
