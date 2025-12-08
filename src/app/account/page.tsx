@@ -117,19 +117,45 @@ export default function AccountPage() {
 
       // Fetch jobs for each order
       if (ordersData && ordersData.length > 0) {
-        const { data: jobsData, error: jobsError } = await supabase
+        // First fetch all jobs
+        const { data: rawJobsData, error: jobsError } = await supabase
           .from('jobs')
-          .select(`
-            *,
-            booster:users!jobs_booster_id_fkey(full_name, email)
-          `)
+          .select('*')
           .in('order_id', ordersData.map(o => o.id));
 
         if (jobsError) throw jobsError;
 
+        // Then fetch booster info for jobs that have a booster assigned
+        const boosterIds = rawJobsData
+          ?.filter(job => job.booster_id)
+          .map(job => job.booster_id) || [];
+
+        let boosterMap: Record<string, { full_name: string | null; email: string }> = {};
+
+        if (boosterIds.length > 0) {
+          const { data: boosters, error: boostersError } = await supabase
+            .from('users')
+            .select('id, full_name, email')
+            .in('id', boosterIds);
+
+          if (!boostersError && boosters) {
+            boosterMap = boosters.reduce((acc, booster) => {
+              acc[booster.id] = { full_name: booster.full_name, email: booster.email };
+              return acc;
+            }, {} as Record<string, { full_name: string | null; email: string }>);
+          }
+        }
+
+        // Map jobs with booster data
+        const jobsData = rawJobsData?.map(job => ({
+          ...job,
+          booster: job.booster_id ? boosterMap[job.booster_id] || null : null
+        }));
+
         // Group jobs by order_id
         const jobsByOrder: Record<string, Job[]> = {};
         jobsData?.forEach((job) => {
+
           if (!jobsByOrder[job.order_id]) {
             jobsByOrder[job.order_id] = [];
           }
@@ -494,9 +520,9 @@ export default function AccountPage() {
                                       <div className="flex-1">
                                         <p className="text-white font-medium">{job.service_name}</p>
                                         <p className="text-sm text-gray-400">{job.game_name}</p>
-                                        {job.booster_id && job.booster ? (
+                                        {job.booster_id ? (
                                           <p className="text-xs text-gray-500 mt-1">
-                                            Assigned to: {job.booster.full_name || job.booster.email}
+                                            Assigned to: {job.booster!.full_name}
                                           </p>
                                         ) : (
                                           <p className="text-xs text-yellow-500 mt-1">
@@ -512,6 +538,10 @@ export default function AccountPage() {
                                             ? 'bg-blue-900/50 text-blue-400'
                                             : job.status === 'accepted'
                                             ? 'bg-purple-900/50 text-purple-400'
+                                            : job.status === 'available'
+                                            ? 'bg-yellow-900/50 text-yellow-400'
+                                            : job.status === 'assigned'
+                                            ? 'bg-indigo-900/50 text-indigo-400'
                                             : 'bg-gray-700 text-gray-300'
                                         }`}>
                                           {job.status.toUpperCase().replace('_', ' ')}
