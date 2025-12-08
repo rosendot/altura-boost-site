@@ -36,6 +36,9 @@ interface Job {
   booster_id: string | null;
   accepted_at: string | null;
   completed_at: string | null;
+  payout_amount: number;
+  requirements: string;
+  weapon_class: string | null;
   booster?: {
     full_name: string | null;
     email: string;
@@ -51,6 +54,8 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orderJobs, setOrderJobs] = useState<Record<string, Job[]>>({});
+  const [boosterJobs, setBoosterJobs] = useState<Job[]>([]);
+  const [boosterJobsLoading, setBoosterJobsLoading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -84,6 +89,13 @@ export default function AccountPage() {
   useEffect(() => {
     if (activeTab === 'orders' && userData?.role === 'customer') {
       fetchOrders();
+    }
+  }, [activeTab, userData]);
+
+  // Fetch booster jobs when jobs tab is active and user is booster
+  useEffect(() => {
+    if (activeTab === 'jobs' && userData?.role === 'booster') {
+      fetchBoosterJobs();
     }
   }, [activeTab, userData]);
 
@@ -130,6 +142,28 @@ export default function AccountPage() {
       console.error('Error fetching orders:', error);
     } finally {
       setOrdersLoading(false);
+    }
+  };
+
+  const fetchBoosterJobs = async () => {
+    setBoosterJobsLoading(true);
+    const supabase = createClient();
+
+    try {
+      // Fetch jobs assigned to this booster
+      const { data: jobsData, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('booster_id', userData?.id)
+        .order('accepted_at', { ascending: false });
+
+      if (error) throw error;
+
+      setBoosterJobs(jobsData || []);
+    } catch (error) {
+      console.error('Error fetching booster jobs:', error);
+    } finally {
+      setBoosterJobsLoading(false);
     }
   };
 
@@ -504,8 +538,11 @@ export default function AccountPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">My Jobs</h2>
 
-                  <div className="space-y-4">
-                    {/* Placeholder for jobs - will be populated with real data later */}
+                  {boosterJobsLoading ? (
+                    <div className="text-center py-12">
+                      <div className="text-gray-400">Loading jobs...</div>
+                    </div>
+                  ) : boosterJobs.length === 0 ? (
                     <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
                       <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -515,7 +552,82 @@ export default function AccountPage() {
                         When you accept jobs, they will appear here.
                       </p>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {boosterJobs.map((job) => (
+                        <div
+                          key={job.id}
+                          className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-primary-600 transition"
+                        >
+                          {/* Job Header */}
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="text-xl font-semibold text-white mb-1">
+                                {job.service_name}
+                              </h3>
+                              <p className="text-sm text-gray-400">{job.game_name}</p>
+                              <p className="text-xs text-gray-500 mt-1">Job ID: {job.job_number}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-green-400">
+                                ${job.payout_amount}
+                              </p>
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mt-2 ${
+                                job.status === 'completed'
+                                  ? 'bg-green-900/50 text-green-400 border border-green-500'
+                                  : job.status === 'in_progress'
+                                  ? 'bg-blue-900/50 text-blue-400 border border-blue-500'
+                                  : job.status === 'accepted'
+                                  ? 'bg-purple-900/50 text-purple-400 border border-purple-500'
+                                  : 'bg-gray-700 text-gray-300 border border-gray-600'
+                              }`}>
+                                {job.status.toUpperCase().replace('_', ' ')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div className="mb-4">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm text-gray-400">Progress</span>
+                              <span className="text-sm font-semibold text-white">
+                                {job.progress_percentage}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-700 rounded-full h-2">
+                              <div
+                                className="bg-gradient-to-r from-primary-600 to-primary-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${job.progress_percentage}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Job Details */}
+                          <div className="border-t border-gray-700 pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-xs text-gray-500 mb-1">Requirements</p>
+                                <p className="text-sm text-white">{job.requirements}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500 mb-1">Weapon Class</p>
+                                <p className="text-sm text-white">{job.weapon_class || 'N/A'}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Update Progress Button */}
+                          {job.status !== 'completed' && (
+                            <div className="mt-4">
+                              <button className="w-full py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-bold">
+                                UPDATE PROGRESS
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
