@@ -113,6 +113,11 @@ export default function Navbar() {
           </div>
 
           {/* Role-based Navigation Links */}
+          {userRole === 'admin' && (
+            <Link href="/admin" className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-all duration-200 font-semibold text-xs tracking-wide">
+              ADMIN PANEL
+            </Link>
+          )}
           {userRole === 'booster' && (
             <>
               <Link href="/booster/hub" className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-xs tracking-wide">
