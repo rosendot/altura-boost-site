@@ -1,73 +1,103 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
-// Mock available jobs
-const mockAvailableJobs = [
-  {
-    id: 'JOB-NEW-001',
-    serviceName: 'Weapon Camos - SMGs',
-    game: 'Call of Duty: Black Ops 7',
-    payout: '$20.00',
-    estimatedHours: 10,
-    weaponClass: 'SMGs',
-    requirements: '3 SMGs to Diamond Camo',
-    details: [
-      '3 weapons to Diamond camo',
-      'All challenges completed',
-      'Completion within 4 days',
-    ],
-  },
-  {
-    id: 'JOB-NEW-002',
-    serviceName: 'Rank Boost - Level 50-100',
-    game: 'Call of Duty: Black Ops 7',
-    payout: '$30.00',
-    estimatedHours: 15,
-    weaponClass: 'N/A',
-    requirements: 'Level 50 to Level 100',
-    details: [
-      'Level from 50 to 100',
-      'All daily challenges during progression',
-      'Completion within 5 days',
-    ],
-  },
-  {
-    id: 'JOB-NEW-003',
-    serviceName: 'Challenge Completion - Seasonal',
-    game: 'Call of Duty: Black Ops 7',
-    payout: '$18.00',
-    estimatedHours: 6,
-    weaponClass: 'Mixed',
-    requirements: 'Complete 20 Seasonal Challenges',
-    details: [
-      '20 seasonal challenges',
-      'Any weapon class',
-      'Completion within 3 days',
-    ],
-  },
-];
+interface Job {
+  id: string;
+  job_number: string;
+  service_name: string;
+  game_name: string;
+  payout_amount: number;
+  estimated_hours: number;
+  requirements: string;
+  weapon_class: string | null;
+}
 
 export default function BoosterHub() {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchAvailableJobs();
+  }, []);
+
+  const fetchAvailableJobs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'available')
+        .is('booster_id', null)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setJobs(data || []);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleExpand = (jobId: string) => {
     setExpandedJob(expandedJob === jobId ? null : jobId);
   };
 
-  const handleAcceptJob = (jobId: string) => {
+  const handleAcceptJob = async (jobId: string) => {
     setSelectedJob(jobId);
     setShowConfirmModal(true);
   };
 
-  const confirmAcceptance = () => {
-    // In real app, this would make API call to accept the job
-    setShowConfirmModal(false);
-    setSelectedJob(null);
-    alert('Job accepted! Redirecting to My Jobs...');
+  const confirmAcceptance = async () => {
+    if (!selectedJob) return;
+
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('You must be logged in to accept jobs');
+        return;
+      }
+
+      // Update job with booster_id and status
+      const { error } = await supabase
+        .from('jobs')
+        .update({
+          booster_id: user.id,
+          status: 'accepted',
+          accepted_at: new Date().toISOString(),
+        })
+        .eq('id', selectedJob);
+
+      if (error) throw error;
+
+      // Refresh jobs list
+      await fetchAvailableJobs();
+      setShowConfirmModal(false);
+      setSelectedJob(null);
+      alert('Job accepted! Redirecting to My Jobs...');
+    } catch (error) {
+      console.error('Error accepting job:', error);
+      alert('Failed to accept job. Please try again.');
+    }
   };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-black pt-24 pb-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-gray-400">Loading available jobs...</div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-black pt-24 pb-12">
@@ -78,95 +108,93 @@ export default function BoosterHub() {
         </p>
 
         {/* Available Jobs List */}
-        <div className="space-y-2">
-          {mockAvailableJobs.map((job) => (
-            <div
-              key={job.id}
-              className="bg-gray-900 border border-primary-700 rounded-lg overflow-hidden card-glow transition hover:border-primary-500"
-            >
-              {/* Compact Row */}
+        {jobs.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-lg">No available jobs at the moment</p>
+            <p className="text-gray-500 text-sm mt-2">Check back later for new opportunities</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {jobs.map((job) => (
               <div
-                onClick={() => toggleExpand(job.id)}
-                className="flex items-center gap-4 p-4 cursor-pointer hover:bg-gray-800 transition"
+                key={job.id}
+                className="bg-gray-900 border border-primary-700 rounded-lg overflow-hidden card-glow transition hover:border-primary-500"
               >
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-white truncate">
-                    {job.serviceName}
-                  </h3>
-                  <p className="text-sm text-gray-400">{job.game}</p>
+                {/* Compact Row */}
+                <div
+                  onClick={() => toggleExpand(job.id)}
+                  className="flex items-center gap-4 p-4 cursor-pointer hover:bg-gray-800 transition"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-white truncate">
+                      {job.service_name}
+                    </h3>
+                    <p className="text-sm text-gray-400">{job.game_name}</p>
+                  </div>
+                  <div className="flex items-center gap-6 shrink-0">
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-green-400">
+                        ${job.payout_amount.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="text-right min-w-[80px]">
+                      <p className="text-sm text-gray-400">Est. Hours</p>
+                      <p className="text-white font-semibold">{job.estimated_hours}h</p>
+                    </div>
+                    <div className="text-gray-400">
+                      <svg
+                        className={`w-5 h-5 transition-transform ${
+                          expandedJob === job.id ? 'rotate-180' : ''
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-6 shrink-0">
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-green-400">
-                      {job.payout}
-                    </p>
-                  </div>
-                  <div className="text-right min-w-[80px]">
-                    <p className="text-sm text-gray-400">Est. Hours</p>
-                    <p className="text-white font-semibold">{job.estimatedHours}h</p>
-                  </div>
-                  <div className="text-gray-400">
-                    <svg
-                      className={`w-5 h-5 transition-transform ${
-                        expandedJob === job.id ? 'rotate-180' : ''
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+
+                {/* Expanded Details */}
+                {expandedJob === job.id && (
+                  <div className="border-t border-gray-700 p-4 bg-gray-800/50">
+                    <div className="mb-4">
+                      <p className="text-xs text-gray-500 mb-1">Job ID</p>
+                      <p className="text-sm text-gray-300">{job.job_number}</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Requirements</p>
+                        <p className="text-sm text-white">{job.requirements}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Weapon Class</p>
+                        <p className="text-sm text-white">{job.weapon_class || 'N/A'}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAcceptJob(job.id);
+                      }}
+                      className="w-full py-2.5 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                      ACCEPT JOB
+                    </button>
                   </div>
-                </div>
+                )}
               </div>
-
-              {/* Expanded Details */}
-              {expandedJob === job.id && (
-                <div className="border-t border-gray-700 p-4 bg-gray-800/50">
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-500 mb-1">Job ID</p>
-                    <p className="text-sm text-gray-300">{job.id}</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Requirements</p>
-                      <p className="text-sm text-white">{job.requirements}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Weapon Class</p>
-                      <p className="text-sm text-white">{job.weaponClass}</p>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-500 mb-2">Job Details</p>
-                    <ul className="list-disc list-inside text-gray-300 space-y-1 text-sm">
-                      {job.details.map((detail, index) => (
-                        <li key={index}>{detail}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAcceptJob(job.id);
-                    }}
-                    className="w-full py-2.5 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold"
-                  >
-                    ACCEPT JOB
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Confirmation Modal */}
         {showConfirmModal && (
