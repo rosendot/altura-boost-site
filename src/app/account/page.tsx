@@ -15,12 +15,42 @@ interface UserData {
   booster_approval_status?: 'pending' | 'approved' | 'rejected' | null;
 }
 
+interface Order {
+  id: string;
+  order_number: string;
+  total_price: number;
+  status: string;
+  progress_percentage: number;
+  created_at: string;
+  paid_at: string | null;
+  completed_at: string | null;
+}
+
+interface Job {
+  id: string;
+  job_number: string;
+  service_name: string;
+  game_name: string;
+  status: string;
+  progress_percentage: number;
+  booster_id: string | null;
+  accepted_at: string | null;
+  completed_at: string | null;
+  booster?: {
+    full_name: string | null;
+    email: string;
+  };
+}
+
 export default function AccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('profile');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [orderJobs, setOrderJobs] = useState<Record<string, Job[]>>({});
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -49,6 +79,59 @@ export default function AccountPage() {
 
     fetchUser();
   }, [router]);
+
+  // Fetch orders when orders tab is active and user is customer
+  useEffect(() => {
+    if (activeTab === 'orders' && userData?.role === 'customer') {
+      fetchOrders();
+    }
+  }, [activeTab, userData]);
+
+  const fetchOrders = async () => {
+    setOrdersLoading(true);
+    const supabase = createClient();
+
+    try {
+      // Fetch orders for this customer
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('customer_id', userData?.id)
+        .order('created_at', { ascending: false });
+
+      if (ordersError) throw ordersError;
+
+      setOrders(ordersData || []);
+
+      // Fetch jobs for each order
+      if (ordersData && ordersData.length > 0) {
+        const { data: jobsData, error: jobsError } = await supabase
+          .from('jobs')
+          .select(`
+            *,
+            booster:users!jobs_booster_id_fkey(full_name, email)
+          `)
+          .in('order_id', ordersData.map(o => o.id));
+
+        if (jobsError) throw jobsError;
+
+        // Group jobs by order_id
+        const jobsByOrder: Record<string, Job[]> = {};
+        jobsData?.forEach((job) => {
+          if (!jobsByOrder[job.order_id]) {
+            jobsByOrder[job.order_id] = [];
+          }
+          jobsByOrder[job.order_id].push(job);
+        });
+
+        setOrderJobs(jobsByOrder);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -294,8 +377,11 @@ export default function AccountPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">My Orders</h2>
 
-                  <div className="space-y-4">
-                    {/* Placeholder for orders - will be populated with real data later */}
+                  {ordersLoading ? (
+                    <div className="text-center py-12">
+                      <div className="text-gray-400">Loading orders...</div>
+                    </div>
+                  ) : orders.length === 0 ? (
                     <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
                       <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -305,7 +391,111 @@ export default function AccountPage() {
                         When you place orders, they will appear here.
                       </p>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {orders.map((order) => {
+                        const jobs = orderJobs[order.id] || [];
+                        const hasJobs = jobs.length > 0;
+
+                        return (
+                          <div
+                            key={order.id}
+                            className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-primary-600 transition"
+                          >
+                            {/* Order Header */}
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="text-xl font-semibold text-white mb-1">
+                                  Order {order.order_number}
+                                </h3>
+                                <p className="text-sm text-gray-400">
+                                  Placed on {new Date(order.created_at).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                  })}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-2xl font-bold text-green-400">
+                                  ${order.total_price.toFixed(2)}
+                                </p>
+                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mt-2 ${
+                                  order.status === 'completed'
+                                    ? 'bg-green-900/50 text-green-400 border border-green-500'
+                                    : order.status === 'in_progress'
+                                    ? 'bg-blue-900/50 text-blue-400 border border-blue-500'
+                                    : order.status === 'paid'
+                                    ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500'
+                                    : 'bg-gray-700 text-gray-300 border border-gray-600'
+                                }`}>
+                                  {order.status.toUpperCase().replace('_', ' ')}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Progress Bar */}
+                            <div className="mb-4">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-gray-400">Progress</span>
+                                <span className="text-sm font-semibold text-white">
+                                  {order.progress_percentage}%
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div
+                                  className="bg-gradient-to-r from-primary-600 to-primary-500 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${order.progress_percentage}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Job Details */}
+                            {hasJobs && (
+                              <div className="border-t border-gray-700 pt-4">
+                                <h4 className="text-sm font-semibold text-gray-400 mb-3">Job Details</h4>
+                                {jobs.map((job) => (
+                                  <div key={job.id} className="mb-3 last:mb-0">
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <p className="text-white font-medium">{job.service_name}</p>
+                                        <p className="text-sm text-gray-400">{job.game_name}</p>
+                                        {job.booster_id && job.booster ? (
+                                          <p className="text-xs text-gray-500 mt-1">
+                                            Assigned to: {job.booster.full_name || job.booster.email}
+                                          </p>
+                                        ) : (
+                                          <p className="text-xs text-yellow-500 mt-1">
+                                            Waiting for booster assignment
+                                          </p>
+                                        )}
+                                      </div>
+                                      <div className="text-right ml-4">
+                                        <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                                          job.status === 'completed'
+                                            ? 'bg-green-900/50 text-green-400'
+                                            : job.status === 'in_progress'
+                                            ? 'bg-blue-900/50 text-blue-400'
+                                            : job.status === 'accepted'
+                                            ? 'bg-purple-900/50 text-purple-400'
+                                            : 'bg-gray-700 text-gray-300'
+                                        }`}>
+                                          {job.status.toUpperCase().replace('_', ' ')}
+                                        </span>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                          {job.progress_percentage}% Complete
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
