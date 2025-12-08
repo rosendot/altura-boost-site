@@ -319,7 +319,7 @@ export default function AdminPage() {
                                       {key.replace(/_/g, ' ')}:
                                     </p>
                                     <p className="text-sm text-white">
-                                      {Array.isArray(value) ? value.join(', ') : value}
+                                      {Array.isArray(value) ? value.join(', ') : String(value || '')}
                                     </p>
                                   </div>
                                 ))}
