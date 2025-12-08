@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 
 interface Job {
   id: string;
@@ -20,7 +19,6 @@ export default function BoosterHub() {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const supabase = createClient();
 
   useEffect(() => {
     fetchAvailableJobs();
@@ -28,17 +26,18 @@ export default function BoosterHub() {
 
   const fetchAvailableJobs = async () => {
     try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('status', 'available')
-        .is('booster_id', null)
-        .order('created_at', { ascending: false });
+      const response = await fetch('/api/jobs/available');
 
-      if (error) throw error;
-      setJobs(data || []);
+      if (response.ok) {
+        const data = await response.json();
+        setJobs(data.jobs || []);
+      } else {
+        console.error('Failed to fetch jobs');
+        setJobs([]);
+      }
     } catch (error) {
       console.error('Error fetching jobs:', error);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
@@ -57,30 +56,20 @@ export default function BoosterHub() {
     if (!selectedJob) return;
 
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('You must be logged in to accept jobs');
-        return;
+      const response = await fetch(`/api/jobs/${selectedJob}/accept`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        // Refresh jobs list
+        await fetchAvailableJobs();
+        setShowConfirmModal(false);
+        setSelectedJob(null);
+        alert('Job accepted! Redirecting to My Jobs...');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to accept job. Please try again.');
       }
-
-      // Update job with booster_id and status
-      const { error } = await supabase
-        .from('jobs')
-        .update({
-          booster_id: user.id,
-          status: 'accepted',
-          accepted_at: new Date().toISOString(),
-        })
-        .eq('id', selectedJob);
-
-      if (error) throw error;
-
-      // Refresh jobs list
-      await fetchAvailableJobs();
-      setShowConfirmModal(false);
-      setSelectedJob(null);
-      alert('Job accepted! Redirecting to My Jobs...');
     } catch (error) {
       console.error('Error accepting job:', error);
       alert('Failed to accept job. Please try again.');

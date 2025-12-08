@@ -17,44 +17,37 @@ export default function Navbar() {
   useEffect(() => {
     const supabase = createClient();
 
-    const fetchUserAndRole = async () => {
-      // Get auth user
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user/me');
 
-      if (user) {
-        // Fetch role and full_name from public.users table
-        const { data: userData } = await supabase
-          .from('users')
-          .select('role, full_name')
-          .eq('id', user.id)
-          .single();
-
-        setUserRole(userData?.role || null);
-        setUserName(userData?.full_name || null);
-      } else {
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+          setUserRole(data.userData?.role || null);
+          setUserName(data.userData?.full_name || null);
+        } else {
+          setUser(null);
+          setUserRole(null);
+          setUserName(null);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setUser(null);
         setUserRole(null);
         setUserName(null);
       }
     };
 
-    fetchUserAndRole();
+    fetchUserData();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
       if (session?.user) {
-        // Fetch role and full_name when user signs in
-        supabase
-          .from('users')
-          .select('role, full_name')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => {
-            setUserRole(data?.role || null);
-            setUserName(data?.full_name || null);
-          });
+        // Re-fetch user data when auth state changes
+        fetchUserData();
       } else {
+        setUser(null);
         setUserRole(null);
         setUserName(null);
       }

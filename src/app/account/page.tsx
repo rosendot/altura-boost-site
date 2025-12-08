@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 
 interface UserData {
   id: string;
@@ -59,27 +58,24 @@ export default function AccountPage() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const supabase = createClient();
+      try {
+        const response = await fetch('/api/user/me');
 
-      // Check if user is authenticated
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+          setUserData(data.userData);
+        } else {
+          router.push('/login');
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
         router.push('/login');
         return;
+      } finally {
+        setLoading(false);
       }
-
-      setUser(user);
-
-      // Fetch user data from public.users
-      const { data: publicUserData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      setUserData(publicUserData);
-      setLoading(false);
     };
 
     fetchUser();
@@ -101,71 +97,23 @@ export default function AccountPage() {
 
   const fetchOrders = async () => {
     setOrdersLoading(true);
-    const supabase = createClient();
 
     try {
-      // Fetch orders for this customer
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('customer_id', userData?.id)
-        .order('created_at', { ascending: false });
+      const response = await fetch('/api/orders/my-orders');
 
-      if (ordersError) throw ordersError;
-
-      setOrders(ordersData || []);
-
-      // Fetch jobs for each order
-      if (ordersData && ordersData.length > 0) {
-        // First fetch all jobs
-        const { data: rawJobsData, error: jobsError } = await supabase
-          .from('jobs')
-          .select('*')
-          .in('order_id', ordersData.map(o => o.id));
-
-        if (jobsError) throw jobsError;
-
-        // Then fetch booster info for jobs that have a booster assigned
-        const boosterIds = rawJobsData
-          ?.filter(job => job.booster_id)
-          .map(job => job.booster_id) || [];
-
-        let boosterMap: Record<string, { full_name: string | null; email: string }> = {};
-
-        if (boosterIds.length > 0) {
-          const { data: boosters, error: boostersError } = await supabase
-            .from('users')
-            .select('id, full_name, email')
-            .in('id', boosterIds);
-
-          if (!boostersError && boosters) {
-            boosterMap = boosters.reduce((acc, booster) => {
-              acc[booster.id] = { full_name: booster.full_name, email: booster.email };
-              return acc;
-            }, {} as Record<string, { full_name: string | null; email: string }>);
-          }
-        }
-
-        // Map jobs with booster data
-        const jobsData = rawJobsData?.map(job => ({
-          ...job,
-          booster: job.booster_id ? boosterMap[job.booster_id] || null : null
-        }));
-
-        // Group jobs by order_id
-        const jobsByOrder: Record<string, Job[]> = {};
-        jobsData?.forEach((job) => {
-
-          if (!jobsByOrder[job.order_id]) {
-            jobsByOrder[job.order_id] = [];
-          }
-          jobsByOrder[job.order_id].push(job);
-        });
-
-        setOrderJobs(jobsByOrder);
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data.orders || []);
+        setOrderJobs(data.jobs || {});
+      } else {
+        console.error('Failed to fetch orders');
+        setOrders([]);
+        setOrderJobs({});
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
+      setOrders([]);
+      setOrderJobs({});
     } finally {
       setOrdersLoading(false);
     }
@@ -173,21 +121,20 @@ export default function AccountPage() {
 
   const fetchBoosterJobs = async () => {
     setBoosterJobsLoading(true);
-    const supabase = createClient();
 
     try {
-      // Fetch jobs assigned to this booster
-      const { data: jobsData, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('booster_id', userData?.id)
-        .order('accepted_at', { ascending: false });
+      const response = await fetch('/api/jobs/my-jobs');
 
-      if (error) throw error;
-
-      setBoosterJobs(jobsData || []);
+      if (response.ok) {
+        const data = await response.json();
+        setBoosterJobs(data.jobs || []);
+      } else {
+        console.error('Failed to fetch booster jobs');
+        setBoosterJobs([]);
+      }
     } catch (error) {
       console.error('Error fetching booster jobs:', error);
+      setBoosterJobs([]);
     } finally {
       setBoosterJobsLoading(false);
     }
