@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function CustomerSignUpPage() {
   const [formData, setFormData] = useState({
@@ -9,6 +10,9 @@ export default function CustomerSignUpPage() {
     confirmPassword: '',
     username: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -17,17 +21,43 @@ export default function CustomerSignUpPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match!');
       return;
     }
 
-    // Here you would submit the form data to your backend
-    console.log('Customer Sign Up Data:', formData);
-    alert('Account created successfully! (This is a placeholder)');
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          username: formData.username,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Signup failed');
+      }
+
+      alert('Account created successfully! Redirecting to login...');
+      router.push('/login');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during sign up');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,6 +75,12 @@ export default function CustomerSignUpPage() {
       <div className="max-w-md w-full bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow relative z-10 max-h-[calc(100vh-2rem)] overflow-y-auto">
         <h1 className="text-3xl font-bold mb-4 text-center text-white">Create Account</h1>
         <p className="text-gray-400 text-sm text-center mb-6">Sign up as a customer</p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-sm">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
@@ -101,9 +137,10 @@ export default function CustomerSignUpPage() {
 
           <button
             type="submit"
-            className="w-full py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold mt-4"
+            disabled={loading}
+            className="w-full py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            CREATE ACCOUNT
+            {loading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
           </button>
         </form>
 
