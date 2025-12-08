@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(
   request: Request,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     const supabase = createClient();
@@ -18,7 +18,7 @@ export async function POST(
       );
     }
 
-    const { jobId } = params;
+    const { jobId } = await params;
 
     // Verify the job exists and is available
     const { data: job, error: fetchError } = await supabase
