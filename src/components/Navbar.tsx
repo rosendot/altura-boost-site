@@ -10,6 +10,7 @@ export default function Navbar() {
   const { getTotalItems } = useCart();
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<'customer' | 'booster' | 'admin' | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const router = useRouter();
 
@@ -22,16 +23,18 @@ export default function Navbar() {
       setUser(user);
 
       if (user) {
-        // Fetch role from public.users table
+        // Fetch role and full_name from public.users table
         const { data: userData } = await supabase
           .from('users')
-          .select('role')
+          .select('role, full_name')
           .eq('id', user.id)
           .single();
 
         setUserRole(userData?.role || null);
+        setUserName(userData?.full_name || null);
       } else {
         setUserRole(null);
+        setUserName(null);
       }
     };
 
@@ -41,15 +44,19 @@ export default function Navbar() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        // Fetch role when user signs in
+        // Fetch role and full_name when user signs in
         supabase
           .from('users')
-          .select('role')
+          .select('role, full_name')
           .eq('id', session.user.id)
           .single()
-          .then(({ data }) => setUserRole(data?.role || null));
+          .then(({ data }) => {
+            setUserRole(data?.role || null);
+            setUserName(data?.full_name || null);
+          });
       } else {
         setUserRole(null);
+        setUserName(null);
       }
     });
 
@@ -160,7 +167,7 @@ export default function Navbar() {
                 <div className="absolute right-0 top-full mt-2 w-48 bg-gray-900 border border-primary-700/50 rounded-lg shadow-2xl p-2 z-50">
                   <div className="px-3 py-2 border-b border-gray-700 mb-2">
                     <p className="text-xs text-gray-400">Signed in as</p>
-                    <p className="text-sm text-white font-medium truncate">{user.email}</p>
+                    <p className="text-sm text-white font-medium truncate">{userName}</p>
                   </div>
                   <Link
                     href="/account"
