@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 interface UserData {
@@ -24,9 +24,8 @@ interface BoosterApplication {
   };
 }
 
-function AdminContent() {
+export default function AdminPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,13 +64,7 @@ function AdminContent() {
     };
 
     fetchUser();
-
-    // Set active tab from URL parameter
-    const tab = searchParams.get('tab');
-    if (tab) {
-      setActiveTab(tab);
-    }
-  }, [router, searchParams]);
+  }, [router]);
 
   useEffect(() => {
     if (activeTab === 'applications' && userData?.role === 'admin') {
@@ -405,17 +398,5 @@ function AdminContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function AdminPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    }>
-      <AdminContent />
-    </Suspense>
   );
 }

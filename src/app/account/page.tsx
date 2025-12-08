@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 interface UserData {
@@ -15,9 +15,8 @@ interface UserData {
   booster_approval_status?: 'pending' | 'approved' | 'rejected' | null;
 }
 
-function AccountContent() {
+export default function AccountPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,13 +48,7 @@ function AccountContent() {
     };
 
     fetchUser();
-
-    // Set active tab from URL parameter
-    const tab = searchParams.get('tab');
-    if (tab) {
-      setActiveTab(tab);
-    }
-  }, [router, searchParams]);
+  }, [router]);
 
   if (loading) {
     return (
@@ -340,17 +333,5 @@ function AccountContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function AccountPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    }>
-      <AccountContent />
-    </Suspense>
   );
 }
