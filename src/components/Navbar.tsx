@@ -118,13 +118,13 @@ export default function Navbar() {
               <Link href="/booster/hub" className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-xs tracking-wide">
                 BOOSTER HUB
               </Link>
-              <Link href="/booster/jobs" className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-all duration-200 font-semibold text-xs tracking-wide">
+              <Link href="/account?tab=jobs" className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-all duration-200 font-semibold text-xs tracking-wide">
                 MY JOBS
               </Link>
             </>
           )}
           {userRole === 'customer' && (
-            <Link href="/customer/orders" className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-all duration-200 font-semibold text-xs tracking-wide">
+            <Link href="/account?tab=orders" className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-all duration-200 font-semibold text-xs tracking-wide">
               MY ORDERS
             </Link>
           )}
