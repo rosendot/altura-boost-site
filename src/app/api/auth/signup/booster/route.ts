@@ -4,9 +4,9 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, username } = body;
+    const { email, password, username, questionnaire_responses } = body;
 
-    if (!email || !password || !username) {
+    if (!email || !password || !username || !questionnaire_responses) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -18,14 +18,14 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Sign up user - trigger will automatically create public.users record
+    // Sign up user - triggers will automatically create public.users and booster_applications records
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: username,
-          role: 'customer',
+          role: 'booster',
         },
       },
     });
@@ -44,12 +44,27 @@ export async function POST(request: Request) {
       );
     }
 
+    // Update the booster application with questionnaire responses
+    // User is now authenticated, so RLS allows this update
+    const { error: updateError } = await supabase
+      .from('booster_applications')
+      .update({ questionnaire_responses })
+      .eq('user_id', authData.user.id);
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: 'Failed to save questionnaire responses: ' + updateError.message },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       user: {
         id: authData.user.id,
         email: authData.user.email,
       },
+      message: 'Application submitted successfully! Your application is pending review.',
     });
   } catch (error: any) {
     return NextResponse.json(

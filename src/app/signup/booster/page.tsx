@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface SurveyQuestion {
   id: string;
@@ -19,6 +20,9 @@ export default function BoosterSignUpPage() {
     username: '',
   });
   const [surveyAnswers, setSurveyAnswers] = useState<Record<string, string | string[]>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   // Generic survey questions - your client can update these later
   const surveyQuestions: SurveyQuestion[] = [
@@ -84,20 +88,47 @@ export default function BoosterSignUpPage() {
 
   const handleAccountSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Basic validation
+    setError(null);
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match!');
       return;
     }
     setCurrentStep('survey');
   };
 
-  const handleSurveySubmit = (e: React.FormEvent) => {
+  const handleSurveySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would submit the complete form data
-    console.log('Account Data:', formData);
-    console.log('Survey Answers:', surveyAnswers);
-    alert('Application submitted successfully! (This is a placeholder)');
+    setError(null);
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/signup/booster', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          username: formData.username,
+          questionnaire_responses: surveyAnswers,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Signup failed');
+      }
+
+      alert(data.message || 'Application submitted successfully! Redirecting to login...');
+      router.push('/login');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during sign up');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -119,6 +150,12 @@ export default function BoosterSignUpPage() {
         <p className="text-gray-400 text-sm text-center mb-6">
           {currentStep === 'account' ? 'Step 1: Create your account' : 'Step 2: Complete the questionnaire'}
         </p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Progress Indicator */}
         <div className="flex items-center justify-center mb-6">
@@ -313,9 +350,10 @@ export default function BoosterSignUpPage() {
               </button>
               <button
                 type="submit"
-                className="flex-1 py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold"
+                disabled={loading}
+                className="flex-1 py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                SUBMIT APPLICATION
+                {loading ? 'SUBMITTING...' : 'SUBMIT APPLICATION'}
               </button>
             </div>
           </form>
