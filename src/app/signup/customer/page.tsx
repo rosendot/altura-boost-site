@@ -33,7 +33,7 @@ export default function CustomerSignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch('/api/signup/customer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

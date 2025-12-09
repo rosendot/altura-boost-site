@@ -103,7 +103,7 @@ export default function BoosterSignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/signup/booster', {
+      const response = await fetch('/api/signup/booster', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
