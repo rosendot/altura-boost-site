@@ -52,6 +52,26 @@ export default function BoosterHub() {
     setShowConfirmModal(true);
   };
 
+  const handleQuickAccept = async (jobId: string) => {
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/accept`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        // Refresh jobs list
+        await fetchAvailableJobs();
+        alert('Job accepted successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to accept job. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error accepting job:', error);
+      alert('Failed to accept job. Please try again.');
+    }
+  };
+
   const confirmAcceptance = async () => {
     if (!selectedJob) return;
 
@@ -110,27 +130,39 @@ export default function BoosterHub() {
                 className="bg-gray-900 border border-primary-700 rounded-lg overflow-hidden card-glow transition hover:border-primary-500"
               >
                 {/* Compact Row */}
-                <div
-                  onClick={() => toggleExpand(job.id)}
-                  className="flex items-center gap-4 p-4 cursor-pointer hover:bg-gray-800 transition"
-                >
-                  <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-4 p-4">
+                  <div
+                    onClick={() => toggleExpand(job.id)}
+                    className="flex-1 min-w-0 cursor-pointer hover:opacity-80 transition"
+                  >
                     <h3 className="text-lg font-semibold text-white truncate">
                       {job.service_name}
                     </h3>
                     <p className="text-sm text-gray-400">{job.game_name}</p>
                   </div>
-                  <div className="flex items-center gap-6 shrink-0">
+                  <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right">
                       <p className="text-xl font-bold text-green-400">
                         ${job.payout_amount.toFixed(2)}
                       </p>
                     </div>
-                    <div className="text-right min-w-[80px]">
+                    <div className="text-right min-w-[70px]">
                       <p className="text-sm text-gray-400">Est. Hours</p>
                       <p className="text-white font-semibold">{job.estimated_hours}h</p>
                     </div>
-                    <div className="text-gray-400">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuickAccept(job.id);
+                      }}
+                      className="px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition font-bold whitespace-nowrap"
+                    >
+                      Quick Accept
+                    </button>
+                    <button
+                      onClick={() => toggleExpand(job.id)}
+                      className="text-gray-400 hover:text-white transition p-2"
+                    >
                       <svg
                         className={`w-5 h-5 transition-transform ${
                           expandedJob === job.id ? 'rotate-180' : ''
@@ -146,7 +178,7 @@ export default function BoosterHub() {
                           d="M19 9l-7 7-7-7"
                         />
                       </svg>
-                    </div>
+                    </button>
                   </div>
                 </div>
 
