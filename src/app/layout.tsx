@@ -1,21 +1,22 @@
+'use client';
+
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/contexts/CartContext";
-
-export const metadata = {
-  title: "Altura Boost",
-  description: "Gaming service website for boosting and orders",
-};
+import { usePathname } from "next/navigation";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAuthPage = pathname === '/login' || pathname?.startsWith('/signup');
+
   return (
     <html lang="en">
       <body>
         <CartProvider>
-          <Navbar />
+          {!isAuthPage && <Navbar />}
           {children}
-          <Footer />
+          {!isAuthPage && <Footer />}
         </CartProvider>
       </body>
     </html>
