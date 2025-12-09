@@ -119,7 +119,7 @@ export default function Navbar() {
             </Link>
           )}
           {userRole === 'booster' && (
-            <Link href="/booster/hub" className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-xs tracking-wide">
+            <Link href="/hub" className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-xs tracking-wide">
               BOOSTER HUB
             </Link>
           )}
