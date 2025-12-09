@@ -700,6 +700,23 @@ export default function AccountPage() {
                 <span>50%</span>
                 <span>100%</span>
               </div>
+
+              {/* Quick Set Buttons */}
+              <div className="flex gap-2 mt-3">
+                {[0, 25, 50, 75, 100].map((percentage) => (
+                  <button
+                    key={percentage}
+                    onClick={() => setNewProgress(percentage)}
+                    className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
+                      newProgress === percentage
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+                    }`}
+                  >
+                    {percentage}%
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Progress Notes */}
