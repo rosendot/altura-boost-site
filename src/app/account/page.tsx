@@ -55,6 +55,11 @@ export default function AccountPage() {
   const [orderJobs, setOrderJobs] = useState<Record<string, Job[]>>({});
   const [boosterJobs, setBoosterJobs] = useState<Job[]>([]);
   const [boosterJobsLoading, setBoosterJobsLoading] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [selectedJobForUpdate, setSelectedJobForUpdate] = useState<Job | null>(null);
+  const [newProgress, setNewProgress] = useState(0);
+  const [progressNotes, setProgressNotes] = useState('');
+  const [updatingProgress, setUpdatingProgress] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -137,6 +142,54 @@ export default function AccountPage() {
       setBoosterJobs([]);
     } finally {
       setBoosterJobsLoading(false);
+    }
+  };
+
+  const handleOpenProgressModal = (job: Job) => {
+    setSelectedJobForUpdate(job);
+    setNewProgress(job.progress_percentage);
+    setProgressNotes('');
+    setShowProgressModal(true);
+  };
+
+  const handleCloseProgressModal = () => {
+    setShowProgressModal(false);
+    setSelectedJobForUpdate(null);
+    setNewProgress(0);
+    setProgressNotes('');
+  };
+
+  const handleUpdateProgress = async () => {
+    if (!selectedJobForUpdate) return;
+
+    setUpdatingProgress(true);
+
+    try {
+      const response = await fetch(`/api/jobs/${selectedJobForUpdate.id}/progress`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          progress_percentage: newProgress,
+          notes: progressNotes,
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh jobs list
+        await fetchBoosterJobs();
+        handleCloseProgressModal();
+        alert('Progress updated successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to update progress. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      alert('Failed to update progress. Please try again.');
+    } finally {
+      setUpdatingProgress(false);
     }
   };
 
@@ -596,7 +649,10 @@ export default function AccountPage() {
                           {/* Update Progress Button */}
                           {job.status !== 'completed' && (
                             <div className="mt-4">
-                              <button className="w-full py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-bold">
+                              <button
+                                onClick={() => handleOpenProgressModal(job)}
+                                className="w-full py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-bold"
+                              >
                                 UPDATE PROGRESS
                               </button>
                             </div>
@@ -611,6 +667,75 @@ export default function AccountPage() {
           </div>
         </div>
       </div>
+
+      {/* Progress Update Modal */}
+      {showProgressModal && selectedJobForUpdate && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-primary-700 rounded-lg p-8 max-w-md w-full">
+            <h3 className="text-2xl font-bold mb-4 text-white">
+              Update Job Progress
+            </h3>
+            <p className="text-gray-400 mb-2 text-sm">
+              Job: {selectedJobForUpdate.service_name}
+            </p>
+            <p className="text-gray-500 mb-6 text-xs">
+              Current Progress: {selectedJobForUpdate.progress_percentage}%
+            </p>
+
+            {/* Progress Slider */}
+            <div className="mb-6">
+              <label className="block text-sm text-gray-400 mb-2">
+                New Progress: {newProgress}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={newProgress}
+                onChange={(e) => setNewProgress(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
+            {/* Progress Notes */}
+            <div className="mb-6">
+              <label className="block text-sm text-gray-400 mb-2">
+                Notes (Optional)
+              </label>
+              <textarea
+                value={progressNotes}
+                onChange={(e) => setProgressNotes(e.target.value)}
+                placeholder="Add any notes about this progress update..."
+                className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition resize-none"
+                rows={3}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <button
+                onClick={handleCloseProgressModal}
+                disabled={updatingProgress}
+                className="flex-1 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateProgress}
+                disabled={updatingProgress}
+                className="flex-1 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {updatingProgress ? 'Updating...' : 'Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
