@@ -65,7 +65,7 @@ export default function CustomerSignUpPage() {
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-60"
-        style={{ backgroundImage: "url('/assets/images/login_page_background.webp')" }}
+        style={{ backgroundImage: "url('/login_page_background.webp')" }}
       ></div>
 
       {/* Overlay */}
