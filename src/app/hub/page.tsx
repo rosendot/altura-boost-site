@@ -98,7 +98,7 @@ export default function BoosterHub() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-black pt-24 pb-12">
+      <main className="min-h-screen bg-black pb-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-center py-20">
             <div className="text-gray-400">Loading available jobs...</div>

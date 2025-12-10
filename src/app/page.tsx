@@ -15,7 +15,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-black">
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto p-4 md:py-16">
+      <section className="max-w-7xl mx-auto p-4">
         <div className="text-center space-y-4">
           <h1 className="text-5xl md:text-7xl font-bold leading-tight">
             <span className="text-white">Elevate Your Game.</span>

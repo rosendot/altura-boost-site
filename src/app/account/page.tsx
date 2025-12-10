@@ -206,7 +206,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black pt-20 pb-12">
+    <div className="min-h-screen bg-black pb-12">
       <div className="max-w-7xl mx-auto px-6">
         <h1 className="text-4xl font-bold text-white mb-8">My Account</h1>
 

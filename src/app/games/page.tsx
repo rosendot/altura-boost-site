@@ -19,7 +19,7 @@ export default async function GamesPage() {
   return (
     <main className="min-h-screen bg-black">
       {/* Header */}
-      <section className="max-w-7xl mx-auto px-4 py-16 md:py-24">
+      <section className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center space-y-4">
           <h1 className="text-5xl md:text-6xl font-bold text-white">
             Our <span className="bg-clip-text gradient-purple">Games</span>

@@ -18,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <CartProvider>
           {!isAuthPage && <Navbar />}
-          {children}
+          <div className={!isAuthPage ? "pt-20" : ""}>
+            {children}
+          </div>
           {!isAuthPage && <Footer />}
         </CartProvider>
       </body>
