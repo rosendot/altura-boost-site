@@ -87,7 +87,7 @@ export default function Navbar() {
       <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
         {/* Left side - Logo and Role-based Navigation Links */}
         <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2 font-bold text-2xl text-white hover:text-primary-400 transition-colors duration-200">
+          <Link href="/" className="flex items-center font-bold text-2xl text-white hover:text-primary-400 transition-colors duration-200">
             <Image
               src="/altura_logo.webp"
               alt="Altura Boost Logo"
