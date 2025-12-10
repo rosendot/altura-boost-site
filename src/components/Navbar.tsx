@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
@@ -86,7 +87,14 @@ export default function Navbar() {
       <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-8">
         {/* Left side - Logo and Primary Actions */}
         <div className="flex items-center gap-8">
-          <Link href="/" className="font-bold text-2xl text-white hover:text-primary-400 transition-colors duration-200">
+          <Link href="/" className="flex items-center gap-3 font-bold text-2xl text-white hover:text-primary-400 transition-colors duration-200">
+            <Image
+              src="/altura_logo.webp"
+              alt="Altura Boost Logo"
+              width={64}
+              height={64}
+              className="w-16 h-16 object-contain"
+            />
             Altura Boost
           </Link>
 
