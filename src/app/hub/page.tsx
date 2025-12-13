@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSocket } from '@/hooks/useSocket';
+import { timeAgo, isJobNew } from '@/utils/timeAgo';
 
 interface Job {
   id: string;
@@ -12,7 +13,10 @@ interface Job {
   estimated_hours: number;
   requirements: string;
   weapon_class: string | null;
+  created_at: string;
 }
+
+type SortOption = 'newest' | 'oldest' | 'payout-high' | 'payout-low' | 'hours-low' | 'hours-high' | 'hourly-rate';
 
 export default function BoosterHub() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -20,6 +24,17 @@ export default function BoosterHub() {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Filter states
+  const [selectedGame, setSelectedGame] = useState<string>('all');
+  const [minPayout, setMinPayout] = useState<number>(0);
+  const [maxPayout, setMaxPayout] = useState<number>(1000);
+  const [maxHours, setMaxHours] = useState<number>(100);
+  const [selectedWeaponClass, setSelectedWeaponClass] = useState<string>('all');
+
+  // Sort state
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   const {
     isConnected,
@@ -35,6 +50,15 @@ export default function BoosterHub() {
 
   useEffect(() => {
     fetchAvailableJobs();
+  }, []);
+
+  // Update time every minute for "time ago" display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
   }, []);
 
   // Socket.IO real-time updates
@@ -79,6 +103,62 @@ export default function BoosterHub() {
       };
     }
   }, [isConnected, joinBoosterHub, onJobUpdate, onJobAccepted, onNewJob, offJobUpdate, offJobAccepted, offNewJob]);
+
+  // Get unique values for filters
+  const uniqueGames = useMemo(() => {
+    const games = jobs.map(job => job.game_name);
+    return ['all', ...Array.from(new Set(games))];
+  }, [jobs]);
+
+  const uniqueWeaponClasses = useMemo(() => {
+    const classes = jobs.map(job => job.weapon_class).filter(Boolean) as string[];
+    return ['all', ...Array.from(new Set(classes))];
+  }, [jobs]);
+
+  // Filter and sort jobs
+  const filteredAndSortedJobs = useMemo(() => {
+    let filtered = jobs.filter(job => {
+      // Game filter
+      if (selectedGame !== 'all' && job.game_name !== selectedGame) return false;
+
+      // Payout filter
+      if (job.payout_amount < minPayout || job.payout_amount > maxPayout) return false;
+
+      // Hours filter
+      if (job.estimated_hours > maxHours) return false;
+
+      // Weapon class filter
+      if (selectedWeaponClass !== 'all' && job.weapon_class !== selectedWeaponClass) return false;
+
+      return true;
+    });
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'payout-high':
+          return b.payout_amount - a.payout_amount;
+        case 'payout-low':
+          return a.payout_amount - b.payout_amount;
+        case 'hours-low':
+          return a.estimated_hours - b.estimated_hours;
+        case 'hours-high':
+          return b.estimated_hours - a.estimated_hours;
+        case 'hourly-rate':
+          const rateA = a.payout_amount / a.estimated_hours;
+          const rateB = b.payout_amount / b.estimated_hours;
+          return rateB - rateA;
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [jobs, selectedGame, minPayout, maxPayout, maxHours, selectedWeaponClass, sortBy]);
 
   const fetchAvailableJobs = async () => {
     try {
@@ -181,19 +261,173 @@ export default function BoosterHub() {
             )}
           </div>
         </div>
-        <p className="text-gray-400 mb-8">
+        <p className="text-gray-400 mb-6">
           Browse available jobs and accept ones that match your skills. Jobs update in real-time.
         </p>
 
+        {/* Filters and Sort */}
+        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Game Filter */}
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Game</label>
+              <select
+                value={selectedGame}
+                onChange={(e) => setSelectedGame(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+              >
+                {uniqueGames.map((game) => (
+                  <option key={game} value={game}>
+                    {game === 'all' ? 'All Games' : game}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Payout Range */}
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Min Payout</label>
+              <input
+                type="number"
+                value={minPayout}
+                onChange={(e) => setMinPayout(Number(e.target.value))}
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+                placeholder="$0"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Max Payout</label>
+              <input
+                type="number"
+                value={maxPayout}
+                onChange={(e) => setMaxPayout(Number(e.target.value))}
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+                placeholder="$1000"
+              />
+            </div>
+
+            {/* Max Hours */}
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Max Hours</label>
+              <input
+                type="number"
+                value={maxHours}
+                onChange={(e) => setMaxHours(Number(e.target.value))}
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+                placeholder="100"
+              />
+            </div>
+
+            {/* Weapon Class */}
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Weapon Class</label>
+              <select
+                value={selectedWeaponClass}
+                onChange={(e) => setSelectedWeaponClass(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+              >
+                {uniqueWeaponClasses.map((wc) => (
+                  <option key={wc} value={wc}>
+                    {wc === 'all' ? 'All Classes' : wc}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Sort Options */}
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <label className="block text-xs text-gray-400 mb-2">Sort By</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSortBy('newest')}
+                className={`px-3 py-1.5 text-xs rounded transition ${
+                  sortBy === 'newest'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Newest First
+              </button>
+              <button
+                onClick={() => setSortBy('oldest')}
+                className={`px-3 py-1.5 text-xs rounded transition ${
+                  sortBy === 'oldest'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Oldest First
+              </button>
+              <button
+                onClick={() => setSortBy('payout-high')}
+                className={`px-3 py-1.5 text-xs rounded transition ${
+                  sortBy === 'payout-high'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Highest Payout
+              </button>
+              <button
+                onClick={() => setSortBy('payout-low')}
+                className={`px-3 py-1.5 text-xs rounded transition ${
+                  sortBy === 'payout-low'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Lowest Payout
+              </button>
+              <button
+                onClick={() => setSortBy('hours-low')}
+                className={`px-3 py-1.5 text-xs rounded transition ${
+                  sortBy === 'hours-low'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Quickest Jobs
+              </button>
+              <button
+                onClick={() => setSortBy('hours-high')}
+                className={`px-3 py-1.5 text-xs rounded transition ${
+                  sortBy === 'hours-high'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Longest Jobs
+              </button>
+              <button
+                onClick={() => setSortBy('hourly-rate')}
+                className={`px-3 py-1.5 text-xs rounded transition ${
+                  sortBy === 'hourly-rate'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                Best $/Hour
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Job Count */}
+        <div className="mb-4 text-sm text-gray-400">
+          Showing {filteredAndSortedJobs.length} of {jobs.length} jobs
+        </div>
+
         {/* Available Jobs List */}
-        {jobs.length === 0 ? (
+        {filteredAndSortedJobs.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-400 text-lg">No available jobs at the moment</p>
             <p className="text-gray-500 text-sm mt-2">Check back later for new opportunities</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {jobs.map((job) => (
+            {filteredAndSortedJobs.map((job) => (
               <div
                 key={job.id}
                 className="bg-gray-900 border border-primary-700 rounded-lg overflow-hidden card-glow transition hover:border-primary-500"
@@ -204,15 +438,29 @@ export default function BoosterHub() {
                     onClick={() => toggleExpand(job.id)}
                     className="flex-1 min-w-0 cursor-pointer hover:opacity-80 transition"
                   >
-                    <h3 className="text-lg font-semibold text-white truncate">
-                      {job.service_name}
-                    </h3>
-                    <p className="text-sm text-gray-400">{job.game_name}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-semibold text-white truncate">
+                        {job.service_name}
+                      </h3>
+                      {isJobNew(job.created_at) && (
+                        <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded">
+                          NEW
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <span>{job.game_name}</span>
+                      <span>•</span>
+                      <span className="text-xs">{timeAgo(job.created_at)}</span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right">
                       <p className="text-xl font-bold text-green-400">
                         ${job.payout_amount.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        ${(job.payout_amount / job.estimated_hours).toFixed(2)}/hr
                       </p>
                     </div>
                     <div className="text-right min-w-[70px]">
