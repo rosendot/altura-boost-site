@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSocket } from '@/hooks/useSocket';
 
 interface Job {
   id: string;
@@ -20,9 +21,63 @@ export default function BoosterHub() {
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  const {
+    isConnected,
+    joinBoosterHub,
+    onJobUpdate,
+    onJobAccepted,
+    onNewJob,
+    offJobUpdate,
+    offJobAccepted,
+    offNewJob
+  } = useSocket();
+
   useEffect(() => {
     fetchAvailableJobs();
   }, []);
+
+  // Socket.IO real-time updates
+  useEffect(() => {
+    if (isConnected) {
+      // Join the booster hub room
+      joinBoosterHub();
+
+      // Handle new jobs being created
+      const handleNewJob = (newJob: Job) => {
+        setJobs((prevJobs) => [newJob, ...prevJobs]);
+      };
+
+      // Handle jobs being accepted by other boosters
+      const handleJobAccepted = (data: { jobId: string }) => {
+        setJobs((prevJobs) => prevJobs.filter((job) => job.id !== data.jobId));
+      };
+
+      // Handle general job updates
+      const handleJobUpdate = (updatedJob: Job) => {
+        setJobs((prevJobs) => {
+          const index = prevJobs.findIndex((job) => job.id === updatedJob.id);
+          if (index !== -1) {
+            const newJobs = [...prevJobs];
+            newJobs[index] = updatedJob;
+            return newJobs;
+          }
+          return prevJobs;
+        });
+      };
+
+      // Register event listeners
+      onNewJob(handleNewJob);
+      onJobAccepted(handleJobAccepted);
+      onJobUpdate(handleJobUpdate);
+
+      // Cleanup listeners on unmount
+      return () => {
+        offNewJob(handleNewJob);
+        offJobAccepted(handleJobAccepted);
+        offJobUpdate(handleJobUpdate);
+      };
+    }
+  }, [isConnected, joinBoosterHub, onJobUpdate, onJobAccepted, onNewJob, offJobUpdate, offJobAccepted, offNewJob]);
 
   const fetchAvailableJobs = async () => {
     try {
@@ -111,9 +166,17 @@ export default function BoosterHub() {
   return (
     <main className="min-h-screen bg-black pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-4xl font-bold mb-4 text-white">Booster Hub</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-4xl font-bold text-white">Booster Hub</h1>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-sm text-gray-400">
+              {isConnected ? 'Live Updates Active' : 'Connecting...'}
+            </span>
+          </div>
+        </div>
         <p className="text-gray-400 mb-8">
-          Browse available jobs and accept ones that match your skills
+          Browse available jobs and accept ones that match your skills. Jobs update in real-time.
         </p>
 
         {/* Available Jobs List */}

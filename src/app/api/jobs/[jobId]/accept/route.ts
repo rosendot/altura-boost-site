@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { emitJobAccepted } from '@/lib/socket/emit';
 
 export async function POST(
   request: Request,
@@ -57,6 +58,9 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    // Emit Socket.IO event to notify all boosters in the hub
+    emitJobAccepted(jobId, user.id);
 
     return NextResponse.json({ success: true });
   } catch (error) {
