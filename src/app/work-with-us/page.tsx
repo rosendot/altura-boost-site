@@ -69,7 +69,7 @@ export default function WorkWithUs() {
           </ol>
 
           <Link
-            href="/login"
+            href="/signup/booster"
             className="inline-block px-8 py-4 gradient-purple text-white text-lg font-bold rounded-lg hover:opacity-90 transition"
           >
             APPLY TO BECOME A BOOSTER
