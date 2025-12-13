@@ -22,7 +22,7 @@ export default async function GamesPage() {
       <section className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center space-y-4">
           <h1 className="text-5xl md:text-6xl font-bold text-white">
-            Our <span className="bg-clip-text gradient-purple">Games</span>
+            Our Games
           </h1>
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
             Choose your game and explore our premium boosting services

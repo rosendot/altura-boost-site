@@ -20,7 +20,7 @@ export default async function Home() {
           <h1 className="text-5xl md:text-7xl font-bold leading-tight">
             <span className="text-white">Elevate Your Game.</span>
             <br />
-            <span className="bg-clip-text gradient-purple">Unlock Your Potential.</span>
+            <span className="text-primary-400">Unlock Your Potential.</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
             Premium boosting services for Call of Duty Black Ops 7

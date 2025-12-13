@@ -116,7 +116,7 @@ export default function GameDetailClient({ game, services, imageUrl }: GameDetai
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Available <span className="bg-clip-text gradient-purple">Services</span>
+            Available Services
           </h2>
           <p className="text-gray-400">
             Choose from our range of professional boosting services
@@ -142,9 +142,7 @@ export default function GameDetailClient({ game, services, imageUrl }: GameDetai
                 </p>
 
                 <div className="flex items-center justify-between mb-4">
-                  <div className="text-2xl font-bold bg-clip-text gradient-purple">
-                    ${service.price.toFixed(2)}
-                  </div>
+                  ${service.price.toFixed(2)}
                   <div className="text-sm text-gray-500">
                     ⏱️ {Math.ceil(service.delivery_time_hours / 24)} days
                   </div>
@@ -166,9 +164,7 @@ export default function GameDetailClient({ game, services, imageUrl }: GameDetai
       <section className="max-w-7xl mx-auto px-4 pb-20">
         <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 md:p-12">
           <h2 className="text-3xl font-bold text-white mb-8">
-            Why Choose Our{" "}
-            <span className="bg-clip-text gradient-purple">{game.name}</span>{" "}
-            Services?
+            Why Choose Our{" "}{game.name}{" "}Services?
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
