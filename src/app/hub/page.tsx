@@ -142,16 +142,8 @@ export default function BoosterHub() {
           return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         case 'payout-high':
           return b.payout_amount - a.payout_amount;
-        case 'payout-low':
-          return a.payout_amount - b.payout_amount;
         case 'hours-low':
           return a.estimated_hours - b.estimated_hours;
-        case 'hours-high':
-          return b.estimated_hours - a.estimated_hours;
-        case 'hourly-rate':
-          const rateA = a.payout_amount / a.estimated_hours;
-          const rateB = b.payout_amount / b.estimated_hours;
-          return rateB - rateA;
         default:
           return 0;
       }
