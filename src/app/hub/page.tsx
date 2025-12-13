@@ -16,7 +16,7 @@ interface Job {
   created_at: string;
 }
 
-type SortOption = 'newest' | 'oldest' | 'payout-high' | 'payout-low' | 'hours-low' | 'hours-high' | 'hourly-rate';
+type SortOption = 'newest' | 'oldest' | 'payout-high' | 'hours-low';
 
 export default function BoosterHub() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -371,16 +371,6 @@ export default function BoosterHub() {
                 Highest Payout
               </button>
               <button
-                onClick={() => setSortBy('payout-low')}
-                className={`px-3 py-1.5 text-xs rounded transition ${
-                  sortBy === 'payout-low'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                Lowest Payout
-              </button>
-              <button
                 onClick={() => setSortBy('hours-low')}
                 className={`px-3 py-1.5 text-xs rounded transition ${
                   sortBy === 'hours-low'
@@ -389,26 +379,6 @@ export default function BoosterHub() {
                 }`}
               >
                 Quickest Jobs
-              </button>
-              <button
-                onClick={() => setSortBy('hours-high')}
-                className={`px-3 py-1.5 text-xs rounded transition ${
-                  sortBy === 'hours-high'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                Longest Jobs
-              </button>
-              <button
-                onClick={() => setSortBy('hourly-rate')}
-                className={`px-3 py-1.5 text-xs rounded transition ${
-                  sortBy === 'hourly-rate'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                Best $/Hour
               </button>
             </div>
           </div>
@@ -458,9 +428,6 @@ export default function BoosterHub() {
                     <div className="text-right">
                       <p className="text-xl font-bold text-green-400">
                         ${job.payout_amount.toFixed(2)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        ${(job.payout_amount / job.estimated_hours).toFixed(2)}/hr
                       </p>
                     </div>
                     <div className="text-right min-w-[70px]">
