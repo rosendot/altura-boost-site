@@ -23,6 +23,7 @@ export default function BoosterHub() {
 
   const {
     isConnected,
+    activeBoostersCount,
     joinBoosterHub,
     onJobUpdate,
     onJobAccepted,
@@ -171,8 +172,13 @@ export default function BoosterHub() {
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
             <span className="text-sm text-gray-400">
-              {isConnected ? 'Live Updates Active' : 'Connecting...'}
+              {isConnected ? 'Live' : 'Connecting...'}
             </span>
+            {isConnected && activeBoostersCount > 0 && (
+              <span className="text-sm text-gray-500">
+                • {activeBoostersCount} booster{activeBoostersCount !== 1 ? 's' : ''} active
+              </span>
+            )}
           </div>
         </div>
         <p className="text-gray-400 mb-8">

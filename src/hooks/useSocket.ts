@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 
 export function useSocket() {
   const [isConnected, setIsConnected] = useState(false);
+  const [activeBoostersCount, setActiveBoostersCount] = useState(0);
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -30,6 +31,10 @@ export function useSocket() {
 
     socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
+    });
+
+    socket.on('booster-count', (count: number) => {
+      setActiveBoostersCount(count);
     });
 
     // Cleanup on unmount
@@ -85,6 +90,7 @@ export function useSocket() {
   return {
     socket: socketRef.current,
     isConnected,
+    activeBoostersCount,
     joinBoosterHub,
     onJobUpdate,
     onJobAccepted,
