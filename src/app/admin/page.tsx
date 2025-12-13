@@ -24,6 +24,47 @@ interface BoosterApplication {
   };
 }
 
+interface Order {
+  id: string;
+  order_number: string;
+  customer_id: string;
+  subtotal: number;
+  tax_amount: number;
+  total_price: number;
+  status: 'pending_payment' | 'paid' | 'available' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
+  progress_percentage: number;
+  created_at: string;
+  paid_at: string | null;
+  completed_at: string | null;
+  users: {
+    email: string;
+    full_name: string | null;
+  } | null;
+}
+
+interface Job {
+  id: string;
+  job_number: string;
+  order_id: string;
+  order_number: string;
+  service_name: string;
+  game_name: string;
+  booster_id: string | null;
+  status: 'available' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
+  payout_amount: number;
+  estimated_hours: number;
+  requirements: string;
+  weapon_class: string | null;
+  progress_percentage: number;
+  accepted_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  users: {
+    email: string;
+    full_name: string | null;
+  } | null;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -31,6 +72,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [applications, setApplications] = useState<BoosterApplication[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -70,6 +113,10 @@ export default function AdminPage() {
     if (activeTab === 'applications' && userData?.role === 'admin') {
       fetchApplications();
     }
+    if (activeTab === 'orders' && userData?.role === 'admin') {
+      fetchOrders();
+      fetchJobs();
+    }
   }, [activeTab, userData]);
 
   const fetchApplications = async () => {
@@ -87,6 +134,42 @@ export default function AdminPage() {
 
     if (data) {
       setApplications(data);
+    }
+  };
+
+  const fetchOrders = async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        users (
+          email,
+          full_name
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      setOrders(data);
+    }
+  };
+
+  const fetchJobs = async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('jobs')
+      .select(`
+        *,
+        users (
+          email,
+          full_name
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      setJobs(data);
     }
   };
 
@@ -349,15 +432,179 @@ export default function AdminPage() {
               {/* Orders Tab */}
               {activeTab === 'orders' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-6">Orders Management</h2>
-                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                    <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                    <h3 className="text-lg font-semibold text-white mb-2">No Orders Yet</h3>
-                    <p className="text-gray-400 text-sm">
-                      Orders will appear here once customers start placing them.
-                    </p>
+                  <h2 className="text-2xl font-bold text-white mb-6">Orders & Jobs Management</h2>
+
+                  {/* Aggregated Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Total Orders</div>
+                      <div className="text-3xl font-bold text-white">{orders.length}</div>
+                      <div className="text-xs text-gray-300 mt-1">All time</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Active Orders</div>
+                      <div className="text-3xl font-bold text-white">
+                        {orders.filter(o => o.status === 'in_progress' || o.status === 'assigned').length}
+                      </div>
+                      <div className="text-xs text-gray-300 mt-1">In progress</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Total Jobs</div>
+                      <div className="text-3xl font-bold text-white">{jobs.length}</div>
+                      <div className="text-xs text-gray-300 mt-1">All time</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Available Jobs</div>
+                      <div className="text-3xl font-bold text-white">
+                        {jobs.filter(j => j.status === 'available').length}
+                      </div>
+                      <div className="text-xs text-gray-300 mt-1">Awaiting boosters</div>
+                    </div>
+                  </div>
+
+                  {/* Orders Section */}
+                  <div className="mb-8">
+                    <h3 className="text-xl font-semibold text-white mb-4">Recent Orders</h3>
+                    {orders.length === 0 ? (
+                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                        <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        <h3 className="text-lg font-semibold text-white mb-2">No Orders Yet</h3>
+                        <p className="text-gray-400 text-sm">
+                          Orders will appear here once customers start placing them.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {orders.map((order) => (
+                          <div key={order.id} className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-primary-600 transition-colors">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h4 className="text-lg font-semibold text-white">{order.order_number}</h4>
+                                <p className="text-sm text-gray-400">
+                                  {order.users?.full_name && <span className="font-medium">{order.users.full_name} - </span>}
+                                  {order.users?.email || 'Unknown customer'}
+                                </p>
+                              </div>
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                order.status === 'completed' ? 'bg-green-900/50 text-green-400 border border-green-500' :
+                                order.status === 'in_progress' ? 'bg-blue-900/50 text-blue-400 border border-blue-500' :
+                                order.status === 'assigned' ? 'bg-purple-900/50 text-purple-400 border border-purple-500' :
+                                order.status === 'paid' || order.status === 'available' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
+                                order.status === 'cancelled' ? 'bg-red-900/50 text-red-400 border border-red-500' :
+                                'bg-gray-900/50 text-gray-400 border border-gray-500'
+                              }`}>
+                                {order.status.replace('_', ' ').toUpperCase()}
+                              </span>
+                            </div>
+
+                            <div className="space-y-2 mb-3">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-400">Total:</span>
+                                <span className="text-white font-semibold">${order.total_price.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-400">Progress:</span>
+                                <span className="text-white font-semibold">{order.progress_percentage}%</span>
+                              </div>
+                              <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div
+                                  className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${order.progress_percentage}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="text-xs text-gray-500">
+                              <div>Created: {new Date(order.created_at).toLocaleDateString()}</div>
+                              {order.paid_at && <div>Paid: {new Date(order.paid_at).toLocaleDateString()}</div>}
+                              {order.completed_at && <div>Completed: {new Date(order.completed_at).toLocaleDateString()}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Jobs Section */}
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-4">All Jobs</h3>
+                    {jobs.length === 0 ? (
+                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                        <p className="text-gray-400 text-sm">
+                          No jobs created yet.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {jobs.map((job) => (
+                          <div key={job.id} className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-primary-600 transition-colors">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h4 className="text-lg font-semibold text-white">{job.job_number}</h4>
+                                <p className="text-sm text-gray-400">{job.game_name}</p>
+                              </div>
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                job.status === 'completed' ? 'bg-green-900/50 text-green-400 border border-green-500' :
+                                job.status === 'in_progress' ? 'bg-blue-900/50 text-blue-400 border border-blue-500' :
+                                job.status === 'accepted' ? 'bg-purple-900/50 text-purple-400 border border-purple-500' :
+                                job.status === 'available' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
+                                'bg-red-900/50 text-red-400 border border-red-500'
+                              }`}>
+                                {job.status.toUpperCase()}
+                              </span>
+                            </div>
+
+                            <div className="mb-3">
+                              <p className="text-sm text-white font-medium mb-1">{job.service_name}</p>
+                              <p className="text-xs text-gray-400">{job.requirements}</p>
+                              {job.weapon_class && (
+                                <p className="text-xs text-gray-500 mt-1">Weapon: {job.weapon_class}</p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2 mb-3">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-400">Payout:</span>
+                                <span className="text-green-400 font-semibold">${job.payout_amount.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-400">Est. Hours:</span>
+                                <span className="text-white">{job.estimated_hours}h</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-400">Progress:</span>
+                                <span className="text-white font-semibold">{job.progress_percentage}%</span>
+                              </div>
+                              <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div
+                                  className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${job.progress_percentage}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {job.users && (
+                              <div className="text-xs text-gray-400 mb-2">
+                                <span className="font-semibold">Booster:</span>{' '}
+                                {job.users.full_name ? `${job.users.full_name} (${job.users.email})` : job.users.email}
+                              </div>
+                            )}
+
+                            <div className="text-xs text-gray-500">
+                              <div>Order: {job.order_number}</div>
+                              <div>Created: {new Date(job.created_at).toLocaleDateString()}</div>
+                              {job.accepted_at && <div>Accepted: {new Date(job.accepted_at).toLocaleDateString()}</div>}
+                              {job.completed_at && <div>Completed: {new Date(job.completed_at).toLocaleDateString()}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
