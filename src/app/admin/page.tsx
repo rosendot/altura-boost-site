@@ -8,6 +8,10 @@ interface UserData {
   id: string;
   email: string;
   role: 'customer' | 'booster' | 'admin';
+  full_name: string | null;
+  phone: string | null;
+  total_earnings: number | null;
+  created_at: string;
 }
 
 interface BoosterApplication {
@@ -74,6 +78,8 @@ export default function AdminPage() {
   const [applications, setApplications] = useState<BoosterApplication[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [userFilter, setUserFilter] = useState<'all' | 'customer' | 'booster' | 'admin'>('all');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -92,7 +98,7 @@ export default function AdminPage() {
       // Fetch user data from public.users
       const { data: publicUserData } = await supabase
         .from('users')
-        .select('id, email, role')
+        .select('id, email, role, full_name, phone, total_earnings, created_at')
         .eq('id', user.id)
         .single();
 
@@ -116,6 +122,9 @@ export default function AdminPage() {
     if (activeTab === 'orders' && userData?.role === 'admin') {
       fetchOrders();
       fetchJobs();
+    }
+    if (activeTab === 'users' && userData?.role === 'admin') {
+      fetchUsers();
     }
   }, [activeTab, userData]);
 
@@ -170,6 +179,18 @@ export default function AdminPage() {
 
     if (data) {
       setJobs(data);
+    }
+  };
+
+  const fetchUsers = async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      setUsers(data);
     }
   };
 
@@ -613,15 +634,181 @@ export default function AdminPage() {
               {activeTab === 'users' && (
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">User Management</h2>
-                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                    <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    <h3 className="text-lg font-semibold text-white mb-2">User Management</h3>
-                    <p className="text-gray-400 text-sm">
-                      User list and management features coming soon.
-                    </p>
+
+                  {/* User Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Total Users</div>
+                      <div className="text-3xl font-bold text-white">{users.length}</div>
+                      <div className="text-xs text-gray-300 mt-1">All time</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Customers</div>
+                      <div className="text-3xl font-bold text-white">
+                        {users.filter(u => u.role === 'customer').length}
+                      </div>
+                      <div className="text-xs text-gray-300 mt-1">Customer accounts</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Boosters</div>
+                      <div className="text-3xl font-bold text-white">
+                        {users.filter(u => u.role === 'booster').length}
+                      </div>
+                      <div className="text-xs text-gray-300 mt-1">Approved boosters</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Admins</div>
+                      <div className="text-3xl font-bold text-white">
+                        {users.filter(u => u.role === 'admin').length}
+                      </div>
+                      <div className="text-xs text-gray-300 mt-1">Admin accounts</div>
+                    </div>
                   </div>
+
+                  {/* Filter Tabs */}
+                  <div className="flex gap-4 mb-6">
+                    <button
+                      onClick={() => setUserFilter('all')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                        userFilter === 'all'
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      All Users ({users.length})
+                    </button>
+                    <button
+                      onClick={() => setUserFilter('customer')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                        userFilter === 'customer'
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Customers ({users.filter(u => u.role === 'customer').length})
+                    </button>
+                    <button
+                      onClick={() => setUserFilter('booster')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                        userFilter === 'booster'
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Boosters ({users.filter(u => u.role === 'booster').length})
+                    </button>
+                    <button
+                      onClick={() => setUserFilter('admin')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                        userFilter === 'admin'
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Admins ({users.filter(u => u.role === 'admin').length})
+                    </button>
+                  </div>
+
+                  {/* Users List */}
+                  {users.length === 0 ? (
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                      <h3 className="text-lg font-semibold text-white mb-2">No Users</h3>
+                      <p className="text-gray-400 text-sm">
+                        No users found in the database.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-900 border-b border-gray-700">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                User
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                Email
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                Role
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                Phone
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                Earnings
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                Joined
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-700">
+                            {users
+                              .filter(u => userFilter === 'all' || u.role === userFilter)
+                              .map((user) => (
+                                <tr key={user.id} className="hover:bg-gray-750 transition-colors">
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="flex items-center">
+                                      <div className="flex-shrink-0 h-10 w-10 bg-primary-600 rounded-full flex items-center justify-center">
+                                        <span className="text-white font-semibold text-sm">
+                                          {user.full_name
+                                            ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                                            : user.email.slice(0, 2).toUpperCase()}
+                                        </span>
+                                      </div>
+                                      <div className="ml-4">
+                                        <div className="text-sm font-medium text-white">
+                                          {user.full_name || 'No name provided'}
+                                        </div>
+                                        <div className="text-xs text-gray-400">
+                                          ID: {user.id.slice(0, 8)}...
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-gray-300">{user.email}</div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                      user.role === 'admin' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
+                                      user.role === 'booster' ? 'bg-purple-900/50 text-purple-400 border border-purple-500' :
+                                      'bg-blue-900/50 text-blue-400 border border-blue-500'
+                                    }`}>
+                                      {user.role.toUpperCase()}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-gray-300">
+                                      {user.phone || '-'}
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-green-400 font-semibold">
+                                      {user.role === 'booster' && user.total_earnings
+                                        ? `$${Number(user.total_earnings).toFixed(2)}`
+                                        : '-'}
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-gray-400">
+                                      {new Date(user.created_at).toLocaleDateString()}
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
