@@ -103,7 +103,7 @@ export default function Navbar() {
               ADMIN PANEL
             </Link>
           )}
-          {userRole === 'booster' && (
+          {(userRole === 'booster' || userRole === 'admin') && (
             <Link href="/hub" className="px-2 py-1 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-xs tracking-wide">
               BOOSTER HUB
             </Link>
