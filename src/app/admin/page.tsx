@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import GameCarousel from '@/components/GameCarousel';
 
 interface UserData {
   id: string;
@@ -69,6 +70,27 @@ interface Job {
   } | null;
 }
 
+interface Game {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+interface Service {
+  id: string;
+  game_id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  delivery_time_hours: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -80,6 +102,9 @@ export default function AdminPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
   const [userFilter, setUserFilter] = useState<'all' | 'customer' | 'booster' | 'admin'>('all');
+  const [games, setGames] = useState<Game[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedGame, setSelectedGame] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -125,6 +150,10 @@ export default function AdminPage() {
     }
     if (activeTab === 'users' && userData?.role === 'admin') {
       fetchUsers();
+    }
+    if (activeTab === 'services' && userData?.role === 'admin') {
+      fetchGames();
+      fetchServices();
     }
   }, [activeTab, userData]);
 
@@ -191,6 +220,30 @@ export default function AdminPage() {
 
     if (data) {
       setUsers(data);
+    }
+  };
+
+  const fetchGames = async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('games')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      setGames(data);
+    }
+  };
+
+  const fetchServices = async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('services')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      setServices(data);
     }
   };
 
@@ -816,15 +869,143 @@ export default function AdminPage() {
               {activeTab === 'services' && (
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">Services & Games Management</h2>
-                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                    <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-                    </svg>
-                    <h3 className="text-lg font-semibold text-white mb-2">Services & Games</h3>
-                    <p className="text-gray-400 text-sm">
-                      Manage games and services from this panel.
-                    </p>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Total Games</div>
+                      <div className="text-3xl font-bold text-white">{games.length}</div>
+                      <div className="text-xs text-gray-300 mt-1">All games</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Active Games</div>
+                      <div className="text-3xl font-bold text-white">
+                        {games.filter(g => g.active).length}
+                      </div>
+                      <div className="text-xs text-gray-300 mt-1">Visible to users</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Total Services</div>
+                      <div className="text-3xl font-bold text-white">{services.length}</div>
+                      <div className="text-xs text-gray-300 mt-1">All services</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Active Services</div>
+                      <div className="text-3xl font-bold text-white">
+                        {services.filter(s => s.active).length}
+                      </div>
+                      <div className="text-xs text-gray-300 mt-1">Available for purchase</div>
+                    </div>
                   </div>
+
+                  {/* Games Section */}
+                  <div className="mb-8">
+                    <h3 className="text-xl font-semibold text-white mb-4">Games</h3>
+                    <GameCarousel games={games} onGameClick={(gameId) => setSelectedGame(gameId)} />
+                  </div>
+
+                  {/* Services Section */}
+                  {selectedGame && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-white">
+                        Services for {games.find(g => g.id === selectedGame)?.name}
+                      </h3>
+                      <button
+                        onClick={() => setSelectedGame(null)}
+                        className="text-sm text-gray-400 hover:text-white transition-colors"
+                      >
+                        Clear Selection
+                      </button>
+                    </div>
+                    {services.length === 0 ? (
+                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                        <p className="text-gray-400 text-sm">
+                          No services found. Add services to games.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="bg-gray-900 border-b border-gray-700">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  Service
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  Game
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  Price
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  Delivery Time
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  Status
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  Created
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-700">
+                              {services
+                                .filter(s => !selectedGame || s.game_id === selectedGame)
+                                .map((service) => (
+                                  <tr key={service.id} className="hover:bg-gray-750 transition-colors">
+                                    <td className="px-6 py-4">
+                                      <div className="text-sm font-medium text-white">
+                                        {service.name}
+                                      </div>
+                                      {service.description && (
+                                        <div className="text-xs text-gray-400 mt-1 max-w-md truncate">
+                                          {service.description}
+                                        </div>
+                                      )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <div className="text-sm text-gray-300">
+                                        {games.find(g => g.id === service.game_id)?.name || 'Unknown'}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <div className="text-sm text-green-400 font-semibold">
+                                        ${service.price.toFixed(2)}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <div className="text-sm text-gray-300">
+                                        {service.delivery_time_hours}h
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                        service.active
+                                          ? 'bg-green-900/50 text-green-400 border border-green-500'
+                                          : 'bg-red-900/50 text-red-400 border border-red-500'
+                                      }`}>
+                                        {service.active ? 'ACTIVE' : 'INACTIVE'}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <div className="text-sm text-gray-400">
+                                        {new Date(service.created_at).toLocaleDateString()}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  )}
                 </div>
               )}
             </div>
