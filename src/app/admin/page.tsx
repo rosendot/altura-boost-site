@@ -159,16 +159,21 @@ export default function AdminPage() {
 
   const fetchApplications = async () => {
     const supabase = createClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('booster_applications')
       .select(`
         *,
-        users (
+        users!booster_applications_user_id_fkey (
           email,
           full_name
         )
       `)
       .order('submitted_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching applications:', error);
+      return;
+    }
 
     if (data) {
       setApplications(data);
