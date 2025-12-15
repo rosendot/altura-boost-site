@@ -1,7 +1,7 @@
 # Authentication & Application System Analysis
 
 **Generated:** 2025-12-14
-**Updated:** 2025-12-14 (After implementing Option 2 fix)
+**Updated:** 2025-12-14 (All authentication & approval flow fixes completed)
 **Purpose:** Complete documentation of the signup, login, and booster application process
 
 ---
@@ -177,50 +177,43 @@ END;
 
 ---
 
-### 2. `handle_booster_application()`
-**Type:** Trigger Function
-**Security:** DEFINER
-**Triggered On:** `public.users` AFTER INSERT
+### 2. ~~`handle_booster_application()`~~ ✅ REMOVED
+**Type:** Trigger Function (DELETED)
+**Previous Purpose:** Created booster application when user was inserted with role='booster'
 
-**Purpose:** Legacy function - creates booster application when user is inserted with role='booster'
+**Status:** ✅ Removed - Was creating duplicate applications
 
-**Logic:**
-```sql
-BEGIN
-  IF NEW.role = 'booster' THEN
-    INSERT INTO public.booster_applications (user_id, status, questionnaire_responses)
-    VALUES (
-      NEW.id,
-      'pending',
-      '{}'::jsonb
-    );
-  END IF;
-  RETURN NEW;
-END;
-```
-
-**Current State:** This trigger still fires but creates a duplicate application. Should be removed or handled.
-
-⚠️ **TODO:** Consider dropping this trigger since `handle_new_user()` now creates the application.
+**What Replaced It:** The `handle_new_user()` function now handles all booster application creation.
 
 ---
 
-### 3. `sync_user_role_to_auth()`
+### 3. `sync_user_role_to_auth()` ⭐ UPDATED
 **Type:** Trigger Function
 **Security:** DEFINER
-**Triggered On:** `public.users` AFTER INSERT OR UPDATE OF role
+**Triggered On:** `public.users` AFTER INSERT OR UPDATE OF role, booster_approval_status
 
-**Purpose:** Syncs role from `public.users.role` to `auth.users.raw_app_meta_data.role`
+**Purpose:** Syncs role AND booster_approval_status from `public.users` to `auth.users.raw_app_meta_data`
 
 **Logic:**
 ```sql
 BEGIN
+  -- Sync role to JWT claims
   PERFORM set_user_role_claim(NEW.id, NEW.role::text);
+
+  -- Sync booster_approval_status to raw_app_meta_data
+  UPDATE auth.users
+  SET raw_app_meta_data =
+    COALESCE(raw_app_meta_data, '{}'::jsonb) ||
+    jsonb_build_object('booster_approval_status', NEW.booster_approval_status)
+  WHERE id = NEW.id;
+
   RETURN NEW;
 END;
 ```
 
 **Calls:** `set_user_role_claim(user_id, user_role)`
+
+**Key Update:** Now syncs `booster_approval_status` to auth metadata, ensuring JWT claims stay in sync
 
 ---
 
@@ -273,9 +266,10 @@ END;
 | Trigger Name | Table | Event | Function | Description |
 |--------------|-------|-------|----------|-------------|
 | `on_auth_user_created` | `auth.users` | AFTER INSERT | `handle_new_user()` ⭐ | Creates public.users + booster_applications (UPDATED) |
-| `on_booster_user_created` | `public.users` | AFTER INSERT | `handle_booster_application()` | Creates booster application (⚠️ now redundant) |
-| `sync_role_on_user_change` | `public.users` | AFTER INSERT/UPDATE OF role | `sync_user_role_to_auth()` | Syncs role to auth.users metadata |
+| `sync_role_on_user_change` ⭐ | `public.users` | AFTER INSERT/UPDATE OF role, booster_approval_status | `sync_user_role_to_auth()` | Syncs role AND approval status to auth.users metadata (UPDATED) |
 | `update_users_updated_at` | `public.users` | BEFORE UPDATE | `update_updated_at_column()` | Auto-updates updated_at timestamp |
+
+**✅ REMOVED:** `on_booster_user_created` trigger - Was creating duplicate applications
 
 ---
 
@@ -287,10 +281,13 @@ END;
 |-------------|---------|-------------------|------------|
 | **Users can insert own profile during signup** | INSERT | - | `auth.uid() = id` |
 | **Users can update own profile** | UPDATE | `auth.uid() = id` | `auth.uid() = id` |
+| **Admins can update any user** ⭐ | UPDATE | `EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')` | `EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')` |
 | **Users can view booster profiles** ⭐ | SELECT | `(auth.uid() = id) OR (role = 'booster' AND booster_approval_status = 'approved')` | - |
 | **Admins can view all user profiles** | SELECT | `((auth.jwt() -> 'app_metadata') ->> 'role') = 'admin'` | - |
 
-**⭐ UPDATED:** "Users can view booster profiles" now only shows **approved** boosters publicly.
+**⭐ UPDATES:**
+- "Admins can update any user" - NEW policy allowing admins to update booster_approval_status
+- "Users can view booster profiles" - Only shows **approved** boosters publicly
 
 ---
 
@@ -695,54 +692,111 @@ User → /login → Enter credentials
 
 ---
 
-### ⚠️ Issue #2: Redundant Booster Application Creation
-**Status:** Known issue, not yet fixed
+### ✅ Issue #2: FIXED - Redundant Booster Application Creation
+**Status:** Completed
 
-**Problem:** `on_booster_user_created` trigger creates duplicate application when admin approves.
+**Problem:** `on_booster_user_created` trigger was creating duplicate applications.
 
-**Recommendation:** Drop the trigger since `handle_new_user()` now handles it:
+**Solution:** Dropped the redundant trigger:
 ```sql
 DROP TRIGGER IF EXISTS on_booster_user_created ON public.users;
+DROP FUNCTION IF EXISTS public.handle_booster_user_created();
 ```
+
+**Result:** No more duplicate applications - `handle_new_user()` is the single source of truth
 
 ---
 
-### ✅ Issue #3: Foreign Key Constraint Updated
+### ✅ Issue #3: FIXED - Foreign Key Constraint Updated
 **Status:** Completed
 
-**Change:**
+**Problem:** `booster_applications.user_id` foreign key was pointing to `auth.users.id`, causing issues with Supabase joins to `public.users`.
+
+**Solution:** Updated the foreign key to point to `public.users.id`:
 ```sql
 ALTER TABLE booster_applications
 DROP CONSTRAINT booster_applications_user_id_fkey;
 
 ALTER TABLE booster_applications
 ADD CONSTRAINT booster_applications_user_id_fkey
-FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 ```
 
-**Result:** Applications can reference users before they're in `public.users` (though now unnecessary with the fix).
+**Result:** Admin panel can now properly join `booster_applications` with `public.users` to display applicant information.
 
 ---
 
-### ✅ Issue #4: RLS Policies Updated
+### ✅ Issue #4: FIXED - RLS Policies Updated
 **Status:** Completed
 
 **Updated Policies:**
 1. ✅ `jobs` - "Approved boosters can view available jobs" - now checks `booster_approval_status = 'approved'`
 2. ✅ `jobs` - "Boosters can update jobs" - now checks approval status
 3. ✅ `users` - "Users can view booster profiles" - now only shows approved boosters publicly
+4. ✅ `users` - "Admins can update any user" - NEW policy allowing admins to update `booster_approval_status`
+
+**Result:** Pending boosters cannot access jobs, and admins can properly approve/reject applications.
 
 ---
 
-### 🚧 Issue #5: Frontend Needs "Application Pending" Page
-**Status:** TODO
+### ✅ Issue #5: FIXED - Trigger Now Syncs Booster Approval Status
+**Status:** Completed
 
-**Recommendation:** Create a middleware or layout component that checks:
-```typescript
-if (userData.role === 'booster' && userData.booster_approval_status === 'pending') {
-  return <ApplicationPendingPage />;
-}
+**Problem:** `sync_user_role_to_auth()` trigger only synced `role`, not `booster_approval_status`, so approval status changes weren't reflected in JWT claims.
+
+**Solution:**
+1. Updated trigger to fire on `booster_approval_status` changes:
+```sql
+DROP TRIGGER IF EXISTS sync_role_on_user_change ON public.users;
+CREATE TRIGGER sync_role_on_user_change
+AFTER INSERT OR UPDATE OF role, booster_approval_status
+ON public.users
+FOR EACH ROW
+EXECUTE FUNCTION sync_user_role_to_auth();
 ```
+
+2. Updated `sync_user_role_to_auth()` function to sync approval status:
+```sql
+CREATE OR REPLACE FUNCTION public.sync_user_role_to_auth()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+BEGIN
+  -- Sync role to JWT claims
+  PERFORM set_user_role_claim(NEW.id, NEW.role::text);
+
+  -- Sync booster_approval_status to raw_app_meta_data
+  UPDATE auth.users
+  SET raw_app_meta_data =
+    COALESCE(raw_app_meta_data, '{}'::jsonb) ||
+    jsonb_build_object('booster_approval_status', NEW.booster_approval_status)
+  WHERE id = NEW.id;
+
+  RETURN NEW;
+END;
+$function$;
+```
+
+**Result:** When admin approves/rejects, status syncs to `auth.users.raw_app_meta_data` for JWT claims and RLS policies.
+
+---
+
+### ✅ Issue #6: FIXED - Frontend Application Status Display
+**Status:** Completed
+
+**Changes Made:**
+1. ✅ **Navbar** ([src/components/Navbar.tsx](src/components/Navbar.tsx)):
+   - Added `boosterApprovalStatus` state
+   - "BOOSTER HUB" link only shows for approved boosters or admins
+   - Fetches approval status from `/api/user/me`
+
+2. ✅ **Account Page** ([src/app/account/page.tsx](src/app/account/page.tsx)):
+   - Added status-specific alerts for boosters (pending/approved/rejected)
+   - "My Jobs" and "Earnings" tabs only visible for approved boosters
+   - Shows clear messaging about application status
+
+**Result:** Users see clear feedback about their application status and are properly gated from booster features until approved.
 
 ---
 
