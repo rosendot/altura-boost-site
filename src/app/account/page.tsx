@@ -339,32 +339,34 @@ export default function AccountPage() {
                   )}
 
                   <div className="space-y-6">
-                    {/* Role Badge */}
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-2">Account Type</label>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${
-                          userData.role === 'booster'
-                            ? 'bg-primary-600 text-white'
-                            : userData.role === 'admin'
-                            ? 'bg-yellow-600 text-white'
-                            : 'bg-gray-700 text-white'
-                        }`}>
-                          {userData.role.toUpperCase()}
-                        </span>
-                        {userData.role === 'booster' && userData.booster_approval_status && (
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            userData.booster_approval_status === 'approved'
-                              ? 'bg-green-900/50 text-green-400 border border-green-500'
-                              : userData.booster_approval_status === 'pending'
-                              ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500'
-                              : 'bg-red-900/50 text-red-400 border border-red-500'
+                    {/* Role Badge - Hidden for pending boosters */}
+                    {!(userData.role === 'booster' && userData.booster_approval_status === 'pending') && (
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-2">Account Type</label>
+                        <div className="flex items-center gap-3">
+                          <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${
+                            userData.role === 'booster'
+                              ? 'bg-primary-600 text-white'
+                              : userData.role === 'admin'
+                              ? 'bg-yellow-600 text-white'
+                              : 'bg-gray-700 text-white'
                           }`}>
-                            {userData.booster_approval_status.toUpperCase()}
+                            {userData.role.toUpperCase()}
                           </span>
-                        )}
+                          {userData.role === 'booster' && userData.booster_approval_status && (
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              userData.booster_approval_status === 'approved'
+                                ? 'bg-green-900/50 text-green-400 border border-green-500'
+                                : userData.booster_approval_status === 'pending'
+                                ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500'
+                                : 'bg-red-900/50 text-red-400 border border-red-500'
+                            }`}>
+                              {userData.booster_approval_status.toUpperCase()}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Email */}
                     <div>
