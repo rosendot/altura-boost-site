@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 interface SurveyQuestion {
   id: string;
@@ -103,27 +104,43 @@ export default function BoosterSignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/signup/booster', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const supabase = createClient();
+
+      // Sign up user with client-side Supabase - automatically creates session
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.username,
+            role: 'booster',
+          },
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          username: formData.username,
-          questionnaire_responses: surveyAnswers,
-        }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Signup failed');
+      if (signUpError) {
+        throw new Error(signUpError.message);
       }
 
-      alert(data.message || 'Application submitted successfully! Redirecting to login...');
-      router.push('/login');
+      if (!authData.user) {
+        throw new Error('Account creation failed');
+      }
+
+      // Update the booster application with questionnaire responses
+      // User is now authenticated, so RLS allows this update
+      const { error: updateError } = await supabase
+        .from('booster_applications')
+        .update({ questionnaire_responses: surveyAnswers })
+        .eq('user_id', authData.user.id);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw new Error('Failed to save questionnaire responses: ' + updateError.message);
+      }
+
+      // User is now automatically logged in with session
+      // Redirect to account page where they'll see pending status
+      router.push('/account');
     } catch (err: any) {
       setError(err.message || 'An error occurred during sign up');
     } finally {

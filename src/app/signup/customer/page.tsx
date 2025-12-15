@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 export default function CustomerSignUpPage() {
   const [formData, setFormData] = useState({
@@ -33,26 +34,31 @@ export default function CustomerSignUpPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/signup/customer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const supabase = createClient();
+
+      // Sign up user with client-side Supabase - automatically creates session
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.username,
+            role: 'customer',
+          },
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          username: formData.username,
-        }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Signup failed');
+      if (signUpError) {
+        throw new Error(signUpError.message);
       }
 
-      alert('Account created successfully! Redirecting to login...');
-      router.push('/login');
+      if (!authData.user) {
+        throw new Error('Account creation failed');
+      }
+
+      // User is now automatically logged in with session
+      // Redirect to account page
+      router.push('/account');
     } catch (err: any) {
       setError(err.message || 'An error occurred during sign up');
     } finally {
