@@ -12,6 +12,7 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<'customer' | 'booster' | 'admin' | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [boosterApprovalStatus, setBoosterApprovalStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const router = useRouter();
 
@@ -27,16 +28,19 @@ export default function Navbar() {
           setUser(data.user);
           setUserRole(data.userData?.role || null);
           setUserName(data.userData?.full_name || null);
+          setBoosterApprovalStatus(data.userData?.booster_approval_status || null);
         } else {
           setUser(null);
           setUserRole(null);
           setUserName(null);
+          setBoosterApprovalStatus(null);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
         setUser(null);
         setUserRole(null);
         setUserName(null);
+        setBoosterApprovalStatus(null);
       }
     };
 
@@ -103,7 +107,7 @@ export default function Navbar() {
               ADMIN PANEL
             </Link>
           )}
-          {(userRole === 'booster' || userRole === 'admin') && (
+          {((userRole === 'booster' && boosterApprovalStatus === 'approved') || userRole === 'admin') && (
             <Link href="/hub" className="px-2 py-1 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 font-semibold text-xs tracking-wide">
               BOOSTER HUB
             </Link>

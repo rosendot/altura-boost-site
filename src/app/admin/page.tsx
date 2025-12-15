@@ -260,37 +260,69 @@ export default function AdminPage() {
   ) => {
     const supabase = createClient();
 
-    // Update application status
-    const { error: appError } = await supabase
-      .from('booster_applications')
-      .update({
-        status: action === 'approve' ? 'approved' : 'rejected',
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: userData?.id,
-        rejection_reason: action === 'reject' ? rejectionReason : null,
-      })
-      .eq('id', applicationId);
+    if (action === 'approve') {
+      // Update user's booster_approval_status to 'approved'
+      const { error: userError } = await supabase
+        .from('users')
+        .update({
+          booster_approval_status: 'approved',
+        })
+        .eq('id', userId);
 
-    if (appError) {
-      alert('Error updating application: ' + appError.message);
-      return;
+      if (userError) {
+        alert('Error updating user status: ' + userError.message);
+        return;
+      }
+
+      // Update application status
+      const { error: appError } = await supabase
+        .from('booster_applications')
+        .update({
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: userData?.id,
+        })
+        .eq('id', applicationId);
+
+      if (appError) {
+        alert('Error updating application: ' + appError.message);
+        return;
+      }
+
+      alert('Application approved successfully!');
+    } else {
+      // Update user's booster_approval_status to 'rejected'
+      const { error: userError } = await supabase
+        .from('users')
+        .update({
+          booster_approval_status: 'rejected',
+        })
+        .eq('id', userId);
+
+      if (userError) {
+        alert('Error updating user status: ' + userError.message);
+        return;
+      }
+
+      // Update application status
+      const { error: appError } = await supabase
+        .from('booster_applications')
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: userData?.id,
+          rejection_reason: rejectionReason,
+        })
+        .eq('id', applicationId);
+
+      if (appError) {
+        alert('Error updating application: ' + appError.message);
+        return;
+      }
+
+      alert('Application rejected successfully!');
     }
 
-    // Update user role and booster_approval_status
-    const { error: userError } = await supabase
-      .from('users')
-      .update({
-        role: action === 'approve' ? 'booster' : 'customer',
-        booster_approval_status: action === 'approve' ? 'approved' : 'rejected',
-      })
-      .eq('id', userId);
-
-    if (userError) {
-      alert('Error updating user: ' + userError.message);
-      return;
-    }
-
-    alert(`Application ${action === 'approve' ? 'approved' : 'rejected'} successfully!`);
     fetchApplications();
   };
 

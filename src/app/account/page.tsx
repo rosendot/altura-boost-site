@@ -93,9 +93,9 @@ export default function AccountPage() {
     }
   }, [activeTab, userData]);
 
-  // Fetch booster jobs when jobs tab is active and user is booster
+  // Fetch booster jobs when jobs tab is active and user is approved booster
   useEffect(() => {
-    if (activeTab === 'jobs' && userData?.role === 'booster') {
+    if (activeTab === 'jobs' && userData?.role === 'booster' && userData?.booster_approval_status === 'approved') {
       fetchBoosterJobs();
     }
   }, [activeTab, userData]);
@@ -247,7 +247,7 @@ export default function AccountPage() {
                     My Orders
                   </button>
                 )}
-                {userData.role === 'booster' && (
+                {userData.role === 'booster' && userData.booster_approval_status === 'approved' && (
                   <>
                     <button
                       onClick={() => setActiveTab('jobs')}
@@ -282,6 +282,61 @@ export default function AccountPage() {
               {activeTab === 'profile' && (
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">Profile Information</h2>
+
+                  {/* Application Status Alert for Boosters */}
+                  {userData.role === 'booster' && userData.booster_approval_status === 'pending' && (
+                    <div className="mb-6 bg-yellow-900/30 border border-yellow-500 rounded-lg p-6">
+                      <div className="flex items-start gap-4">
+                        <svg className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-yellow-400 mb-2">Application Pending Review</h3>
+                          <p className="text-yellow-200 text-sm mb-3">
+                            Your booster application is currently under review by our admin team. You will receive an email notification once your application has been reviewed.
+                          </p>
+                          <p className="text-yellow-200/80 text-xs">
+                            You will gain access to the Booster Hub once your application is approved.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {userData.role === 'booster' && userData.booster_approval_status === 'rejected' && (
+                    <div className="mb-6 bg-red-900/30 border border-red-500 rounded-lg p-6">
+                      <div className="flex items-start gap-4">
+                        <svg className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-red-400 mb-2">Application Not Approved</h3>
+                          <p className="text-red-200 text-sm mb-3">
+                            Unfortunately, your booster application was not approved at this time. If you believe this was a mistake or would like more information, please contact our support team.
+                          </p>
+                          <p className="text-red-200/80 text-xs">
+                            You may reapply after 30 days by contacting support.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {userData.role === 'booster' && userData.booster_approval_status === 'approved' && (
+                    <div className="mb-6 bg-green-900/30 border border-green-500 rounded-lg p-6">
+                      <div className="flex items-start gap-4">
+                        <svg className="w-6 h-6 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-green-400 mb-2">Application Approved!</h3>
+                          <p className="text-green-200 text-sm">
+                            Congratulations! Your booster application has been approved. You now have access to the Booster Hub where you can accept and manage jobs.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-6">
                     {/* Role Badge */}
@@ -407,8 +462,8 @@ export default function AccountPage() {
                 </div>
               )}
 
-              {/* Earnings Tab (Boosters Only) */}
-              {activeTab === 'earnings' && userData.role === 'booster' && (
+              {/* Earnings Tab (Approved Boosters Only) */}
+              {activeTab === 'earnings' && userData.role === 'booster' && userData.booster_approval_status === 'approved' && (
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">Earnings</h2>
 
@@ -563,8 +618,8 @@ export default function AccountPage() {
                 </div>
               )}
 
-              {/* Jobs Tab (Boosters Only) */}
-              {activeTab === 'jobs' && userData.role === 'booster' && (
+              {/* Jobs Tab (Approved Boosters Only) */}
+              {activeTab === 'jobs' && userData.role === 'booster' && userData.booster_approval_status === 'approved' && (
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">My Jobs</h2>
 

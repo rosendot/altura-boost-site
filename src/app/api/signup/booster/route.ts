@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Sign up user - triggers will automatically create public.users and booster_applications records
+    // Sign up user - triggers will automatically create booster_applications record
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     });
 
     if (signUpError) {
+      console.error('Signup error:', signUpError);
       return NextResponse.json(
         { error: signUpError.message },
         { status: 400 }
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
       .eq('user_id', authData.user.id);
 
     if (updateError) {
+      console.error('Update error:', updateError);
       return NextResponse.json(
         { error: 'Failed to save questionnaire responses: ' + updateError.message },
         { status: 500 }
@@ -67,8 +69,9 @@ export async function POST(request: Request) {
       message: 'Application submitted successfully! Your application is pending review.',
     });
   } catch (error: any) {
+    console.error('Server error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + error.message },
       { status: 500 }
     );
   }
