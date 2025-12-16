@@ -60,6 +60,8 @@ export default function AccountPage() {
   const [newProgress, setNewProgress] = useState(0);
   const [progressNotes, setProgressNotes] = useState('');
   const [updatingProgress, setUpdatingProgress] = useState(false);
+  const [editedFullName, setEditedFullName] = useState('');
+  const [editedPhone, setEditedPhone] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -70,6 +72,8 @@ export default function AccountPage() {
           const data = await response.json();
           setUser(data.user);
           setUserData(data.userData);
+          setEditedFullName(data.userData.full_name || '');
+          setEditedPhone(data.userData.phone || '');
         } else {
           router.push('/login');
           return;
@@ -352,7 +356,8 @@ export default function AccountPage() {
                       <label className="block text-sm text-gray-400 mb-2">Full Name</label>
                       <input
                         type="text"
-                        value={userData.full_name || ''}
+                        value={editedFullName}
+                        onChange={(e) => setEditedFullName(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
                         placeholder="Enter your full name"
                       />
@@ -363,7 +368,8 @@ export default function AccountPage() {
                       <label className="block text-sm text-gray-400 mb-2">Phone Number (Optional)</label>
                       <input
                         type="tel"
-                        value={userData.phone || ''}
+                        value={editedPhone}
+                        onChange={(e) => setEditedPhone(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
                         placeholder="Enter your phone number"
                       />
