@@ -10,7 +10,7 @@ export function initSocketServer(server: HTTPServer) {
       addTrailingSlash: false,
       cors: {
         origin: process.env.NODE_ENV === 'production'
-          ? process.env.NEXT_PUBLIC_APP_URL
+          ? process.env.NEXT_PUBLIC_SITE_URL
           : 'http://localhost:3000',
         methods: ['GET', 'POST'],
       },
