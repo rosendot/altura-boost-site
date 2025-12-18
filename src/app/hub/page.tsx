@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useSocket } from '@/hooks/useSocket';
+import { useRealtimeJobs } from '@/hooks/useRealtimeJobs';
 import { timeAgo, isJobNew } from '@/utils/timeAgo';
 
 interface Job {
@@ -39,14 +39,10 @@ export default function BoosterHub() {
   const {
     isConnected,
     activeBoostersCount,
-    joinBoosterHub,
     onJobUpdate,
     onJobAccepted,
     onNewJob,
-    offJobUpdate,
-    offJobAccepted,
-    offNewJob
-  } = useSocket();
+  } = useRealtimeJobs();
 
   useEffect(() => {
     fetchAvailableJobs();
@@ -61,24 +57,21 @@ export default function BoosterHub() {
     return () => clearInterval(interval);
   }, []);
 
-  // Socket.IO real-time updates
+  // Supabase Realtime updates
   useEffect(() => {
     if (isConnected) {
-      // Join the booster hub room
-      joinBoosterHub();
-
       // Handle new jobs being created
-      const handleNewJob = (newJob: Job) => {
+      onNewJob((newJob: Job) => {
         setJobs((prevJobs) => [newJob, ...prevJobs]);
-      };
+      });
 
       // Handle jobs being accepted by other boosters
-      const handleJobAccepted = (data: { jobId: string }) => {
+      onJobAccepted((data: { jobId: string }) => {
         setJobs((prevJobs) => prevJobs.filter((job) => job.id !== data.jobId));
-      };
+      });
 
       // Handle general job updates
-      const handleJobUpdate = (updatedJob: Job) => {
+      onJobUpdate((updatedJob: Job) => {
         setJobs((prevJobs) => {
           const index = prevJobs.findIndex((job) => job.id === updatedJob.id);
           if (index !== -1) {
@@ -88,21 +81,9 @@ export default function BoosterHub() {
           }
           return prevJobs;
         });
-      };
-
-      // Register event listeners
-      onNewJob(handleNewJob);
-      onJobAccepted(handleJobAccepted);
-      onJobUpdate(handleJobUpdate);
-
-      // Cleanup listeners on unmount
-      return () => {
-        offNewJob(handleNewJob);
-        offJobAccepted(handleJobAccepted);
-        offJobUpdate(handleJobUpdate);
-      };
+      });
     }
-  }, [isConnected, joinBoosterHub, onJobUpdate, onJobAccepted, onNewJob, offJobUpdate, offJobAccepted, offNewJob]);
+  }, [isConnected, onJobUpdate, onJobAccepted, onNewJob]);
 
   // Get unique values for filters
   const uniqueGames = useMemo(() => {
