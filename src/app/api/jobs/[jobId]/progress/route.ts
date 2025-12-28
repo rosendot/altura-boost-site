@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { broadcastJobUpdate } from '@/lib/supabase/realtime';
 
 export async function PATCH(
   request: Request,
@@ -98,17 +97,6 @@ export async function PATCH(
     if (logError) {
       console.error('Failed to log progress update:', logError);
       // Don't fail the request if logging fails
-    }
-
-    // Fetch the updated job and broadcast it
-    const { data: updatedJob } = await supabase
-      .from('jobs')
-      .select('*')
-      .eq('id', jobId)
-      .single();
-
-    if (updatedJob) {
-      await broadcastJobUpdate(updatedJob);
     }
 
     return NextResponse.json({ success: true });

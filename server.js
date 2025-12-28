@@ -1,7 +1,6 @@
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
-const { Server } = require('socket.io');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
@@ -22,45 +21,6 @@ app.prepare().then(() => {
     }
   });
 
-  // Initialize Socket.IO
-  const io = new Server(httpServer, {
-    path: '/api/socket',
-    cors: {
-      origin: dev ? 'http://localhost:3000' : process.env.NEXT_PUBLIC_APP_URL,
-      methods: ['GET', 'POST'],
-    },
-  });
-
-  // Function to broadcast booster count
-  const broadcastBoosterCount = async () => {
-    const sockets = await io.in('booster-hub').fetchSockets();
-    const count = sockets.length;
-    io.to('booster-hub').emit('booster-count', count);
-    console.log('Active boosters in hub:', count);
-  };
-
-  io.on('connection', (socket) => {
-    console.log('Booster connected:', socket.id);
-
-    socket.on('join-booster-hub', async () => {
-      socket.join('booster-hub');
-      console.log('Booster joined hub room:', socket.id);
-
-      // Broadcast updated count to all boosters
-      await broadcastBoosterCount();
-    });
-
-    socket.on('disconnect', async () => {
-      console.log('Booster disconnected:', socket.id);
-
-      // Broadcast updated count to remaining boosters
-      await broadcastBoosterCount();
-    });
-  });
-
-  // Make io accessible globally
-  global.io = io;
-
   httpServer
     .once('error', (err) => {
       console.error(err);
@@ -68,6 +28,5 @@ app.prepare().then(() => {
     })
     .listen(port, () => {
       console.log(`> Ready on http://${hostname}:${port}`);
-      console.log('> Socket.IO server running');
     });
 });

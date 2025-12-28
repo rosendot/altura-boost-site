@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useRealtimeJobs } from '@/hooks/useRealtimeJobs';
 import { timeAgo, isJobNew } from '@/utils/timeAgo';
 
 interface Job {
@@ -17,6 +16,8 @@ interface Job {
 }
 
 type SortOption = 'newest' | 'oldest' | 'payout-high' | 'hours-low';
+
+const POLLING_INTERVAL = 30000; // 30 seconds
 
 export default function BoosterHub() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -36,16 +37,18 @@ export default function BoosterHub() {
   // Sort state
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
-  const {
-    isConnected,
-    activeBoostersCount,
-    onJobUpdate,
-    onJobAccepted,
-    onNewJob,
-  } = useRealtimeJobs();
-
+  // Initial fetch
   useEffect(() => {
     fetchAvailableJobs();
+  }, []);
+
+  // Polling for job updates every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchAvailableJobs();
+    }, POLLING_INTERVAL);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Update time every minute for "time ago" display
@@ -56,34 +59,6 @@ export default function BoosterHub() {
 
     return () => clearInterval(interval);
   }, []);
-
-  // Supabase Realtime updates
-  useEffect(() => {
-    if (isConnected) {
-      // Handle new jobs being created
-      onNewJob((newJob: Job) => {
-        setJobs((prevJobs) => [newJob, ...prevJobs]);
-      });
-
-      // Handle jobs being accepted by other boosters
-      onJobAccepted((data: { jobId: string }) => {
-        setJobs((prevJobs) => prevJobs.filter((job) => job.id !== data.jobId));
-      });
-
-      // Handle general job updates
-      onJobUpdate((updatedJob: Job) => {
-        setJobs((prevJobs) => {
-          const index = prevJobs.findIndex((job) => job.id === updatedJob.id);
-          if (index !== -1) {
-            const newJobs = [...prevJobs];
-            newJobs[index] = updatedJob;
-            return newJobs;
-          }
-          return prevJobs;
-        });
-      });
-    }
-  }, [isConnected, onJobUpdate, onJobAccepted, onNewJob]);
 
   // Get unique values for filters
   const uniqueGames = useMemo(() => {
@@ -223,19 +198,14 @@ export default function BoosterHub() {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-4xl font-bold text-white">Booster Hub</h1>
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
             <span className="text-sm text-gray-400">
-              {isConnected ? 'Live' : 'Connecting...'}
+              Auto-refreshing every 30s
             </span>
-            {isConnected && activeBoostersCount > 0 && (
-              <span className="text-sm text-gray-500">
-                • {activeBoostersCount} booster{activeBoostersCount !== 1 ? 's' : ''} active
-              </span>
-            )}
           </div>
         </div>
         <p className="text-gray-400 mb-6">
-          Browse available jobs and accept ones that match your skills. Jobs update in real-time.
+          Browse available jobs and accept ones that match your skills. Jobs update automatically every 30 seconds.
         </p>
 
         {/* Filters and Sort */}

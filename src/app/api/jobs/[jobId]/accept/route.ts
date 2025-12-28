@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { broadcastJobAccepted } from '@/lib/supabase/realtime';
 
 export async function POST(
   request: Request,
@@ -58,9 +57,6 @@ export async function POST(
         { status: 500 }
       );
     }
-
-    // Broadcast event to notify all boosters in the hub
-    await broadcastJobAccepted(jobId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
