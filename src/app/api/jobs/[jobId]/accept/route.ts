@@ -43,6 +43,39 @@ export async function POST(
       );
     }
 
+    // Get the order to find customer_id
+    const { data: order } = await supabase
+      .from('orders')
+      .select('customer_id')
+      .eq('id', updatedJob.order_id)
+      .single();
+
+    if (order) {
+      // Create conversation for this job
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          job_id: jobId,
+          customer_id: order.customer_id,
+          booster_id: user.id,
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      if (conversation && !convError) {
+        // Send system message: "Job accepted"
+        await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversation.id,
+            sender_id: user.id,
+            text: 'Job accepted',
+            is_system_message: true,
+          });
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error in /api/jobs/[jobId]/accept:', error);

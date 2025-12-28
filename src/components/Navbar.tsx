@@ -14,6 +14,7 @@ export default function Navbar() {
   const [userName, setUserName] = useState<string | null>(null);
   const [boosterApprovalStatus, setBoosterApprovalStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -60,6 +61,29 @@ export default function Navbar() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch unread message count
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch('/api/conversations/unread-count');
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.unread_count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Poll every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Close account menu when clicking outside
   useEffect(() => {
@@ -175,6 +199,13 @@ export default function Navbar() {
                     onClick={() => setShowAccountMenu(false)}
                   >
                     My Account
+                  </Link>
+                  <Link
+                    href="/messages"
+                    className="block px-2 py-1 text-sm text-gray-300 hover:bg-primary-700/30 hover:text-white rounded-md transition-colors duration-200"
+                    onClick={() => setShowAccountMenu(false)}
+                  >
+                    Messages{unreadCount > 0 ? ` (${unreadCount})` : ''}
                   </Link>
                   <button
                     onClick={handleLogout}
