@@ -70,7 +70,7 @@ export async function POST(
           .insert({
             conversation_id: conversation.id,
             sender_id: user.id,
-            text: 'Job accepted',
+            message_text: 'Job accepted',
             is_system_message: true,
           });
       }

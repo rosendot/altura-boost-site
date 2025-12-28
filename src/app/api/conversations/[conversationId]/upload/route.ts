@@ -104,7 +104,7 @@ export async function POST(
       .insert({
         conversation_id: conversationId,
         sender_id: user.id,
-        text: messageText || null,
+        message_text: messageText || null,
         is_system_message: false,
       })
       .select()

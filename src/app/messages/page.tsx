@@ -17,8 +17,8 @@ interface Message {
   id: string;
   conversation_id: string;
   sender_id: string;
-  text: string | null;
-  is_read: boolean;
+  message_text: string | null;
+  read_at: string | null;
   is_system_message: boolean;
   created_at: string;
   message_attachments?: Attachment[];
@@ -242,7 +242,7 @@ export default function MessagesPage() {
                     </div>
                     {conv.last_message && (
                       <div className="text-xs text-gray-500 mt-2 truncate">
-                        {conv.last_message.text || '📎 Attachment'}
+                        {conv.last_message.message_text || '📎 Attachment'}
                       </div>
                     )}
                   </button>
@@ -275,7 +275,7 @@ export default function MessagesPage() {
                       return (
                         <div key={msg.id} className="flex justify-center">
                           <div className="bg-gray-800 text-gray-400 text-xs px-3 py-1 rounded-full">
-                            {msg.text}
+                            {msg.message_text}
                           </div>
                         </div>
                       );
@@ -293,7 +293,7 @@ export default function MessagesPage() {
                               : 'bg-gray-800 text-gray-100'
                           }`}
                         >
-                          {msg.text && <div className="mb-1">{msg.text}</div>}
+                          {msg.message_text && <div className="mb-1">{msg.message_text}</div>}
                           {msg.message_attachments && msg.message_attachments.length > 0 && (
                             <div className="mt-2">
                               {msg.message_attachments.map((att) => (

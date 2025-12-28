@@ -37,10 +37,10 @@ export async function GET() {
         ),
         messages (
           id,
-          text,
+          message_text,
           sender_id,
           created_at,
-          is_read,
+          read_at,
           is_system_message
         )
       `)
@@ -69,7 +69,7 @@ export async function GET() {
     // Calculate unread count for each conversation
     const conversationsWithUnread = filteredConversations.map(conv => {
       const unreadCount = conv.messages?.filter(
-        msg => !msg.is_read && msg.sender_id !== user.id
+        msg => !msg.read_at && msg.sender_id !== user.id
       ).length || 0;
 
       // Get last message

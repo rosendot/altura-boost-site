@@ -55,7 +55,7 @@ export async function GET() {
       .from('messages')
       .select('id', { count: 'exact', head: true })
       .in('conversation_id', conversationIds)
-      .eq('is_read', false)
+      .is('read_at', null)
       .neq('sender_id', user.id);
 
     if (countError) {

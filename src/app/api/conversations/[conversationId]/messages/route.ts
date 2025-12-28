@@ -48,8 +48,8 @@ export async function GET(
         id,
         conversation_id,
         sender_id,
-        text,
-        is_read,
+        message_text,
+        read_at,
         is_system_message,
         created_at,
         message_attachments (
@@ -73,13 +73,13 @@ export async function GET(
 
     // Mark messages as read (only messages sent by the other person)
     const unreadMessageIds = messages
-      ?.filter(msg => !msg.is_read && msg.sender_id !== user.id)
+      ?.filter(msg => !msg.read_at && msg.sender_id !== user.id)
       .map(msg => msg.id) || [];
 
     if (unreadMessageIds.length > 0) {
       await supabase
         .from('messages')
-        .update({ is_read: true })
+        .update({ read_at: new Date().toISOString() })
         .in('id', unreadMessageIds);
     }
 
@@ -148,7 +148,7 @@ export async function POST(
       .insert({
         conversation_id: conversationId,
         sender_id: user.id,
-        text: text.trim(),
+        message_text: text.trim(),
         is_system_message: false,
       })
       .select()
