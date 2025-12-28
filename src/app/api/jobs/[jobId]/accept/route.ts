@@ -20,41 +20,26 @@ export async function POST(
 
     const { jobId } = await params;
 
-    // Verify the job exists and is available
-    const { data: job, error: fetchError } = await supabase
-      .from('jobs')
-      .select('*')
-      .eq('id', jobId)
-      .single();
-
-    if (fetchError || !job) {
-      return NextResponse.json(
-        { error: 'Job not found' },
-        { status: 404 }
-      );
-    }
-
-    if (job.status !== 'available' || job.booster_id) {
-      return NextResponse.json(
-        { error: 'Job is no longer available' },
-        { status: 400 }
-      );
-    }
-
-    // Update job with booster assignment
-    const { error: updateError } = await supabase
+    // Atomically update job only if it's still available
+    // This prevents race conditions when multiple boosters try to accept the same job
+    const { data: updatedJob, error: updateError } = await supabase
       .from('jobs')
       .update({
         booster_id: user.id,
         status: 'accepted',
         accepted_at: new Date().toISOString(),
       })
-      .eq('id', jobId);
+      .eq('id', jobId)
+      .eq('status', 'available')
+      .is('booster_id', null)
+      .select()
+      .single();
 
-    if (updateError) {
+    if (updateError || !updatedJob) {
+      // Job either doesn't exist or was already accepted by another booster
       return NextResponse.json(
-        { error: 'Failed to accept job' },
-        { status: 500 }
+        { error: 'Job is no longer available' },
+        { status: 400 }
       );
     }
 
