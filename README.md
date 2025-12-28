@@ -108,6 +108,17 @@ src/
 - ✅ Job age indicator with "NEW" badge
 - ✅ Auto-refresh status indicator
 
+### Messaging System
+- ✅ Direct messaging between customers and boosters
+- ✅ Automatic conversation creation when job is accepted (via database trigger)
+- ✅ Real-time message updates via polling (5-second intervals)
+- ✅ Unread message count in account dropdown (30-second polling)
+- ✅ Image attachment support (5MB limit, stored in Supabase Storage)
+- ✅ System messages for job status updates
+- ✅ Message read/unread tracking
+- ✅ Two-sided archive system (customer and booster can archive independently)
+- ✅ Dark theme matching overall site design
+
 ## Getting Started
 
 ### Prerequisites
@@ -457,14 +468,24 @@ The app is fully Vercel-ready with no special configuration needed:
 - Job board updates with latest available jobs
 - Advanced filtering and sorting
 
-### 🚧 Phase 6: Stripe Integration & Payment Testing (In Progress)
+### ✅ Phase 6: Messaging System (Complete)
+- Direct messaging between customers and boosters
+- Automatic conversation creation via database triggers
+- Message polling for updates (5-second intervals)
+- Unread message count tracking
+- Image attachment support with Supabase Storage
+- System messages for job events
+- Archive functionality
+- Dark theme UI
+
+### 🚧 Phase 7: Stripe Integration & Payment Testing (In Progress)
 - Set up Stripe Connect for booster payouts
 - Implement Stripe Checkout for customer payments
 - Build webhook handlers for payment events
 - Create transaction logging and reconciliation
 - Test payment flows (sandbox mode)
 
-### 📋 Phase 7: Production & Enhancement (Planned)
+### 📋 Phase 8: Production & Enhancement (Planned)
 - Analytics and reporting dashboard
 - Email notification system
 - Review and rating system
