@@ -8,7 +8,7 @@ Altura Boost is a two-sided marketplace where:
 - **Customers** browse and purchase boosting services for games like Call of Duty Black Ops 7 (weapon camos, rank boosts, challenges, battle passes)
 - **Boosters** apply to join the platform, accept jobs from the job board, and earn competitive pay for their gaming skills
 
-The platform features secure payment processing via Stripe, real-time updates via Socket.IO, and user authentication through Supabase.
+The platform features secure payment processing via Stripe, automatic job updates via polling, and user authentication through Supabase.
 
 ## Tech Stack
 
@@ -16,7 +16,7 @@ The platform features secure payment processing via Stripe, real-time updates vi
 - **Frontend:** React 18, TypeScript 5
 - **Styling:** Tailwind CSS 3.4
 - **Database:** Supabase 2.86
-- **Real-time:** Socket.IO 4.8
+- **Updates:** Polling (30-second intervals)
 - **Payments:** Stripe 20.0
 - **Deployment:** Vercel-ready
 
@@ -33,11 +33,9 @@ The platform features secure payment processing via Stripe, real-time updates vi
   - [Running Locally](#running-locally)
   - [Supabase Client Usage](#supabase-client-usage)
   - [Authentication Flow](#authentication-flow)
-- [Socket.IO Real-Time Updates](#socketio-real-time-updates)
-  - [Architecture](#architecture)
-  - [Events](#events)
-  - [Client Usage](#client-usage)
-  - [Emitting Events from API Routes](#emitting-events-from-api-routes)
+- [Job Updates](#job-updates)
+  - [How It Works](#how-it-works)
+  - [Race Condition Protection](#race-condition-protection)
 - [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
 - [Security Notes](#security-notes)
@@ -55,7 +53,7 @@ src/
 │   │   └── booster/                # Booster application with questionnaire
 │   ├── games/
 │   │   └── [gameId]/               # Dynamic game pages with services + Add to Cart
-│   ├── hub/                        # Booster job dashboard with real-time updates
+│   ├── hub/                        # Booster job dashboard with auto-refresh
 │   ├── cart/                       # Shopping cart with full CRUD functionality
 │   ├── admin/                      # Admin panel for managing applications
 │   ├── faq/                        # FAQ page
@@ -71,16 +69,12 @@ src/
 │   └── GameCarousel.tsx            # Interactive game showcase
 ├── contexts/
 │   └── CartContext.tsx             # Global cart state with localStorage persistence
-├── hooks/
-│   └── useSocket.ts                # Custom React hook for Socket.IO
 ├── lib/
 │   ├── stripe.ts                   # Stripe config
-│   ├── supabase/                   # Supabase config (client, server, middleware)
-│   └── socket/
-│       └── emit.ts                 # Helper functions to emit Socket.IO events
+│   └── supabase/                   # Supabase config (client, server, middleware)
 ├── utils/
 │   └── timeAgo.ts                  # Time formatting utilities
-└── server.js                       # Custom Node.js server with Socket.IO
+└── server.js                       # Custom Node.js server
 ```
 
 ## Features
@@ -106,14 +100,13 @@ src/
 - ✅ Admin panel for reviewing and approving booster applications
 - ✅ Role-based access control (customer, booster, admin)
 
-### Booster Hub & Real-Time Features
-- ✅ Real-time job board with Socket.IO
-- ✅ Live job updates when boosters accept jobs
-- ✅ Active booster count indicator
+### Booster Hub Features
+- ✅ Auto-refreshing job board (30-second polling)
+- ✅ Atomic job acceptance with race condition protection
 - ✅ Job filtering (game, payout range, hours, weapon class)
 - ✅ Job sorting (newest, oldest, highest payout, quickest jobs)
 - ✅ Job age indicator with "NEW" badge
-- ✅ Connection status indicator
+- ✅ Auto-refresh status indicator
 
 ## Getting Started
 
@@ -186,17 +179,18 @@ Copy the output and paste it in `.env.local`:
 GAME_CREDENTIALS_ENCRYPTION_KEY=your-generated-key-here
 ```
 
-#### 4. Add Production URL (for Socket.IO)
-For production deployments, add:
+#### 4. Stripe Configuration (Optional)
+For payment processing, add your Stripe keys:
 ```env
-NEXT_PUBLIC_APP_URL=https://your-production-url.com
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
 ```
 
 ## Development
 
 ### Running Locally
 
-Start the custom Node.js server with Socket.IO:
+Start the development server:
 
 ```bash
 npm run dev
@@ -299,142 +293,86 @@ const { data: { user } } = await supabase.auth.getUser()
 const { error } = await supabase.auth.signOut()
 ```
 
-## Socket.IO Real-Time Updates
+## Job Updates
 
-The booster hub uses Socket.IO for real-time updates, allowing boosters to see available jobs and jobs being taken by other boosters instantly without refreshing the page.
+The booster hub uses a simple polling mechanism to keep job listings up-to-date. This approach is perfect for the initial launch with 5-10 concurrent users and can easily scale to hundreds of users.
 
-### Architecture
+### How It Works
 
-#### Server Setup
+#### Client-Side Polling
 
-The Socket.IO server is initialized in `server.js` as a custom Next.js server. This allows us to maintain a persistent WebSocket connection alongside Next.js API routes.
-
-**Key Files:**
-- `server.js` - Custom server with Socket.IO integration
-- `src/lib/socket/emit.ts` - Helper functions to emit events from API routes
-
-**Why a custom server?** Next.js API routes are stateless and don't support persistent WebSocket connections. The custom server keeps Socket.IO connections alive.
-
-#### Client Setup
-
-The client connects to the Socket.IO server using a custom React hook.
-
-**Key Files:**
-- `src/hooks/useSocket.ts` - React hook for Socket.IO client connection
-- `src/app/hub/page.tsx` - Booster hub page with real-time updates
-
-### Events
-
-#### Server → Client Events
-
-1. **`job-accepted`**
-   - Emitted when a booster accepts a job
-   - Payload: `{ jobId: string, boosterId: string }`
-   - Effect: Removes the job from all boosters' available job lists
-
-2. **`new-job`**
-   - Emitted when a new job is created
-   - Payload: `Job` object
-   - Effect: Adds the new job to all boosters' available job lists
-
-3. **`job-update`**
-   - Emitted when a job is updated
-   - Payload: `Job` object
-   - Effect: Updates the job in all boosters' available job lists
-
-4. **`booster-count`**
-   - Emitted when a booster joins or leaves
-   - Payload: `number` (count of active boosters)
-   - Effect: Updates the active booster count display
-
-#### Client → Server Events
-
-1. **`join-booster-hub`**
-   - Emitted when a booster connects to join the hub room
-   - Effect: Adds the socket to the 'booster-hub' room
-
-### Client Usage
-
-The booster hub page automatically connects to Socket.IO and listens for events:
+The booster hub automatically fetches available jobs every 30 seconds:
 
 ```typescript
-const {
-  isConnected,
-  activeBoostersCount,
-  joinBoosterHub,
-  onJobUpdate,
-  onJobAccepted,
-  onNewJob,
-} = useSocket();
-
+// Polling for job updates every 30 seconds
 useEffect(() => {
-  if (isConnected) {
-    joinBoosterHub();
+  const interval = setInterval(() => {
+    fetchAvailableJobs();
+  }, 30000); // 30 seconds
 
-    onNewJob((job) => {
-      // Add job to list
-      setJobs(prev => [job, ...prev]);
-    });
-
-    onJobAccepted(({ jobId }) => {
-      // Remove job from list
-      setJobs(prev => prev.filter(j => j.id !== jobId));
-    });
-  }
-}, [isConnected]);
+  return () => clearInterval(interval);
+}, []);
 ```
 
-### Emitting Events from API Routes
+**Why 30 seconds?**
+- Fast enough for a responsive user experience
+- Low server load (10 users = 20 requests/minute)
+- Simple to implement and debug
+- No complex infrastructure needed
 
-Use the helper functions in `src/lib/socket/emit.ts`:
+#### Initial Load
+
+Jobs are fetched immediately when the page loads:
 
 ```typescript
-import { emitJobAccepted, emitNewJob, emitJobUpdate } from '@/lib/socket/emit';
-
-// When a job is accepted
-emitJobAccepted(jobId, boosterId);
-
-// When a new job is created (e.g., from Stripe webhook)
-emitNewJob(newJob);
-
-// When a job is updated
-emitJobUpdate(updatedJob);
+useEffect(() => {
+  fetchAvailableJobs();
+}, []);
 ```
 
-#### Example: Emitting New Job Event from Stripe Webhook
+### Race Condition Protection
+
+To prevent multiple boosters from accepting the same job, the API uses an atomic database update:
 
 ```typescript
-// In src/app/api/webhooks/stripe/route.ts
-import { emitNewJob } from '@/lib/socket/emit';
-
-// After creating jobs in the database
-const { data: newJobs } = await supabase
+// Atomically update job only if it's still available
+const { data: updatedJob, error: updateError } = await supabase
   .from('jobs')
-  .insert([...])
-  .select();
+  .update({
+    booster_id: user.id,
+    status: 'accepted',
+    accepted_at: new Date().toISOString(),
+  })
+  .eq('id', jobId)
+  .eq('status', 'available')     // Only update if still available
+  .is('booster_id', null)        // Only update if no booster assigned
+  .select()
+  .single();
 
-// Emit event for each new job
-newJobs?.forEach(job => {
-  emitNewJob(job);
-});
+if (updateError || !updatedJob) {
+  // Job was already taken by another booster
+  return NextResponse.json(
+    { error: 'Job is no longer available' },
+    { status: 400 }
+  );
+}
 ```
 
-### Socket.IO Features
+**How it works:**
+1. The UPDATE only succeeds if the job is still available at the exact moment of update
+2. If another booster accepted the job first, the update returns no rows
+3. The second booster gets a clear error message
+4. No double-booking possible, even with simultaneous clicks
 
-✅ Real-time job updates across all connected boosters
-✅ Connection status indicator (green = connected, red = connecting)
-✅ Active booster count display
-✅ Automatic reconnection on disconnect
-✅ Room-based broadcasting (only boosters in the hub receive updates)
-✅ Clean event listener management (proper cleanup on unmount)
+### Scaling Strategy
 
-### Testing Socket.IO
+The current polling approach works well for **up to 200+ concurrent users**. When you need to scale beyond that:
 
-1. Open the booster hub in two different browser windows/tabs
-2. Accept a job in one window
-3. The job should immediately disappear from the other window
-4. Check the connection status indicator (top right of the page)
-5. Observe the active booster count update as you open/close tabs
+1. **Server-Sent Events (SSE)** - One-way server→client updates, Vercel-compatible
+2. **Pusher/Ably** - Third-party real-time services with free tiers
+3. **Supabase Realtime** - Built into Supabase, easy to add later
+
+The atomic update protection will work with any of these approaches.
 
 ## Deployment
 
@@ -447,9 +385,11 @@ npm start
 
 ### Vercel Deployment
 
-The app is Vercel-ready. However, note that Socket.IO requires a persistent server, so you may need to:
-- Use Vercel's Node.js runtime (configure in `vercel.json`)
-- Or deploy the Socket.IO server separately and configure `NEXT_PUBLIC_APP_URL`
+The app is fully Vercel-ready with no special configuration needed:
+
+1. Connect your GitHub repository to Vercel
+2. Add environment variables in Vercel dashboard
+3. Deploy!
 
 ## Troubleshooting
 
@@ -465,10 +405,10 @@ The app is Vercel-ready. However, note that Socket.IO requires a persistent serv
 - Verify you ran `schema.sql` successfully in the SQL Editor
 - Check Supabase Dashboard → Table Editor to see all tables
 
-### Socket.IO not connecting
-- Ensure the dev server is running with `npm run dev` (not `next dev`)
-- Check browser console for connection errors
-- Verify `NEXT_PUBLIC_APP_URL` is set correctly in production
+### Jobs not updating in the hub
+- Check browser console for API errors
+- Verify the `/api/jobs/available` endpoint is working
+- Check that polling interval is running (should refetch every 30 seconds)
 
 ### Build warnings about Edge Runtime
 - Warnings about Supabase using Node.js APIs in Edge Runtime are normal
@@ -482,9 +422,8 @@ The app is Vercel-ready. However, note that Socket.IO requires a persistent serv
 - **NEVER** share your `SUPABASE_SERVICE_ROLE_KEY` (it bypasses RLS)
 - Use the `anon` key for client-side code
 - Use the `service_role` key only in API routes/server-side for admin operations
-- The Socket.IO path is `/api/socket` (configured in both server and client)
-- Events are broadcast to the `booster-hub` room only
-- The connection uses WebSocket with polling fallback for compatibility
+- Job acceptance uses atomic updates to prevent race conditions
+- All sensitive operations go through authenticated API routes
 
 ## Development Roadmap
 
@@ -512,11 +451,10 @@ The app is Vercel-ready. However, note that Socket.IO requires a persistent serv
 - Protected routes and role-based access
 - Admin panel for booster applications
 
-### ✅ Phase 5: Live Updates on Booster Dashboard (Complete)
-- Socket.IO real-time subscriptions
-- Live job board updates
-- Real-time order status changes
-- Active booster count tracking
+### ✅ Phase 5: Booster Dashboard Updates (Complete)
+- Auto-refreshing job board with 30-second polling
+- Atomic job acceptance with race condition protection
+- Job board updates with latest available jobs
 - Advanced filtering and sorting
 
 ### 🚧 Phase 6: Stripe Integration & Payment Testing (In Progress)
