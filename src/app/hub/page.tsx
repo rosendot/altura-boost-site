@@ -26,6 +26,8 @@ export default function BoosterHub() {
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [suspended, setSuspended] = useState(false);
+  const [suspensionReason, setSuspensionReason] = useState<string | null>(null);
 
   // Filter states
   const [selectedGame, setSelectedGame] = useState<string>('all');
@@ -115,6 +117,14 @@ export default function BoosterHub() {
       if (response.ok) {
         const data = await response.json();
         setJobs(data.jobs || []);
+        setSuspended(false);
+      } else if (response.status === 403) {
+        const data = await response.json();
+        if (data.suspended) {
+          setSuspended(true);
+          setSuspensionReason(data.suspension_reason || null);
+          setJobs([]);
+        }
       } else {
         console.error('Failed to fetch jobs');
         setJobs([]);
@@ -186,6 +196,43 @@ export default function BoosterHub() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-center py-20">
             <div className="text-gray-400">Loading available jobs...</div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (suspended) {
+    return (
+      <main className="min-h-screen bg-black pt-24 pb-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-red-900/20 border-2 border-red-500 rounded-lg p-8 text-center">
+              <div className="mb-4">
+                <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold text-red-400 mb-4">Account Suspended</h1>
+              <p className="text-gray-300 mb-6">
+                Your account has been suspended and you cannot access the jobs board.
+              </p>
+              {suspensionReason && (
+                <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-gray-400 mb-1">Reason:</p>
+                  <p className="text-white">{suspensionReason}</p>
+                </div>
+              )}
+              <p className="text-gray-400 mb-6">
+                If you believe this is a mistake, you can submit an appeal from your account page.
+              </p>
+              <a
+                href="/account"
+                className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold"
+              >
+                Go to Account Page
+              </a>
+            </div>
           </div>
         </div>
       </main>

@@ -13,6 +13,12 @@ interface UserData {
   created_at: string;
   total_earnings?: number;
   booster_approval_status?: 'pending' | 'approved' | 'rejected' | null;
+  is_suspended?: boolean;
+  suspended_at?: string | null;
+  suspension_reason?: string | null;
+  can_appeal?: boolean;
+  appeal_status?: 'none' | 'pending' | 'approved' | 'rejected' | null;
+  strike_count?: number;
 }
 
 interface Order {
@@ -120,6 +126,8 @@ export default function AccountPage() {
   const [selectedJobForReview, setSelectedJobForReview] = useState<CompletedJob | null>(null);
   const [boosterReviews, setBoosterReviews] = useState<BoosterReview[]>([]);
   const [boosterReviewsLoading, setBoosterReviewsLoading] = useState(false);
+  const [appealText, setAppealText] = useState('');
+  const [submittingAppeal, setSubmittingAppeal] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -425,6 +433,18 @@ export default function AccountPage() {
                       Earnings
                     </button>
                   </>
+                )}
+                {userData.role === 'booster' && userData.is_suspended && userData.can_appeal && (
+                  <button
+                    onClick={() => setActiveTab('appeals')}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 border-2 ${
+                      activeTab === 'appeals'
+                        ? 'bg-red-600 text-white border-red-500'
+                        : 'text-red-400 border-red-700 hover:bg-red-900/20 hover:text-red-300'
+                    }`}
+                  >
+                    Submit Appeal
+                  </button>
                 )}
               </nav>
             </div>
@@ -1101,6 +1121,152 @@ export default function AccountPage() {
                           )}
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Appeals Tab (Suspended Boosters Only) */}
+              {activeTab === 'appeals' && userData.role === 'booster' && userData.is_suspended && (
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6">Submit Suspension Appeal</h2>
+
+                  {/* Suspension Info */}
+                  <div className="bg-red-900/20 border-2 border-red-500 rounded-lg p-6 mb-6">
+                    <div className="flex items-start gap-4">
+                      <svg className="w-8 h-8 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-red-400 mb-2">Your Account is Suspended</h3>
+                        <div className="space-y-2">
+                          {userData.suspension_reason && (
+                            <div>
+                              <p className="text-sm text-gray-400">Reason:</p>
+                              <p className="text-white">{userData.suspension_reason}</p>
+                            </div>
+                          )}
+                          {userData.suspended_at && (
+                            <div>
+                              <p className="text-sm text-gray-400">Suspended on:</p>
+                              <p className="text-white">
+                                {new Date(userData.suspended_at).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          )}
+                          {userData.strike_count !== undefined && (
+                            <div>
+                              <p className="text-sm text-gray-400">Active Strikes:</p>
+                              <p className="text-white font-semibold">{userData.strike_count} strikes</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Appeal Status */}
+                  {userData.appeal_status && userData.appeal_status !== 'none' && (
+                    <div className={`border-2 rounded-lg p-6 mb-6 ${
+                      userData.appeal_status === 'pending'
+                        ? 'bg-yellow-900/20 border-yellow-500'
+                        : userData.appeal_status === 'approved'
+                        ? 'bg-green-900/20 border-green-500'
+                        : 'bg-red-900/20 border-red-500'
+                    }`}>
+                      <h3 className={`text-lg font-bold mb-2 ${
+                        userData.appeal_status === 'pending'
+                          ? 'text-yellow-400'
+                          : userData.appeal_status === 'approved'
+                          ? 'text-green-400'
+                          : 'text-red-400'
+                      }`}>
+                        Appeal Status: {userData.appeal_status.charAt(0).toUpperCase() + userData.appeal_status.slice(1)}
+                      </h3>
+                      <p className="text-gray-300">
+                        {userData.appeal_status === 'pending' && 'Your appeal is currently under review by our admin team. We will notify you once a decision has been made.'}
+                        {userData.appeal_status === 'approved' && 'Your appeal has been approved! Your suspension will be lifted shortly.'}
+                        {userData.appeal_status === 'rejected' && 'Unfortunately, your appeal was not approved. If you have additional information, you may submit a new appeal.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Appeal Form */}
+                  {(!userData.appeal_status || userData.appeal_status === 'none' || userData.appeal_status === 'rejected') && (
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">Why should your suspension be lifted?</h3>
+                      <p className="text-sm text-gray-400 mb-4">
+                        Please provide a detailed explanation of why you believe your suspension should be reconsidered.
+                        Include any relevant information that might support your case.
+                      </p>
+
+                      <form onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!appealText.trim()) {
+                          alert('Please provide an explanation for your appeal.');
+                          return;
+                        }
+
+                        setSubmittingAppeal(true);
+                        try {
+                          const response = await fetch('/api/appeals/submit', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ appeal_text: appealText }),
+                          });
+
+                          if (response.ok) {
+                            alert('Your appeal has been submitted successfully. We will review it and get back to you soon.');
+                            setAppealText('');
+                            // Refresh user data
+                            const userResponse = await fetch('/api/user/me');
+                            if (userResponse.ok) {
+                              const data = await userResponse.json();
+                              setUserData(data.userData);
+                            }
+                          } else {
+                            const error = await response.json();
+                            alert(error.error || 'Failed to submit appeal. Please try again.');
+                          }
+                        } catch (error) {
+                          console.error('Error submitting appeal:', error);
+                          alert('Failed to submit appeal. Please try again.');
+                        } finally {
+                          setSubmittingAppeal(false);
+                        }
+                      }}>
+                        <div className="mb-6">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Appeal Explanation <span className="text-red-500">*</span>
+                          </label>
+                          <textarea
+                            value={appealText}
+                            onChange={(e) => setAppealText(e.target.value)}
+                            placeholder="Explain why you believe your suspension should be lifted..."
+                            rows={8}
+                            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-gray-500 resize-none"
+                            required
+                            disabled={submittingAppeal}
+                          />
+                          <p className="text-xs text-gray-500 mt-2">
+                            Be honest and respectful in your explanation.
+                          </p>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={submittingAppeal || !appealText.trim()}
+                          className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {submittingAppeal ? 'Submitting Appeal...' : 'Submit Appeal'}
+                        </button>
+                      </form>
                     </div>
                   )}
                 </div>

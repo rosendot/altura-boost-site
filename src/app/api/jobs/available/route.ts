@@ -15,6 +15,31 @@ export async function GET() {
       );
     }
 
+    // Check if user is suspended
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('is_suspended, suspension_reason')
+      .eq('id', user.id)
+      .single();
+
+    if (userError) {
+      return NextResponse.json(
+        { error: 'Failed to fetch user data' },
+        { status: 500 }
+      );
+    }
+
+    if (userData?.is_suspended) {
+      return NextResponse.json(
+        {
+          error: 'Account suspended',
+          suspended: true,
+          suspension_reason: userData.suspension_reason
+        },
+        { status: 403 }
+      );
+    }
+
     // Fetch available jobs (no booster assigned)
     const { data: jobs, error: jobsError } = await supabase
       .from('jobs')

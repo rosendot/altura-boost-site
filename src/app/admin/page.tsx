@@ -14,6 +14,10 @@ interface UserData {
   phone: string | null;
   total_earnings: number | null;
   created_at: string;
+  strike_count: number | null;
+  suspension_count: number | null;
+  is_suspended: boolean | null;
+  suspended_at: string | null;
 }
 
 interface BoosterApplication {
@@ -137,6 +141,39 @@ interface ConversationUser {
   full_name: string | null;
 }
 
+interface Strike {
+  id: string;
+  reason: string;
+  strike_type: string;
+  severity: string;
+  is_active: boolean;
+  created_at: string;
+  job_id: string;
+  jobs: {
+    job_number: string;
+    service_name: string;
+    game_name: string;
+  } | null;
+}
+
+interface Appeal {
+  id: string;
+  user_id: string;
+  appeal_text: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  admin_notes: string | null;
+  users: {
+    email: string;
+    full_name: string | null;
+    is_suspended: boolean | null;
+    suspension_reason: string | null;
+    suspended_at: string | null;
+  } | null;
+}
+
 interface Conversation {
   id: string;
   job_id: string;
@@ -181,6 +218,14 @@ export default function AdminPage() {
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [strikeModalOpen, setStrikeModalOpen] = useState(false);
   const [selectedReviewForStrike, setSelectedReviewForStrike] = useState<AdminReview | null>(null);
+  const [selectedUserForStrikes, setSelectedUserForStrikes] = useState<UserData | null>(null);
+  const [userStrikes, setUserStrikes] = useState<Strike[]>([]);
+  const [strikesLoading, setStrikesLoading] = useState(false);
+  const [showStrikesModal, setShowStrikesModal] = useState(false);
+  const [appeals, setAppeals] = useState<Appeal[]>([]);
+  const [appealsLoading, setAppealsLoading] = useState(false);
+  const [selectedAppeal, setSelectedAppeal] = useState<Appeal | null>(null);
+  const [adminNotes, setAdminNotes] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -236,6 +281,9 @@ export default function AdminPage() {
     }
     if (activeTab === 'reviews' && userData?.role === 'admin') {
       fetchReviews();
+    }
+    if (activeTab === 'appeals' && userData?.role === 'admin') {
+      fetchAppeals();
     }
   }, [activeTab, userData]);
 
@@ -302,7 +350,7 @@ export default function AdminPage() {
     const supabase = createClient();
     const { data } = await supabase
       .from('users')
-      .select('*')
+      .select('id, email, role, full_name, phone, total_earnings, created_at, strike_count, suspension_count, is_suspended, suspended_at')
       .order('created_at', { ascending: false });
 
     if (data) {
@@ -367,6 +415,128 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const fetchUserStrikes = async (boosterId: string) => {
+    setStrikesLoading(true);
+    try {
+      const res = await fetch(`/api/admin/strikes/booster/${boosterId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUserStrikes(data.strikes || []);
+      }
+    } catch (error) {
+      console.error('Error fetching strikes:', error);
+    } finally {
+      setStrikesLoading(false);
+    }
+  };
+
+  const handleViewStrikes = async (user: UserData) => {
+    setSelectedUserForStrikes(user);
+    setShowStrikesModal(true);
+    await fetchUserStrikes(user.id);
+  };
+
+  const handleDeactivateStrike = async (strikeId: string) => {
+    if (!confirm('Are you sure you want to deactivate this strike? It will no longer count toward suspension.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/strikes/${strikeId}`, {
+        method: 'PATCH',
+      });
+
+      if (res.ok) {
+        alert('Strike deactivated successfully');
+        if (selectedUserForStrikes) {
+          await fetchUserStrikes(selectedUserForStrikes.id);
+          await fetchUsers();
+        }
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to deactivate strike');
+      }
+    } catch (error) {
+      console.error('Error deactivating strike:', error);
+      alert('Failed to deactivate strike');
+    }
+  };
+
+  const handleDeleteStrike = async (strikeId: string) => {
+    if (!confirm('Are you sure you want to permanently DELETE this strike? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/strikes/${strikeId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        alert('Strike deleted successfully');
+        if (selectedUserForStrikes) {
+          await fetchUserStrikes(selectedUserForStrikes.id);
+          await fetchUsers();
+        }
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to delete strike');
+      }
+    } catch (error) {
+      console.error('Error deleting strike:', error);
+      alert('Failed to delete strike');
+    }
+  };
+
+  const fetchAppeals = async () => {
+    setAppealsLoading(true);
+    try {
+      const res = await fetch('/api/admin/appeals');
+      if (res.ok) {
+        const data = await res.json();
+        setAppeals(data.appeals || []);
+      }
+    } catch (error) {
+      console.error('Error fetching appeals:', error);
+    } finally {
+      setAppealsLoading(false);
+    }
+  };
+
+  const handleAppealAction = async (appealId: string, action: 'approved' | 'rejected') => {
+    const confirmMsg = action === 'approved'
+      ? 'Are you sure you want to APPROVE this appeal? The booster will be unsuspended.'
+      : 'Are you sure you want to REJECT this appeal? The booster will remain suspended.';
+
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/appeals/${appealId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: action,
+          admin_notes: adminNotes.trim() || null,
+        }),
+      });
+
+      if (res.ok) {
+        alert(`Appeal ${action} successfully`);
+        setSelectedAppeal(null);
+        setAdminNotes('');
+        await fetchAppeals();
+      } else {
+        const error = await res.json();
+        alert(error.error || `Failed to ${action} appeal`);
+      }
+    } catch (error) {
+      console.error(`Error ${action} appeal:`, error);
+      alert(`Failed to ${action} appeal`);
     }
   };
 
@@ -540,6 +710,16 @@ export default function AdminPage() {
                   }`}
                 >
                   Reviews
+                </button>
+                <button
+                  onClick={() => setActiveTab('appeals')}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                    activeTab === 'appeals'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  }`}
+                >
+                  Appeals
                 </button>
               </nav>
             </div>
@@ -967,6 +1147,12 @@ export default function AdminPage() {
                                 Role
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                Status
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                Strikes
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Phone
                               </th>
                               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
@@ -975,13 +1161,18 @@ export default function AdminPage() {
                               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Joined
                               </th>
+                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                Actions
+                              </th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-700">
                             {users
                               .filter(u => userFilter === 'all' || u.role === userFilter)
                               .map((user) => (
-                                <tr key={user.id} className="hover:bg-gray-750 transition-colors">
+                                <tr key={user.id} className={`hover:bg-gray-750 transition-colors ${
+                                  user.is_suspended ? 'bg-red-900/10' : ''
+                                }`}>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
                                       <div className="flex-shrink-0 h-10 w-10 bg-primary-600 rounded-full flex items-center justify-center">
@@ -1014,6 +1205,46 @@ export default function AdminPage() {
                                     </span>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
+                                    {user.role === 'booster' ? (
+                                      <div className="flex flex-col gap-1">
+                                        {user.is_suspended ? (
+                                          <>
+                                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-900/50 text-red-400 border border-red-500">
+                                              SUSPENDED
+                                            </span>
+                                            {user.suspension_count && user.suspension_count > 0 && (
+                                              <span className="text-xs text-gray-500">
+                                                {user.suspension_count}x suspended
+                                              </span>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900/50 text-green-400 border border-green-500">
+                                            ACTIVE
+                                          </span>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <span className="text-sm text-gray-500">-</span>
+                                    )}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {user.role === 'booster' ? (
+                                      <div className="text-sm">
+                                        <span className={`font-semibold ${
+                                          (user.strike_count || 0) >= 3 ? 'text-red-400' :
+                                          (user.strike_count || 0) >= 2 ? 'text-yellow-400' :
+                                          'text-gray-300'
+                                        }`}>
+                                          {user.strike_count || 0}/3
+                                        </span>
+                                        <span className="text-gray-500 ml-1">strikes</span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-sm text-gray-500">-</span>
+                                    )}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm text-gray-300">
                                       {user.phone || '-'}
                                     </div>
@@ -1029,6 +1260,16 @@ export default function AdminPage() {
                                     <div className="text-sm text-gray-400">
                                       {new Date(user.created_at).toLocaleDateString()}
                                     </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {user.role === 'booster' && (
+                                      <button
+                                        onClick={() => handleViewStrikes(user)}
+                                        className="px-3 py-1.5 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition font-semibold"
+                                      >
+                                        View Strikes
+                                      </button>
+                                    )}
                                   </td>
                                 </tr>
                               ))}
@@ -1515,6 +1756,161 @@ export default function AdminPage() {
                   )}
                 </div>
               )}
+
+              {/* Appeals Tab */}
+              {activeTab === 'appeals' && (
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6">Suspension Appeals</h2>
+
+                  {appealsLoading ? (
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                      <p className="text-gray-400">Loading appeals...</p>
+                    </div>
+                  ) : appeals.length === 0 ? (
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <h3 className="text-lg font-semibold text-white mb-2">No Appeals</h3>
+                      <p className="text-gray-400 text-sm">
+                        Suspension appeals from boosters will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Stats Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
+                          <div className="text-sm text-yellow-100 mb-1">Pending Appeals</div>
+                          <div className="text-3xl font-bold text-white">
+                            {appeals.filter(a => a.status === 'pending').length}
+                          </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
+                          <div className="text-sm text-green-100 mb-1">Approved</div>
+                          <div className="text-3xl font-bold text-white">
+                            {appeals.filter(a => a.status === 'approved').length}
+                          </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-4">
+                          <div className="text-sm text-red-100 mb-1">Rejected</div>
+                          <div className="text-3xl font-bold text-white">
+                            {appeals.filter(a => a.status === 'rejected').length}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Appeals List */}
+                      <div className="space-y-4">
+                        {appeals.map((appeal) => (
+                          <div
+                            key={appeal.id}
+                            className={`bg-gray-800 border rounded-lg p-6 ${
+                              appeal.status === 'pending'
+                                ? 'border-yellow-500'
+                                : appeal.status === 'approved'
+                                ? 'border-green-500'
+                                : 'border-red-500'
+                            }`}
+                          >
+                            {/* Appeal Header */}
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="text-xl font-semibold text-white mb-1">
+                                  {appeal.users?.full_name || appeal.users?.email || 'Unknown User'}
+                                </h3>
+                                <div className="flex gap-4 mt-2 text-xs">
+                                  <span className="text-gray-500">
+                                    Submitted: {new Date(appeal.submitted_at).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })}
+                                  </span>
+                                  {appeal.users?.is_suspended && (
+                                    <span className="px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-500 rounded text-xs font-semibold">
+                                      SUSPENDED
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                    appeal.status === 'pending'
+                                      ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500'
+                                      : appeal.status === 'approved'
+                                      ? 'bg-green-900/50 text-green-400 border border-green-500'
+                                      : 'bg-red-900/50 text-red-400 border border-red-500'
+                                  }`}
+                                >
+                                  {appeal.status.toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Suspension Reason */}
+                            {appeal.users?.suspension_reason && (
+                              <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded">
+                                <h4 className="text-sm font-semibold text-red-400 mb-1">Suspension Reason:</h4>
+                                <p className="text-sm text-gray-300">{appeal.users.suspension_reason}</p>
+                                {appeal.users.suspended_at && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Suspended on: {new Date(appeal.users.suspended_at).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'long',
+                                      day: 'numeric',
+                                    })}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Appeal Text */}
+                            <div className="mb-4 p-3 bg-gray-700/30 rounded">
+                              <h4 className="text-sm font-semibold text-gray-300 mb-2">Appeal:</h4>
+                              <p className="text-sm text-white whitespace-pre-wrap">{appeal.appeal_text}</p>
+                            </div>
+
+                            {/* Admin Notes (if reviewed) */}
+                            {appeal.admin_notes && (
+                              <div className="mb-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded">
+                                <h4 className="text-sm font-semibold text-blue-400 mb-1">Admin Notes:</h4>
+                                <p className="text-sm text-gray-300">{appeal.admin_notes}</p>
+                                {appeal.reviewed_at && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Reviewed on: {new Date(appeal.reviewed_at).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'long',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Action Buttons (only for pending appeals) */}
+                            {appeal.status === 'pending' && (
+                              <div className="border-t border-gray-700 pt-4">
+                                <button
+                                  onClick={() => setSelectedAppeal(appeal)}
+                                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold text-sm"
+                                >
+                                  Review Appeal
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1538,6 +1934,228 @@ export default function AdminPage() {
             setSelectedReviewForStrike(null);
           }}
         />
+      )}
+
+      {/* Strikes Management Modal */}
+      {showStrikesModal && selectedUserForStrikes && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+            <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">Strike Management</h2>
+                <p className="text-gray-400">
+                  {selectedUserForStrikes.full_name || selectedUserForStrikes.email}
+                </p>
+                <div className="flex gap-4 mt-2 text-sm">
+                  <span className="text-gray-500">
+                    Active Strikes: <span className={`font-bold ${(selectedUserForStrikes.strike_count || 0) >= 3 ? 'text-red-400' : 'text-yellow-400'}`}>
+                      {selectedUserForStrikes.strike_count || 0}/3
+                    </span>
+                  </span>
+                  {selectedUserForStrikes.is_suspended && (
+                    <span className="px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-500 rounded text-xs font-semibold">
+                      SUSPENDED
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowStrikesModal(false);
+                  setSelectedUserForStrikes(null);
+                  setUserStrikes([]);
+                }}
+                className="text-gray-400 hover:text-white text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6">
+              {strikesLoading ? (
+                <div className="text-center py-12">
+                  <div className="text-gray-400">Loading strikes...</div>
+                </div>
+              ) : userStrikes.length === 0 ? (
+                <div className="text-center py-12">
+                  <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-gray-400">No strikes found for this booster.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {userStrikes.map((strike) => (
+                    <div
+                      key={strike.id}
+                      className={`border rounded-lg p-4 ${
+                        strike.is_active
+                          ? 'bg-red-900/10 border-red-700'
+                          : 'bg-gray-800 border-gray-700 opacity-60'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-lg font-semibold text-white">
+                              {strike.jobs?.service_name || 'Unknown Service'}
+                            </h3>
+                            {!strike.is_active && (
+                              <span className="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs font-semibold rounded">
+                                DEACTIVATED
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-400">
+                            {strike.jobs?.game_name || 'Unknown Game'} • Job #{strike.jobs?.job_number || 'N/A'}
+                          </p>
+                          <div className="flex gap-3 mt-2 text-xs">
+                            <span className="text-gray-500">
+                              Type: <span className="text-gray-300 capitalize">{strike.strike_type.replace(/_/g, ' ')}</span>
+                            </span>
+                            <span className="text-gray-500">
+                              Severity: <span className={`font-semibold ${
+                                strike.severity === 'severe' ? 'text-red-400' :
+                                strike.severity === 'moderate' ? 'text-yellow-400' :
+                                'text-gray-300'
+                              }`}>{strike.severity}</span>
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {new Date(strike.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      <div className="mb-4 p-3 bg-gray-950 rounded border border-gray-800">
+                        <p className="text-sm text-gray-400 mb-1">Reason:</p>
+                        <p className="text-white text-sm">{strike.reason}</p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {strike.is_active ? (
+                          <button
+                            onClick={() => handleDeactivateStrike(strike.id)}
+                            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition text-sm font-semibold"
+                          >
+                            Deactivate Strike
+                          </button>
+                        ) : (
+                          <div className="text-xs text-gray-500 italic">
+                            This strike is deactivated and does not count toward suspension
+                          </div>
+                        )}
+                        <button
+                          onClick={() => handleDeleteStrike(strike.id)}
+                          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm font-semibold"
+                        >
+                          Delete Permanently
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Appeal Modal */}
+      {selectedAppeal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+            <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">Review Appeal</h2>
+                  <p className="text-gray-400">
+                    {selectedAppeal.users?.full_name || selectedAppeal.users?.email || 'Unknown User'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedAppeal(null);
+                    setAdminNotes('');
+                  }}
+                  className="text-gray-400 hover:text-white transition text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Suspension Info */}
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-red-400 mb-2">Suspension Information</h3>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-400">Reason: </span>
+                    <span className="text-white">{selectedAppeal.users?.suspension_reason || 'N/A'}</span>
+                  </div>
+                  {selectedAppeal.users?.suspended_at && (
+                    <div>
+                      <span className="text-gray-400">Suspended On: </span>
+                      <span className="text-white">
+                        {new Date(selectedAppeal.users.suspended_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Appeal Text */}
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-300 mb-2">Booster's Appeal</h3>
+                <p className="text-white text-sm whitespace-pre-wrap">{selectedAppeal.appeal_text}</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Submitted: {new Date(selectedAppeal.submitted_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+
+              {/* Admin Notes Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Admin Notes (Optional)
+                </label>
+                <textarea
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="Add any notes about your decision..."
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-600"
+                  rows={4}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t border-gray-700">
+                <button
+                  onClick={() => handleAppealAction(selectedAppeal.id, 'approved')}
+                  className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+                >
+                  Approve & Unsuspend
+                </button>
+                <button
+                  onClick={() => handleAppealAction(selectedAppeal.id, 'rejected')}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                >
+                  Reject Appeal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
