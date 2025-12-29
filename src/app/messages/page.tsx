@@ -57,13 +57,7 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Scroll to bottom of messages
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   // Fetch user
   useEffect(() => {
@@ -106,7 +100,6 @@ export default function MessagesPage() {
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages || []);
-        setTimeout(scrollToBottom, 100);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -266,7 +259,7 @@ export default function MessagesPage() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black flex flex-col">
                   {messages.map((msg) => {
                     const isOwnMessage = msg.sender_id === user?.id;
                     const isSystemMessage = msg.is_system_message;
@@ -324,7 +317,6 @@ export default function MessagesPage() {
                       </div>
                     );
                   })}
-                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input */}
