@@ -91,6 +91,45 @@ interface Service {
   updated_at: string;
 }
 
+interface Message {
+  id: string;
+  message_text: string | null;
+  sender_id: string;
+  created_at: string;
+  read_at: string | null;
+  is_system_message: boolean;
+}
+
+interface ConversationUser {
+  id: string;
+  email: string;
+  full_name: string | null;
+}
+
+interface Conversation {
+  id: string;
+  job_id: string;
+  customer_id: string;
+  booster_id: string;
+  created_at: string;
+  last_message_at: string;
+  status: string;
+  customer_archived: boolean;
+  booster_archived: boolean;
+  jobs: {
+    job_number: string;
+    service_name: string;
+    game_name: string;
+    status: string;
+  };
+  customer: ConversationUser;
+  booster: ConversationUser;
+  message_count: number;
+  unread_count: number;
+  last_message: Message | null;
+  messages?: Message[];
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -105,6 +144,9 @@ export default function AdminPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [conversationMessages, setConversationMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -154,6 +196,9 @@ export default function AdminPage() {
     if (activeTab === 'services' && userData?.role === 'admin') {
       fetchGames();
       fetchServices();
+    }
+    if (activeTab === 'conversations' && userData?.role === 'admin') {
+      fetchConversations();
     }
   }, [activeTab, userData]);
 
@@ -249,6 +294,30 @@ export default function AdminPage() {
 
     if (data) {
       setServices(data);
+    }
+  };
+
+  const fetchConversations = async () => {
+    try {
+      const res = await fetch('/api/admin/conversations');
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data.conversations || []);
+      }
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    }
+  };
+
+  const fetchConversationMessages = async (conversationId: string) => {
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}/messages`);
+      if (res.ok) {
+        const data = await res.json();
+        setConversationMessages(data.messages || []);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
   };
 
@@ -402,6 +471,16 @@ export default function AdminPage() {
                   }`}
                 >
                   Services & Games
+                </button>
+                <button
+                  onClick={() => setActiveTab('conversations')}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                    activeTab === 'conversations'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  }`}
+                >
+                  Conversations
                 </button>
               </nav>
             </div>
@@ -1043,6 +1122,164 @@ export default function AdminPage() {
                     )}
                   </div>
                   )}
+                </div>
+              )}
+
+              {/* Conversations Tab */}
+              {activeTab === 'conversations' && (
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6">Conversations Monitor</h2>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Total Conversations</div>
+                      <div className="text-3xl font-bold text-white">{conversations.length}</div>
+                      <div className="text-xs text-gray-300 mt-1">All time</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Active Conversations</div>
+                      <div className="text-3xl font-bold text-white">
+                        {conversations.filter(c => c.status === 'active').length}
+                      </div>
+                      <div className="text-xs text-gray-300 mt-1">Currently active</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
+                      <div className="text-sm text-gray-200 mb-1">Unread Messages</div>
+                      <div className="text-3xl font-bold text-white">
+                        {conversations.reduce((sum, c) => sum + c.unread_count, 0)}
+                      </div>
+                      <div className="text-xs text-gray-300 mt-1">Across all conversations</div>
+                    </div>
+                  </div>
+
+                  {/* Conversations List */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Conversation List */}
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                      <div className="p-4 border-b border-gray-700">
+                        <h3 className="font-semibold text-white">All Conversations</h3>
+                      </div>
+                      <div className="overflow-y-auto max-h-[600px]">
+                        {conversations.length === 0 ? (
+                          <div className="p-6 text-center">
+                            <p className="text-gray-400 text-sm">No conversations yet.</p>
+                          </div>
+                        ) : (
+                          conversations.map((conv) => (
+                            <button
+                              key={conv.id}
+                              onClick={() => {
+                                setSelectedConversation(conv);
+                                fetchConversationMessages(conv.id);
+                              }}
+                              className={`w-full p-4 border-b border-gray-700 hover:bg-gray-750 text-left transition ${
+                                selectedConversation?.id === conv.id ? 'bg-gray-750' : ''
+                              }`}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="font-semibold text-sm text-white">
+                                  {conv.jobs.game_name} - Job #{conv.jobs.job_number}
+                                </div>
+                                {conv.unread_count > 0 && (
+                                  <span className="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">
+                                    {conv.unread_count} unread
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-400 mb-1">
+                                Customer: {conv.customer.full_name || conv.customer.email}
+                              </div>
+                              <div className="text-xs text-gray-400 mb-2">
+                                Booster: {conv.booster.full_name || conv.booster.email}
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                  conv.jobs.status === 'completed' ? 'bg-green-900/50 text-green-400 border border-green-500' :
+                                  conv.jobs.status === 'in_progress' ? 'bg-blue-900/50 text-blue-400 border border-blue-500' :
+                                  'bg-purple-900/50 text-purple-400 border border-purple-500'
+                                }`}>
+                                  {conv.jobs.status.toUpperCase()}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {conv.message_count} messages
+                                </span>
+                              </div>
+                              {conv.last_message && (
+                                <div className="text-xs text-gray-500 mt-2 truncate">
+                                  Last: {conv.last_message.message_text || '📎 Attachment'}
+                                </div>
+                              )}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Message Viewer */}
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg flex flex-col">
+                      {selectedConversation ? (
+                        <>
+                          <div className="p-4 border-b border-gray-700">
+                            <div className="font-semibold text-white mb-1">
+                              {selectedConversation.jobs.game_name} - {selectedConversation.jobs.service_name}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              Job #{selectedConversation.jobs.job_number}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              Customer: {selectedConversation.customer.full_name || selectedConversation.customer.email}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              Booster: {selectedConversation.booster.full_name || selectedConversation.booster.email}
+                            </div>
+                          </div>
+
+                          <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[500px] bg-black">
+                            {conversationMessages.map((msg) => {
+                              const isCustomerMessage = msg.sender_id === selectedConversation.customer_id;
+                              const isSystemMessage = msg.is_system_message;
+
+                              if (isSystemMessage) {
+                                return (
+                                  <div key={msg.id} className="flex justify-center">
+                                    <div className="bg-gray-800 text-gray-400 text-xs px-3 py-1 rounded-full">
+                                      {msg.message_text}
+                                    </div>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div key={msg.id} className="flex flex-col">
+                                  <div className="text-xs text-gray-500 mb-1">
+                                    {isCustomerMessage ? 'Customer' : 'Booster'}
+                                  </div>
+                                  <div className={`px-3 py-2 rounded-lg ${
+                                    isCustomerMessage
+                                      ? 'bg-blue-900/50 text-blue-100 border border-blue-700'
+                                      : 'bg-purple-900/50 text-purple-100 border border-purple-700'
+                                  }`}>
+                                    <div className="text-sm">{msg.message_text || '📎 Attachment'}</div>
+                                    <div className="text-xs text-gray-400 mt-1">
+                                      {new Date(msg.created_at).toLocaleString()}
+                                      {msg.read_at ? ' • Read' : ' • Unread'}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex-1 flex items-center justify-center text-gray-500 p-6">
+                          Select a conversation to view messages
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
