@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import GameCarousel from '@/components/GameCarousel';
+import StrikeModal from '@/components/StrikeModal';
 
 interface UserData {
   id: string;
@@ -178,6 +179,8 @@ export default function AdminPage() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [conversationMessages, setConversationMessages] = useState<Message[]>([]);
   const [reviews, setReviews] = useState<AdminReview[]>([]);
+  const [strikeModalOpen, setStrikeModalOpen] = useState(false);
+  const [selectedReviewForStrike, setSelectedReviewForStrike] = useState<AdminReview | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -1483,14 +1486,27 @@ export default function AdminPage() {
                             )}
 
                             {/* Review Footer */}
-                            <div className="border-t border-gray-700 pt-4 text-xs text-gray-500">
-                              {new Date(review.created_at).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
+                            <div className="border-t border-gray-700 pt-4 flex justify-between items-center">
+                              <div className="text-xs text-gray-500">
+                                {new Date(review.created_at).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </div>
+                              {review.booster && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedReviewForStrike(review);
+                                    setStrikeModalOpen(true);
+                                  }}
+                                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm"
+                                >
+                                  Issue Strike
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -1503,6 +1519,26 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+
+      {/* Strike Modal */}
+      {selectedReviewForStrike && (
+        <StrikeModal
+          isOpen={strikeModalOpen}
+          onClose={() => {
+            setStrikeModalOpen(false);
+            setSelectedReviewForStrike(null);
+          }}
+          boosterId={selectedReviewForStrike.booster?.id || ''}
+          boosterName={selectedReviewForStrike.booster?.full_name || selectedReviewForStrike.booster?.email || 'Unknown'}
+          jobId={selectedReviewForStrike.job_id}
+          jobNumber={selectedReviewForStrike.jobs?.job_number || 'N/A'}
+          onStrikeIssued={() => {
+            fetchReviews();
+            setStrikeModalOpen(false);
+            setSelectedReviewForStrike(null);
+          }}
+        />
+      )}
     </div>
   );
 }
