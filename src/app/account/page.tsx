@@ -892,33 +892,134 @@ export default function AccountPage() {
                       <div className="text-gray-400">Loading reviews...</div>
                     </div>
                   ) : boosterReviews.length === 0 ? (
-                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                      </svg>
-                      <h3 className="text-lg font-semibold text-white mb-2">No Reviews Yet</h3>
-                      <p className="text-gray-400 text-sm">
-                        When customers review your work, their reviews will appear here.
-                      </p>
-                    </div>
-                  ) : (
                     <div>
-                      {/* Average Rating Card */}
-                      <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-6 mb-6">
+                      {/* Strike Count Card (show even when no reviews) */}
+                      <div className={`bg-gradient-to-br rounded-lg p-6 mb-6 ${
+                        (userData.strike_count || 0) >= 3
+                          ? 'from-red-600 to-red-700'
+                          : (userData.strike_count || 0) >= 2
+                          ? 'from-orange-600 to-orange-700'
+                          : (userData.strike_count || 0) >= 1
+                          ? 'from-yellow-600 to-yellow-700'
+                          : 'from-green-600 to-green-700'
+                      }`}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="text-sm text-yellow-100 mb-1">Average Rating</div>
+                            <div className={`text-sm mb-1 ${
+                              (userData.strike_count || 0) >= 3
+                                ? 'text-red-100'
+                                : (userData.strike_count || 0) >= 2
+                                ? 'text-orange-100'
+                                : (userData.strike_count || 0) >= 1
+                                ? 'text-yellow-100'
+                                : 'text-green-100'
+                            }`}>Active Strikes</div>
                             <div className="flex items-center gap-2">
                               <div className="text-5xl font-bold text-white">
-                                {(boosterReviews.reduce((acc, r) => acc + r.rating, 0) / boosterReviews.length).toFixed(1)}
+                                {userData.strike_count || 0}
                               </div>
-                              <div className="text-3xl text-yellow-200">★</div>
+                              <div className="text-2xl text-white opacity-70">/3</div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm text-yellow-100 mb-1">Total Reviews</div>
-                            <div className="text-3xl font-bold text-white">{boosterReviews.length}</div>
+                            <svg className="w-16 h-16 text-white opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
                           </div>
+                        </div>
+                        {(userData.strike_count || 0) === 0 && (
+                          <p className="text-xs text-green-100 mt-2">Great job! Keep up the excellent work.</p>
+                        )}
+                        {(userData.strike_count || 0) === 1 && (
+                          <p className="text-xs text-yellow-100 mt-2">You have 1 active strike. Two more will result in suspension.</p>
+                        )}
+                        {(userData.strike_count || 0) === 2 && (
+                          <p className="text-xs text-orange-100 mt-2">Warning: You have 2 strikes. One more will result in suspension.</p>
+                        )}
+                        {(userData.strike_count || 0) >= 3 && (
+                          <p className="text-xs text-red-100 mt-2">Your account is suspended due to 3 strikes.</p>
+                        )}
+                      </div>
+
+                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                        <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                        <h3 className="text-lg font-semibold text-white mb-2">No Reviews Yet</h3>
+                        <p className="text-gray-400 text-sm">
+                          When customers review your work, their reviews will appear here.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Stats Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        {/* Average Rating Card */}
+                        <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="text-sm text-yellow-100 mb-1">Average Rating</div>
+                              <div className="flex items-center gap-2">
+                                <div className="text-5xl font-bold text-white">
+                                  {(boosterReviews.reduce((acc, r) => acc + r.rating, 0) / boosterReviews.length).toFixed(1)}
+                                </div>
+                                <div className="text-3xl text-yellow-200">★</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm text-yellow-100 mb-1">Total Reviews</div>
+                              <div className="text-3xl font-bold text-white">{boosterReviews.length}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Strike Count Card */}
+                        <div className={`bg-gradient-to-br rounded-lg p-6 ${
+                          (userData.strike_count || 0) >= 3
+                            ? 'from-red-600 to-red-700'
+                            : (userData.strike_count || 0) >= 2
+                            ? 'from-orange-600 to-orange-700'
+                            : (userData.strike_count || 0) >= 1
+                            ? 'from-yellow-600 to-yellow-700'
+                            : 'from-green-600 to-green-700'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className={`text-sm mb-1 ${
+                                (userData.strike_count || 0) >= 3
+                                  ? 'text-red-100'
+                                  : (userData.strike_count || 0) >= 2
+                                  ? 'text-orange-100'
+                                  : (userData.strike_count || 0) >= 1
+                                  ? 'text-yellow-100'
+                                  : 'text-green-100'
+                              }`}>Active Strikes</div>
+                              <div className="flex items-center gap-2">
+                                <div className="text-5xl font-bold text-white">
+                                  {userData.strike_count || 0}
+                                </div>
+                                <div className="text-2xl text-white opacity-70">/3</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <svg className="w-16 h-16 text-white opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                            </div>
+                          </div>
+                          {(userData.strike_count || 0) === 0 && (
+                            <p className="text-xs text-green-100 mt-2">Great job! Keep up the excellent work.</p>
+                          )}
+                          {(userData.strike_count || 0) === 1 && (
+                            <p className="text-xs text-yellow-100 mt-2">You have 1 active strike. Two more will result in suspension.</p>
+                          )}
+                          {(userData.strike_count || 0) === 2 && (
+                            <p className="text-xs text-orange-100 mt-2">Warning: You have 2 strikes. One more will result in suspension.</p>
+                          )}
+                          {(userData.strike_count || 0) >= 3 && (
+                            <p className="text-xs text-red-100 mt-2">Your account is suspended due to 3 strikes.</p>
+                          )}
                         </div>
                       </div>
 
