@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import ReviewModal from '@/components/ReviewModal';
 
 interface UserData {
   id: string;
@@ -44,6 +45,57 @@ interface Job {
   };
 }
 
+interface Review {
+  id: string;
+  rating: number;
+  quality_rating: number | null;
+  communication_rating: number | null;
+  timeliness_rating: number | null;
+  review_text: string | null;
+  delivery_status: string;
+  created_at: string;
+}
+
+interface CompletedJob {
+  id: string;
+  job_number: string;
+  service_name: string;
+  game_name: string;
+  status: string;
+  completed_at: string;
+  booster_id: string;
+  booster: {
+    id: string;
+    full_name: string | null;
+    email: string;
+  };
+  has_review: boolean;
+  review: Review | null;
+}
+
+interface BoosterReview {
+  id: string;
+  rating: number;
+  quality_rating: number | null;
+  communication_rating: number | null;
+  timeliness_rating: number | null;
+  review_text: string | null;
+  delivery_status: string;
+  created_at: string;
+  job_id: string;
+  jobs: {
+    job_number: string;
+    service_name: string;
+    game_name: string;
+    completed_at: string;
+  } | null;
+  customer: {
+    id: string;
+    full_name: string | null;
+    email: string;
+  } | null;
+}
+
 export default function AccountPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -62,6 +114,12 @@ export default function AccountPage() {
   const [updatingProgress, setUpdatingProgress] = useState(false);
   const [editedFullName, setEditedFullName] = useState('');
   const [editedPhone, setEditedPhone] = useState('');
+  const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
+  const [completedJobsLoading, setCompletedJobsLoading] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedJobForReview, setSelectedJobForReview] = useState<CompletedJob | null>(null);
+  const [boosterReviews, setBoosterReviews] = useState<BoosterReview[]>([]);
+  const [boosterReviewsLoading, setBoosterReviewsLoading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -101,6 +159,20 @@ export default function AccountPage() {
   useEffect(() => {
     if (activeTab === 'jobs' && userData?.role === 'booster' && userData?.booster_approval_status === 'approved') {
       fetchBoosterJobs();
+    }
+  }, [activeTab, userData]);
+
+  // Fetch completed jobs when completed tab is active and user is customer
+  useEffect(() => {
+    if (activeTab === 'completed' && userData?.role === 'customer') {
+      fetchCompletedJobs();
+    }
+  }, [activeTab, userData]);
+
+  // Fetch booster reviews when reviews tab is active and user is approved booster
+  useEffect(() => {
+    if (activeTab === 'reviews' && userData?.role === 'booster' && userData?.booster_approval_status === 'approved') {
+      fetchBoosterReviews();
     }
   }, [activeTab, userData]);
 
@@ -146,6 +218,48 @@ export default function AccountPage() {
       setBoosterJobs([]);
     } finally {
       setBoosterJobsLoading(false);
+    }
+  };
+
+  const fetchCompletedJobs = async () => {
+    setCompletedJobsLoading(true);
+
+    try {
+      const response = await fetch('/api/jobs/completed');
+
+      if (response.ok) {
+        const data = await response.json();
+        setCompletedJobs(data.jobs || []);
+      } else {
+        console.error('Failed to fetch completed jobs');
+        setCompletedJobs([]);
+      }
+    } catch (error) {
+      console.error('Error fetching completed jobs:', error);
+      setCompletedJobs([]);
+    } finally {
+      setCompletedJobsLoading(false);
+    }
+  };
+
+  const fetchBoosterReviews = async () => {
+    setBoosterReviewsLoading(true);
+
+    try {
+      const response = await fetch('/api/reviews/my-reviews');
+
+      if (response.ok) {
+        const data = await response.json();
+        setBoosterReviews(data.reviews || []);
+      } else {
+        console.error('Failed to fetch booster reviews');
+        setBoosterReviews([]);
+      }
+    } catch (error) {
+      console.error('Error fetching booster reviews:', error);
+      setBoosterReviews([]);
+    } finally {
+      setBoosterReviewsLoading(false);
     }
   };
 
@@ -197,6 +311,21 @@ export default function AccountPage() {
     }
   };
 
+  const handleOpenReviewModal = (job: CompletedJob) => {
+    setSelectedJobForReview(job);
+    setShowReviewModal(true);
+  };
+
+  const handleCloseReviewModal = () => {
+    setShowReviewModal(false);
+    setSelectedJobForReview(null);
+  };
+
+  const handleReviewSubmitted = () => {
+    // Refresh completed jobs list
+    fetchCompletedJobs();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -240,16 +369,28 @@ export default function AccountPage() {
                   Security
                 </button>
                 {userData.role === 'customer' && (
-                  <button
-                    onClick={() => setActiveTab('orders')}
-                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
-                      activeTab === 'orders'
-                        ? 'bg-primary-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                    }`}
-                  >
-                    My Orders
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setActiveTab('orders')}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                        activeTab === 'orders'
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      My Orders
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('completed')}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                        activeTab === 'completed'
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      Completed Jobs
+                    </button>
+                  </>
                 )}
                 {userData.role === 'booster' && userData.booster_approval_status === 'approved' && (
                   <>
@@ -262,6 +403,16 @@ export default function AccountPage() {
                       }`}
                     >
                       My Jobs
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('reviews')}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                        activeTab === 'reviews'
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      My Reviews
                     </button>
                     <button
                       onClick={() => setActiveTab('earnings')}
@@ -597,6 +748,263 @@ export default function AccountPage() {
                 </div>
               )}
 
+              {/* Completed Jobs Tab (Customers Only) */}
+              {activeTab === 'completed' && userData.role === 'customer' && (
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6">Completed Jobs</h2>
+
+                  {completedJobsLoading ? (
+                    <div className="text-center py-12">
+                      <div className="text-gray-400">Loading completed jobs...</div>
+                    </div>
+                  ) : completedJobs.length === 0 ? (
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <h3 className="text-lg font-semibold text-white mb-2">No Completed Jobs Yet</h3>
+                      <p className="text-gray-400 text-sm">
+                        When your jobs are completed, they will appear here for you to review.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {completedJobs.map((job) => (
+                        <div
+                          key={job.id}
+                          className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-primary-600 transition"
+                        >
+                          {/* Job Header */}
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="text-xl font-semibold text-white mb-1">
+                                {job.service_name}
+                              </h3>
+                              <p className="text-sm text-gray-400">{job.game_name}</p>
+                              <p className="text-xs text-gray-500 mt-1">Job #{job.job_number}</p>
+                              <p className="text-xs text-gray-500">
+                                Completed on {new Date(job.completed_at).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-900/50 text-green-400 border border-green-500">
+                                COMPLETED
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Booster Info */}
+                          <div className="border-t border-gray-700 pt-4 mb-4">
+                            <p className="text-xs text-gray-500 mb-1">Booster</p>
+                            <p className="text-sm text-white">{job.booster.full_name || job.booster.email}</p>
+                          </div>
+
+                          {/* Review Section */}
+                          {job.has_review && job.review ? (
+                            <div className="border-t border-gray-700 pt-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-sm font-semibold text-gray-400">Your Review</h4>
+                                <div className="flex items-center gap-1">
+                                  {[...Array(5)].map((_, i) => (
+                                    <span
+                                      key={i}
+                                      className={`text-lg ${
+                                        i < job.review!.rating ? 'text-yellow-400' : 'text-gray-600'
+                                      }`}
+                                    >
+                                      ★
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="mb-2">
+                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                                  job.review.delivery_status === 'complete'
+                                    ? 'bg-green-900/50 text-green-400'
+                                    : job.review.delivery_status === 'incomplete'
+                                    ? 'bg-yellow-900/50 text-yellow-400'
+                                    : 'bg-red-900/50 text-red-400'
+                                }`}>
+                                  {job.review.delivery_status === 'complete' ? 'Complete Delivery' :
+                                   job.review.delivery_status === 'incomplete' ? 'Incomplete Delivery' :
+                                   'Poor Quality'}
+                                </span>
+                              </div>
+                              {job.review.review_text && (
+                                <p className="text-sm text-gray-300 mb-2">{job.review.review_text}</p>
+                              )}
+                              <p className="text-xs text-gray-500">
+                                Reviewed on {new Date(job.review.created_at).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="border-t border-gray-700 pt-4">
+                              <button
+                                onClick={() => handleOpenReviewModal(job)}
+                                className="w-full py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-bold"
+                              >
+                                LEAVE A REVIEW
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Reviews Tab (Approved Boosters Only) */}
+              {activeTab === 'reviews' && userData.role === 'booster' && userData.booster_approval_status === 'approved' && (
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6">My Reviews</h2>
+
+                  {boosterReviewsLoading ? (
+                    <div className="text-center py-12">
+                      <div className="text-gray-400">Loading reviews...</div>
+                    </div>
+                  ) : boosterReviews.length === 0 ? (
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                      <h3 className="text-lg font-semibold text-white mb-2">No Reviews Yet</h3>
+                      <p className="text-gray-400 text-sm">
+                        When customers review your work, their reviews will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Average Rating Card */}
+                      <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-6 mb-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm text-yellow-100 mb-1">Average Rating</div>
+                            <div className="flex items-center gap-2">
+                              <div className="text-5xl font-bold text-white">
+                                {(boosterReviews.reduce((acc, r) => acc + r.rating, 0) / boosterReviews.length).toFixed(1)}
+                              </div>
+                              <div className="text-3xl text-yellow-200">★</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-yellow-100 mb-1">Total Reviews</div>
+                            <div className="text-3xl font-bold text-white">{boosterReviews.length}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Reviews List */}
+                      <div className="space-y-4">
+                        {boosterReviews.map((review) => (
+                          <div
+                            key={review.id}
+                            className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-primary-600 transition"
+                          >
+                            {/* Review Header */}
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="text-xl font-semibold text-white mb-1">
+                                  {review.jobs?.service_name || 'Unknown Service'}
+                                </h3>
+                                <p className="text-sm text-gray-400">{review.jobs?.game_name || 'Unknown Game'}</p>
+                                <p className="text-xs text-gray-500 mt-1">Job #{review.jobs?.job_number || 'N/A'}</p>
+                              </div>
+                              <div className="text-right">
+                                <div className="flex items-center gap-1 mb-2">
+                                  {[...Array(5)].map((_, i) => (
+                                    <span
+                                      key={i}
+                                      className={`text-2xl ${
+                                        i < review.rating ? 'text-yellow-400' : 'text-gray-600'
+                                      }`}
+                                    >
+                                      ★
+                                    </span>
+                                  ))}
+                                </div>
+                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                                  review.delivery_status === 'complete'
+                                    ? 'bg-green-900/50 text-green-400'
+                                    : review.delivery_status === 'incomplete'
+                                    ? 'bg-yellow-900/50 text-yellow-400'
+                                    : 'bg-red-900/50 text-red-400'
+                                }`}>
+                                  {review.delivery_status === 'complete' ? 'Complete' :
+                                   review.delivery_status === 'incomplete' ? 'Incomplete' :
+                                   'Poor Quality'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Review Content */}
+                            {review.review_text && (
+                              <div className="mb-4">
+                                <p className="text-gray-300 text-sm italic">"{review.review_text}"</p>
+                              </div>
+                            )}
+
+                            {/* Additional Ratings */}
+                            {(review.quality_rating || review.communication_rating || review.timeliness_rating) && (
+                              <div className="border-t border-gray-700 pt-4 mb-4">
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                  {review.quality_rating && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 mb-1">Quality</p>
+                                      <p className="text-sm font-semibold text-white">
+                                        {review.quality_rating}/5 ★
+                                      </p>
+                                    </div>
+                                  )}
+                                  {review.communication_rating && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 mb-1">Communication</p>
+                                      <p className="text-sm font-semibold text-white">
+                                        {review.communication_rating}/5 ★
+                                      </p>
+                                    </div>
+                                  )}
+                                  {review.timeliness_rating && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 mb-1">Timeliness</p>
+                                      <p className="text-sm font-semibold text-white">
+                                        {review.timeliness_rating}/5 ★
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Review Footer */}
+                            <div className="border-t border-gray-700 pt-4 flex justify-between items-center text-xs text-gray-500">
+                              <div>
+                                From: {review.customer?.full_name || review.customer?.email || 'Anonymous'}
+                              </div>
+                              <div>
+                                {new Date(review.created_at).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Jobs Tab (Approved Boosters Only) */}
               {activeTab === 'jobs' && userData.role === 'booster' && userData.booster_approval_status === 'approved' && (
                 <div>
@@ -701,6 +1109,20 @@ export default function AccountPage() {
           </div>
         </div>
       </div>
+
+      {/* Review Modal */}
+      {showReviewModal && selectedJobForReview && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={handleCloseReviewModal}
+          jobId={selectedJobForReview.id}
+          jobNumber={selectedJobForReview.job_number}
+          gameName={selectedJobForReview.game_name}
+          serviceName={selectedJobForReview.service_name}
+          boosterName={selectedJobForReview.booster.full_name || selectedJobForReview.booster.email}
+          onReviewSubmitted={handleReviewSubmitted}
+        />
+      )}
 
       {/* Progress Update Modal */}
       {showProgressModal && selectedJobForUpdate && (

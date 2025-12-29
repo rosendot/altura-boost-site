@@ -100,6 +100,36 @@ interface Message {
   is_system_message: boolean;
 }
 
+interface AdminReview {
+  id: string;
+  rating: number;
+  quality_rating: number | null;
+  communication_rating: number | null;
+  timeliness_rating: number | null;
+  review_text: string | null;
+  delivery_status: string;
+  is_flagged: boolean | null;
+  requires_admin_review: boolean | null;
+  created_at: string;
+  job_id: string;
+  jobs: {
+    job_number: string;
+    service_name: string;
+    game_name: string;
+    completed_at: string;
+  } | null;
+  customer: {
+    id: string;
+    full_name: string | null;
+    email: string;
+  } | null;
+  booster: {
+    id: string;
+    full_name: string | null;
+    email: string;
+  } | null;
+}
+
 interface ConversationUser {
   id: string;
   email: string;
@@ -147,6 +177,7 @@ export default function AdminPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [conversationMessages, setConversationMessages] = useState<Message[]>([]);
+  const [reviews, setReviews] = useState<AdminReview[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -199,6 +230,9 @@ export default function AdminPage() {
     }
     if (activeTab === 'conversations' && userData?.role === 'admin') {
       fetchConversations();
+    }
+    if (activeTab === 'reviews' && userData?.role === 'admin') {
+      fetchReviews();
     }
   }, [activeTab, userData]);
 
@@ -318,6 +352,18 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch('/api/admin/reviews');
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data.reviews || []);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
     }
   };
 
@@ -481,6 +527,16 @@ export default function AdminPage() {
                   }`}
                 >
                   Conversations
+                </button>
+                <button
+                  onClick={() => setActiveTab('reviews')}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                    activeTab === 'reviews'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  }`}
+                >
+                  Reviews
                 </button>
               </nav>
             </div>
@@ -1280,6 +1336,167 @@ export default function AdminPage() {
                       )}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Reviews Tab */}
+              {activeTab === 'reviews' && (
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6">Customer Reviews</h2>
+
+                  {reviews.length === 0 ? (
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                      <h3 className="text-lg font-semibold text-white mb-2">No Reviews Yet</h3>
+                      <p className="text-gray-400 text-sm">
+                        Customer reviews will appear here once jobs are completed and reviewed.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Stats Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
+                          <div className="text-sm text-yellow-100 mb-1">Total Reviews</div>
+                          <div className="text-3xl font-bold text-white">{reviews.length}</div>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
+                          <div className="text-sm text-green-100 mb-1">Average Rating</div>
+                          <div className="text-3xl font-bold text-white">
+                            {(reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)} ★
+                          </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
+                          <div className="text-sm text-blue-100 mb-1">Complete Deliveries</div>
+                          <div className="text-3xl font-bold text-white">
+                            {reviews.filter(r => r.delivery_status === 'complete').length}
+                          </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-4">
+                          <div className="text-sm text-red-100 mb-1">Flagged Reviews</div>
+                          <div className="text-3xl font-bold text-white">
+                            {reviews.filter(r => r.is_flagged || r.requires_admin_review).length}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Reviews List */}
+                      <div className="space-y-4">
+                        {reviews.map((review) => (
+                          <div
+                            key={review.id}
+                            className={`bg-gray-800 border rounded-lg p-6 hover:border-primary-600 transition ${
+                              review.is_flagged || review.requires_admin_review
+                                ? 'border-red-500'
+                                : 'border-gray-700'
+                            }`}
+                          >
+                            {/* Review Header */}
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="text-xl font-semibold text-white mb-1">
+                                  {review.jobs?.service_name || 'Unknown Service'}
+                                </h3>
+                                <p className="text-sm text-gray-400">{review.jobs?.game_name || 'Unknown Game'} • Job #{review.jobs?.job_number || 'N/A'}</p>
+                                <div className="flex gap-4 mt-2 text-xs">
+                                  <span className="text-gray-500">
+                                    Customer: {review.customer?.full_name || review.customer?.email || 'Anonymous'}
+                                  </span>
+                                  <span className="text-gray-500">
+                                    Booster: {review.booster?.full_name || review.booster?.email || 'Anonymous'}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="flex items-center gap-1 mb-2">
+                                  {[...Array(5)].map((_, i) => (
+                                    <span
+                                      key={i}
+                                      className={`text-2xl ${
+                                        i < review.rating ? 'text-yellow-400' : 'text-gray-600'
+                                      }`}
+                                    >
+                                      ★
+                                    </span>
+                                  ))}
+                                </div>
+                                <div className="flex gap-2 flex-wrap justify-end">
+                                  <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                                    review.delivery_status === 'complete'
+                                      ? 'bg-green-900/50 text-green-400'
+                                      : review.delivery_status === 'incomplete'
+                                      ? 'bg-yellow-900/50 text-yellow-400'
+                                      : 'bg-red-900/50 text-red-400'
+                                  }`}>
+                                    {review.delivery_status === 'complete' ? 'Complete' :
+                                     review.delivery_status === 'incomplete' ? 'Incomplete' :
+                                     'Poor Quality'}
+                                  </span>
+                                  {(review.is_flagged || review.requires_admin_review) && (
+                                    <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-red-900/50 text-red-400 border border-red-500">
+                                      ⚠ FLAGGED
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Review Content */}
+                            {review.review_text && (
+                              <div className="mb-4 p-3 bg-gray-900 rounded-lg">
+                                <p className="text-gray-300 text-sm italic">"{review.review_text}"</p>
+                              </div>
+                            )}
+
+                            {/* Additional Ratings */}
+                            {(review.quality_rating || review.communication_rating || review.timeliness_rating) && (
+                              <div className="border-t border-gray-700 pt-4 mb-4">
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                  {review.quality_rating && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 mb-1">Quality</p>
+                                      <p className="text-sm font-semibold text-white">
+                                        {review.quality_rating}/5 ★
+                                      </p>
+                                    </div>
+                                  )}
+                                  {review.communication_rating && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 mb-1">Communication</p>
+                                      <p className="text-sm font-semibold text-white">
+                                        {review.communication_rating}/5 ★
+                                      </p>
+                                    </div>
+                                  )}
+                                  {review.timeliness_rating && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 mb-1">Timeliness</p>
+                                      <p className="text-sm font-semibold text-white">
+                                        {review.timeliness_rating}/5 ★
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Review Footer */}
+                            <div className="border-t border-gray-700 pt-4 text-xs text-gray-500">
+                              {new Date(review.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
