@@ -263,31 +263,23 @@ export default function AdminPage() {
     fetchUser();
   }, [router]);
 
+  // Load all data in parallel on mount
   useEffect(() => {
-    if (activeTab === 'applications' && userData?.role === 'admin') {
-      fetchApplications();
+    if (userData?.role === 'admin') {
+      // Fetch all data in parallel
+      Promise.all([
+        fetchApplications(),
+        fetchOrders(),
+        fetchJobs(),
+        fetchUsers(),
+        fetchGames(),
+        fetchServices(),
+        fetchConversations(),
+        fetchReviews(),
+        fetchAppeals(),
+      ]);
     }
-    if (activeTab === 'orders' && userData?.role === 'admin') {
-      fetchOrders();
-      fetchJobs();
-    }
-    if (activeTab === 'users' && userData?.role === 'admin') {
-      fetchUsers();
-    }
-    if (activeTab === 'services' && userData?.role === 'admin') {
-      fetchGames();
-      fetchServices();
-    }
-    if (activeTab === 'conversations' && userData?.role === 'admin') {
-      fetchConversations();
-    }
-    if (activeTab === 'reviews' && userData?.role === 'admin') {
-      fetchReviews();
-    }
-    if (activeTab === 'appeals' && userData?.role === 'admin') {
-      fetchAppeals();
-    }
-  }, [activeTab, userData]);
+  }, [userData]);
 
   const fetchApplications = async () => {
     const supabase = createClient();
