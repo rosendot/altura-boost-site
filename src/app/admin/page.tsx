@@ -203,7 +203,7 @@ export default function AdminPage() {
   const [user, setUser] = useState<any>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('applications');
   const [applications, setApplications] = useState<BoosterApplication[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -631,9 +631,6 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold text-white">Admin Panel</h1>
-          <div className="px-4 py-2 bg-yellow-600 text-white rounded-lg font-semibold text-sm">
-            ADMIN ACCESS
-          </div>
         </div>
 
         <div className="flex gap-8">
@@ -642,82 +639,65 @@ export default function AdminPage() {
             <div className="bg-gray-900 border border-primary-700 rounded-lg p-4">
               <nav className="space-y-2">
                 <button
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    activeTab === 'dashboard'
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
-                >
-                  Dashboard
-                </button>
-                <button
                   onClick={() => setActiveTab('applications')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    activeTab === 'applications'
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'applications'
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
                 >
                   Booster Applications
                 </button>
                 <button
                   onClick={() => setActiveTab('orders')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    activeTab === 'orders'
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'orders'
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
                 >
                   Orders
                 </button>
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    activeTab === 'users'
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'users'
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
                 >
                   Users
                 </button>
                 <button
                   onClick={() => setActiveTab('services')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    activeTab === 'services'
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'services'
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
                 >
                   Services & Games
                 </button>
                 <button
                   onClick={() => setActiveTab('conversations')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    activeTab === 'conversations'
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'conversations'
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
                 >
                   Conversations
                 </button>
                 <button
                   onClick={() => setActiveTab('reviews')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    activeTab === 'reviews'
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'reviews'
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
                 >
                   Reviews
                 </button>
                 <button
                   onClick={() => setActiveTab('appeals')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
-                    activeTab === 'appeals'
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'appeals'
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
                 >
                   Appeals
                 </button>
@@ -728,48 +708,6 @@ export default function AdminPage() {
           {/* Main Content */}
           <div className="flex-1">
             <div className="bg-gray-900 border border-primary-700 rounded-lg p-6">
-              {/* Dashboard Tab */}
-              {activeTab === 'dashboard' && (
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-6">Dashboard Overview</h2>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {/* Stats Cards */}
-                    <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-lg p-6">
-                      <div className="text-sm text-gray-200 mb-1">Total Revenue</div>
-                      <div className="text-3xl font-bold text-white">$0.00</div>
-                      <div className="text-xs text-gray-300 mt-2">All time</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-6">
-                      <div className="text-sm text-gray-200 mb-1">Active Orders</div>
-                      <div className="text-3xl font-bold text-white">0</div>
-                      <div className="text-xs text-gray-300 mt-2">Currently in progress</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-6">
-                      <div className="text-sm text-gray-200 mb-1">Active Boosters</div>
-                      <div className="text-3xl font-bold text-white">0</div>
-                      <div className="text-xs text-gray-300 mt-2">Approved boosters</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-6">
-                      <div className="text-sm text-gray-200 mb-1">Pending Applications</div>
-                      <div className="text-3xl font-bold text-white">
-                        {applications.filter(app => app.status === 'pending').length}
-                      </div>
-                      <div className="text-xs text-gray-300 mt-2">Awaiting review</div>
-                    </div>
-                  </div>
-
-                  {/* Recent Activity */}
-                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
-                    <p className="text-gray-400 text-sm">No recent activity to display.</p>
-                  </div>
-                </div>
-              )}
-
               {/* Booster Applications Tab */}
               {activeTab === 'applications' && (
                 <div>
@@ -919,14 +857,13 @@ export default function AdminPage() {
                                   {order.users?.email || 'Unknown customer'}
                                 </p>
                               </div>
-                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                order.status === 'completed' ? 'bg-green-900/50 text-green-400 border border-green-500' :
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${order.status === 'completed' ? 'bg-green-900/50 text-green-400 border border-green-500' :
                                 order.status === 'in_progress' ? 'bg-blue-900/50 text-blue-400 border border-blue-500' :
-                                order.status === 'assigned' ? 'bg-purple-900/50 text-purple-400 border border-purple-500' :
-                                order.status === 'paid' || order.status === 'available' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
-                                order.status === 'cancelled' ? 'bg-red-900/50 text-red-400 border border-red-500' :
-                                'bg-gray-900/50 text-gray-400 border border-gray-500'
-                              }`}>
+                                  order.status === 'assigned' ? 'bg-purple-900/50 text-purple-400 border border-purple-500' :
+                                    order.status === 'paid' || order.status === 'available' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
+                                      order.status === 'cancelled' ? 'bg-red-900/50 text-red-400 border border-red-500' :
+                                        'bg-gray-900/50 text-gray-400 border border-gray-500'
+                                }`}>
                                 {order.status.replace('_', ' ').toUpperCase()}
                               </span>
                             </div>
@@ -977,13 +914,12 @@ export default function AdminPage() {
                                 <h4 className="text-lg font-semibold text-white">{job.job_number}</h4>
                                 <p className="text-sm text-gray-400">{job.game_name}</p>
                               </div>
-                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                job.status === 'completed' ? 'bg-green-900/50 text-green-400 border border-green-500' :
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${job.status === 'completed' ? 'bg-green-900/50 text-green-400 border border-green-500' :
                                 job.status === 'in_progress' ? 'bg-blue-900/50 text-blue-400 border border-blue-500' :
-                                job.status === 'accepted' ? 'bg-purple-900/50 text-purple-400 border border-purple-500' :
-                                job.status === 'available' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
-                                'bg-red-900/50 text-red-400 border border-red-500'
-                              }`}>
+                                  job.status === 'accepted' ? 'bg-purple-900/50 text-purple-400 border border-purple-500' :
+                                    job.status === 'available' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
+                                      'bg-red-900/50 text-red-400 border border-red-500'
+                                }`}>
                                 {job.status.toUpperCase()}
                               </span>
                             </div>
@@ -1043,78 +979,41 @@ export default function AdminPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">User Management</h2>
 
-                  {/* User Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Total Users</div>
-                      <div className="text-3xl font-bold text-white">{users.length}</div>
-                      <div className="text-xs text-gray-300 mt-1">All time</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Customers</div>
-                      <div className="text-3xl font-bold text-white">
-                        {users.filter(u => u.role === 'customer').length}
-                      </div>
-                      <div className="text-xs text-gray-300 mt-1">Customer accounts</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Boosters</div>
-                      <div className="text-3xl font-bold text-white">
-                        {users.filter(u => u.role === 'booster').length}
-                      </div>
-                      <div className="text-xs text-gray-300 mt-1">Approved boosters</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Admins</div>
-                      <div className="text-3xl font-bold text-white">
-                        {users.filter(u => u.role === 'admin').length}
-                      </div>
-                      <div className="text-xs text-gray-300 mt-1">Admin accounts</div>
-                    </div>
-                  </div>
-
                   {/* Filter Tabs */}
                   <div className="flex gap-4 mb-6">
                     <button
                       onClick={() => setUserFilter('all')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                        userFilter === 'all'
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      }`}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${userFilter === 'all'
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
                     >
                       All Users ({users.length})
                     </button>
                     <button
                       onClick={() => setUserFilter('customer')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                        userFilter === 'customer'
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      }`}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${userFilter === 'customer'
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
                     >
                       Customers ({users.filter(u => u.role === 'customer').length})
                     </button>
                     <button
                       onClick={() => setUserFilter('booster')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                        userFilter === 'booster'
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      }`}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${userFilter === 'booster'
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
                     >
                       Boosters ({users.filter(u => u.role === 'booster').length})
                     </button>
                     <button
                       onClick={() => setUserFilter('admin')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                        userFilter === 'admin'
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      }`}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${userFilter === 'admin'
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
                     >
                       Admins ({users.filter(u => u.role === 'admin').length})
                     </button>
@@ -1170,9 +1069,8 @@ export default function AdminPage() {
                             {users
                               .filter(u => userFilter === 'all' || u.role === userFilter)
                               .map((user) => (
-                                <tr key={user.id} className={`hover:bg-gray-750 transition-colors ${
-                                  user.is_suspended ? 'bg-red-900/10' : ''
-                                }`}>
+                                <tr key={user.id} className={`hover:bg-gray-750 transition-colors ${user.is_suspended ? 'bg-red-900/10' : ''
+                                  }`}>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
                                       <div className="flex-shrink-0 h-10 w-10 bg-primary-600 rounded-full flex items-center justify-center">
@@ -1196,11 +1094,10 @@ export default function AdminPage() {
                                     <div className="text-sm text-gray-300">{user.email}</div>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                      user.role === 'admin' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
+                                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500' :
                                       user.role === 'booster' ? 'bg-purple-900/50 text-purple-400 border border-purple-500' :
-                                      'bg-blue-900/50 text-blue-400 border border-blue-500'
-                                    }`}>
+                                        'bg-blue-900/50 text-blue-400 border border-blue-500'
+                                      }`}>
                                       {user.role.toUpperCase()}
                                     </span>
                                   </td>
@@ -1231,11 +1128,10 @@ export default function AdminPage() {
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     {user.role === 'booster' ? (
                                       <div className="text-sm">
-                                        <span className={`font-semibold ${
-                                          (user.strike_count || 0) >= 3 ? 'text-red-400' :
+                                        <span className={`font-semibold ${(user.strike_count || 0) >= 3 ? 'text-red-400' :
                                           (user.strike_count || 0) >= 2 ? 'text-yellow-400' :
-                                          'text-gray-300'
-                                        }`}>
+                                            'text-gray-300'
+                                          }`}>
                                           {user.strike_count || 0}/3
                                         </span>
                                         <span className="text-gray-500 ml-1">strikes</span>
@@ -1286,37 +1182,6 @@ export default function AdminPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">Services & Games Management</h2>
 
-                  {/* Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Total Games</div>
-                      <div className="text-3xl font-bold text-white">{games.length}</div>
-                      <div className="text-xs text-gray-300 mt-1">All games</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Active Games</div>
-                      <div className="text-3xl font-bold text-white">
-                        {games.filter(g => g.active).length}
-                      </div>
-                      <div className="text-xs text-gray-300 mt-1">Visible to users</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Total Services</div>
-                      <div className="text-3xl font-bold text-white">{services.length}</div>
-                      <div className="text-xs text-gray-300 mt-1">All services</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Active Services</div>
-                      <div className="text-3xl font-bold text-white">
-                        {services.filter(s => s.active).length}
-                      </div>
-                      <div className="text-xs text-gray-300 mt-1">Available for purchase</div>
-                    </div>
-                  </div>
-
                   {/* Games Section */}
                   <div className="mb-8">
                     <h3 className="text-xl font-semibold text-white mb-4">Games</h3>
@@ -1325,102 +1190,101 @@ export default function AdminPage() {
 
                   {/* Services Section */}
                   {selectedGame && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-semibold text-white">
-                        Services for {games.find(g => g.id === selectedGame)?.name}
-                      </h3>
-                      <button
-                        onClick={() => setSelectedGame(null)}
-                        className="text-sm text-gray-400 hover:text-white transition-colors"
-                      >
-                        Clear Selection
-                      </button>
-                    </div>
-                    {services.length === 0 ? (
-                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                        <p className="text-gray-400 text-sm">
-                          No services found. Add services to games.
-                        </p>
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-semibold text-white">
+                          Services for {games.find(g => g.id === selectedGame)?.name}
+                        </h3>
+                        <button
+                          onClick={() => setSelectedGame(null)}
+                          className="text-sm text-gray-400 hover:text-white transition-colors"
+                        >
+                          Clear Selection
+                        </button>
                       </div>
-                    ) : (
-                      <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead className="bg-gray-900 border-b border-gray-700">
-                              <tr>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                                  Service
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                                  Game
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                                  Price
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                                  Delivery Time
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                                  Status
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                                  Created
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-700">
-                              {services
-                                .filter(s => !selectedGame || s.game_id === selectedGame)
-                                .map((service) => (
-                                  <tr key={service.id} className="hover:bg-gray-750 transition-colors">
-                                    <td className="px-6 py-4">
-                                      <div className="text-sm font-medium text-white">
-                                        {service.name}
-                                      </div>
-                                      {service.description && (
-                                        <div className="text-xs text-gray-400 mt-1 max-w-md truncate">
-                                          {service.description}
+                      {services.length === 0 ? (
+                        <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                          <p className="text-gray-400 text-sm">
+                            No services found. Add services to games.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                          <div className="overflow-x-auto">
+                            <table className="w-full">
+                              <thead className="bg-gray-900 border-b border-gray-700">
+                                <tr>
+                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                    Service
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                    Game
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                    Price
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                    Delivery Time
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                    Status
+                                  </th>
+                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                    Created
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-700">
+                                {services
+                                  .filter(s => !selectedGame || s.game_id === selectedGame)
+                                  .map((service) => (
+                                    <tr key={service.id} className="hover:bg-gray-750 transition-colors">
+                                      <td className="px-6 py-4">
+                                        <div className="text-sm font-medium text-white">
+                                          {service.name}
                                         </div>
-                                      )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                      <div className="text-sm text-gray-300">
-                                        {games.find(g => g.id === service.game_id)?.name || 'Unknown'}
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                      <div className="text-sm text-green-400 font-semibold">
-                                        ${service.price.toFixed(2)}
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                      <div className="text-sm text-gray-300">
-                                        {service.delivery_time_hours}h
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                        service.active
+                                        {service.description && (
+                                          <div className="text-xs text-gray-400 mt-1 max-w-md truncate">
+                                            {service.description}
+                                          </div>
+                                        )}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-300">
+                                          {games.find(g => g.id === service.game_id)?.name || 'Unknown'}
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-green-400 font-semibold">
+                                          ${service.price.toFixed(2)}
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-300">
+                                          {service.delivery_time_hours}h
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${service.active
                                           ? 'bg-green-900/50 text-green-400 border border-green-500'
                                           : 'bg-red-900/50 text-red-400 border border-red-500'
-                                      }`}>
-                                        {service.active ? 'ACTIVE' : 'INACTIVE'}
-                                      </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                      <div className="text-sm text-gray-400">
-                                        {new Date(service.created_at).toLocaleDateString()}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                            </tbody>
-                          </table>
+                                          }`}>
+                                          {service.active ? 'ACTIVE' : 'INACTIVE'}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-400">
+                                          {new Date(service.created_at).toLocaleDateString()}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -1475,9 +1339,8 @@ export default function AdminPage() {
                                 setSelectedConversation(conv);
                                 fetchConversationMessages(conv.id);
                               }}
-                              className={`w-full p-4 border-b border-gray-700 hover:bg-gray-750 text-left transition ${
-                                selectedConversation?.id === conv.id ? 'bg-gray-750' : ''
-                              }`}
+                              className={`w-full p-4 border-b border-gray-700 hover:bg-gray-750 text-left transition ${selectedConversation?.id === conv.id ? 'bg-gray-750' : ''
+                                }`}
                             >
                               <div className="flex justify-between items-start mb-2">
                                 <div className="font-semibold text-sm text-white">
@@ -1496,11 +1359,10 @@ export default function AdminPage() {
                                 Booster: {conv.booster.full_name || conv.booster.email}
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                  conv.jobs.status === 'completed' ? 'bg-green-900/50 text-green-400 border border-green-500' :
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${conv.jobs.status === 'completed' ? 'bg-green-900/50 text-green-400 border border-green-500' :
                                   conv.jobs.status === 'in_progress' ? 'bg-blue-900/50 text-blue-400 border border-blue-500' :
-                                  'bg-purple-900/50 text-purple-400 border border-purple-500'
-                                }`}>
+                                    'bg-purple-900/50 text-purple-400 border border-purple-500'
+                                  }`}>
                                   {conv.jobs.status.toUpperCase()}
                                 </span>
                                 <span className="text-xs text-gray-500">
@@ -1557,11 +1419,10 @@ export default function AdminPage() {
                                   <div className="text-xs text-gray-500 mb-1">
                                     {isCustomerMessage ? 'Customer' : 'Booster'}
                                   </div>
-                                  <div className={`px-3 py-2 rounded-lg ${
-                                    isCustomerMessage
-                                      ? 'bg-blue-900/50 text-blue-100 border border-blue-700'
-                                      : 'bg-purple-900/50 text-purple-100 border border-purple-700'
-                                  }`}>
+                                  <div className={`px-3 py-2 rounded-lg ${isCustomerMessage
+                                    ? 'bg-blue-900/50 text-blue-100 border border-blue-700'
+                                    : 'bg-purple-900/50 text-purple-100 border border-purple-700'
+                                    }`}>
                                     <div className="text-sm">{msg.message_text || '📎 Attachment'}</div>
                                     <div className="text-xs text-gray-400 mt-1">
                                       {new Date(msg.created_at).toLocaleString()}
@@ -1631,11 +1492,10 @@ export default function AdminPage() {
                         {reviews.map((review) => (
                           <div
                             key={review.id}
-                            className={`bg-gray-800 border rounded-lg p-6 hover:border-primary-600 transition ${
-                              review.is_flagged || review.requires_admin_review
-                                ? 'border-red-500'
-                                : 'border-gray-700'
-                            }`}
+                            className={`bg-gray-800 border rounded-lg p-6 hover:border-primary-600 transition ${review.is_flagged || review.requires_admin_review
+                              ? 'border-red-500'
+                              : 'border-gray-700'
+                              }`}
                           >
                             {/* Review Header */}
                             <div className="flex justify-between items-start mb-4">
@@ -1658,25 +1518,23 @@ export default function AdminPage() {
                                   {[...Array(5)].map((_, i) => (
                                     <span
                                       key={i}
-                                      className={`text-2xl ${
-                                        i < review.rating ? 'text-yellow-400' : 'text-gray-600'
-                                      }`}
+                                      className={`text-2xl ${i < review.rating ? 'text-yellow-400' : 'text-gray-600'
+                                        }`}
                                     >
                                       ★
                                     </span>
                                   ))}
                                 </div>
                                 <div className="flex gap-2 flex-wrap justify-end">
-                                  <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                                    review.delivery_status === 'complete'
-                                      ? 'bg-green-900/50 text-green-400'
-                                      : review.delivery_status === 'incomplete'
+                                  <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${review.delivery_status === 'complete'
+                                    ? 'bg-green-900/50 text-green-400'
+                                    : review.delivery_status === 'incomplete'
                                       ? 'bg-yellow-900/50 text-yellow-400'
                                       : 'bg-red-900/50 text-red-400'
-                                  }`}>
+                                    }`}>
                                     {review.delivery_status === 'complete' ? 'Complete' :
-                                     review.delivery_status === 'incomplete' ? 'Incomplete' :
-                                     'Poor Quality'}
+                                      review.delivery_status === 'incomplete' ? 'Incomplete' :
+                                        'Poor Quality'}
                                   </span>
                                   {(review.is_flagged || review.requires_admin_review) && (
                                     <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-red-900/50 text-red-400 border border-red-500">
@@ -1766,146 +1624,133 @@ export default function AdminPage() {
                     <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
                       <p className="text-gray-400">Loading appeals...</p>
                     </div>
-                  ) : appeals.length === 0 ? (
-                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <h3 className="text-lg font-semibold text-white mb-2">No Appeals</h3>
-                      <p className="text-gray-400 text-sm">
-                        Suspension appeals from boosters will appear here.
-                      </p>
-                    </div>
                   ) : (
                     <div>
-                      {/* Stats Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
-                          <div className="text-sm text-yellow-100 mb-1">Pending Appeals</div>
-                          <div className="text-3xl font-bold text-white">
-                            {appeals.filter(a => a.status === 'pending').length}
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
-                          <div className="text-sm text-green-100 mb-1">Approved</div>
-                          <div className="text-3xl font-bold text-white">
-                            {appeals.filter(a => a.status === 'approved').length}
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-4">
-                          <div className="text-sm text-red-100 mb-1">Rejected</div>
-                          <div className="text-3xl font-bold text-white">
-                            {appeals.filter(a => a.status === 'rejected').length}
-                          </div>
-                        </div>
+                      {/* Filter Tabs */}
+                      <div className="flex gap-4 mb-6">
+                        <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg font-semibold text-sm">
+                          Pending ({appeals.filter(a => a.status === 'pending').length})
+                        </button>
+                        <button className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg font-semibold text-sm hover:bg-gray-600">
+                          Approved ({appeals.filter(a => a.status === 'approved').length})
+                        </button>
+                        <button className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg font-semibold text-sm hover:bg-gray-600">
+                          Rejected ({appeals.filter(a => a.status === 'rejected').length})
+                        </button>
                       </div>
 
                       {/* Appeals List */}
                       <div className="space-y-4">
-                        {appeals.map((appeal) => (
-                          <div
-                            key={appeal.id}
-                            className={`bg-gray-800 border rounded-lg p-6 ${
-                              appeal.status === 'pending'
-                                ? 'border-yellow-500'
-                                : appeal.status === 'approved'
-                                ? 'border-green-500'
-                                : 'border-red-500'
-                            }`}
-                          >
-                            {/* Appeal Header */}
-                            <div className="flex justify-between items-start mb-4">
-                              <div>
-                                <h3 className="text-xl font-semibold text-white mb-1">
-                                  {appeal.users?.full_name || appeal.users?.email || 'Unknown User'}
-                                </h3>
-                                <div className="flex gap-4 mt-2 text-xs">
-                                  <span className="text-gray-500">
-                                    Submitted: {new Date(appeal.submitted_at).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    })}
-                                  </span>
-                                  {appeal.users?.is_suspended && (
-                                    <span className="px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-500 rounded text-xs font-semibold">
-                                      SUSPENDED
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div>
-                                <span
-                                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                    appeal.status === 'pending'
-                                      ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500'
-                                      : appeal.status === 'approved'
-                                      ? 'bg-green-900/50 text-green-400 border border-green-500'
-                                      : 'bg-red-900/50 text-red-400 border border-red-500'
-                                  }`}
-                                >
-                                  {appeal.status.toUpperCase()}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Suspension Reason */}
-                            {appeal.users?.suspension_reason && (
-                              <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded">
-                                <h4 className="text-sm font-semibold text-red-400 mb-1">Suspension Reason:</h4>
-                                <p className="text-sm text-gray-300">{appeal.users.suspension_reason}</p>
-                                {appeal.users.suspended_at && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Suspended on: {new Date(appeal.users.suspended_at).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'long',
-                                      day: 'numeric',
-                                    })}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Appeal Text */}
-                            <div className="mb-4 p-3 bg-gray-700/30 rounded">
-                              <h4 className="text-sm font-semibold text-gray-300 mb-2">Appeal:</h4>
-                              <p className="text-sm text-white whitespace-pre-wrap">{appeal.appeal_text}</p>
-                            </div>
-
-                            {/* Admin Notes (if reviewed) */}
-                            {appeal.admin_notes && (
-                              <div className="mb-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded">
-                                <h4 className="text-sm font-semibold text-blue-400 mb-1">Admin Notes:</h4>
-                                <p className="text-sm text-gray-300">{appeal.admin_notes}</p>
-                                {appeal.reviewed_at && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Reviewed on: {new Date(appeal.reviewed_at).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'long',
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    })}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Action Buttons (only for pending appeals) */}
-                            {appeal.status === 'pending' && (
-                              <div className="border-t border-gray-700 pt-4">
-                                <button
-                                  onClick={() => setSelectedAppeal(appeal)}
-                                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold text-sm"
-                                >
-                                  Review Appeal
-                                </button>
-                              </div>
-                            )}
+                        {appeals.filter(a => a.status === 'pending').length === 0 ? (
+                          <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                            <p className="text-gray-400">No pending appeals.</p>
                           </div>
-                        ))}
+                        ) : (
+                          appeals
+                            .filter(a => a.status === 'pending')
+                            .map((appeal) => (
+                              <div
+                                key={appeal.id}
+                                className={`bg-gray-800 border rounded-lg p-6 ${appeal.status === 'pending'
+                                  ? 'border-yellow-500'
+                                  : appeal.status === 'approved'
+                                    ? 'border-green-500'
+                                    : 'border-red-500'
+                                  }`}
+                              >
+                                {/* Appeal Header */}
+                                <div className="flex justify-between items-start mb-4">
+                                  <div>
+                                    <h3 className="text-xl font-semibold text-white mb-1">
+                                      {appeal.users?.full_name || appeal.users?.email || 'Unknown User'}
+                                    </h3>
+                                    <div className="flex gap-4 mt-2 text-xs">
+                                      <span className="text-gray-500">
+                                        Submitted: {new Date(appeal.submitted_at).toLocaleDateString('en-US', {
+                                          year: 'numeric',
+                                          month: 'short',
+                                          day: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                        })}
+                                      </span>
+                                      {appeal.users?.is_suspended && (
+                                        <span className="px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-500 rounded text-xs font-semibold">
+                                          SUSPENDED
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span
+                                      className={`px-3 py-1 rounded-full text-xs font-semibold ${appeal.status === 'pending'
+                                        ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500'
+                                        : appeal.status === 'approved'
+                                          ? 'bg-green-900/50 text-green-400 border border-green-500'
+                                          : 'bg-red-900/50 text-red-400 border border-red-500'
+                                        }`}
+                                    >
+                                      {appeal.status.toUpperCase()}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Suspension Reason */}
+                                {appeal.users?.suspension_reason && (
+                                  <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded">
+                                    <h4 className="text-sm font-semibold text-red-400 mb-1">Suspension Reason:</h4>
+                                    <p className="text-sm text-gray-300">{appeal.users.suspension_reason}</p>
+                                    {appeal.users.suspended_at && (
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Suspended on: {new Date(appeal.users.suspended_at).toLocaleDateString('en-US', {
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric',
+                                        })}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Appeal Text */}
+                                <div className="mb-4 p-3 bg-gray-700/30 rounded">
+                                  <h4 className="text-sm font-semibold text-gray-300 mb-2">Appeal:</h4>
+                                  <p className="text-sm text-white whitespace-pre-wrap">{appeal.appeal_text}</p>
+                                </div>
+
+                                {/* Admin Notes (if reviewed) */}
+                                {appeal.admin_notes && (
+                                  <div className="mb-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded">
+                                    <h4 className="text-sm font-semibold text-blue-400 mb-1">Admin Notes:</h4>
+                                    <p className="text-sm text-gray-300">{appeal.admin_notes}</p>
+                                    {appeal.reviewed_at && (
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Reviewed on: {new Date(appeal.reviewed_at).toLocaleDateString('en-US', {
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                        })}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Action Buttons (only for pending appeals) */}
+                                {appeal.status === 'pending' && (
+                                  <div className="border-t border-gray-700 pt-4">
+                                    <button
+                                      onClick={() => setSelectedAppeal(appeal)}
+                                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold text-sm"
+                                    >
+                                      Review Appeal
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                        )}
                       </div>
                     </div>
                   )}
@@ -1988,11 +1833,10 @@ export default function AdminPage() {
                   {userStrikes.map((strike) => (
                     <div
                       key={strike.id}
-                      className={`border rounded-lg p-4 ${
-                        strike.is_active
-                          ? 'bg-red-900/10 border-red-700'
-                          : 'bg-gray-800 border-gray-700 opacity-60'
-                      }`}
+                      className={`border rounded-lg p-4 ${strike.is_active
+                        ? 'bg-red-900/10 border-red-700'
+                        : 'bg-gray-800 border-gray-700 opacity-60'
+                        }`}
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
@@ -2014,11 +1858,10 @@ export default function AdminPage() {
                               Type: <span className="text-gray-300 capitalize">{strike.strike_type.replace(/_/g, ' ')}</span>
                             </span>
                             <span className="text-gray-500">
-                              Severity: <span className={`font-semibold ${
-                                strike.severity === 'severe' ? 'text-red-400' :
+                              Severity: <span className={`font-semibold ${strike.severity === 'severe' ? 'text-red-400' :
                                 strike.severity === 'moderate' ? 'text-yellow-400' :
-                                'text-gray-300'
-                              }`}>{strike.severity}</span>
+                                  'text-gray-300'
+                                }`}>{strike.severity}</span>
                             </span>
                           </div>
                         </div>
