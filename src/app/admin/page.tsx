@@ -226,6 +226,8 @@ export default function AdminPage() {
   const [appealsLoading, setAppealsLoading] = useState(false);
   const [selectedAppeal, setSelectedAppeal] = useState<Appeal | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
+  const [applicationFilter, setApplicationFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [appealFilter, setAppealFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -715,26 +717,35 @@ export default function AdminPage() {
 
                   {/* Filter Tabs */}
                   <div className="flex gap-4 mb-6">
-                    <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg font-semibold text-sm">
+                    <button
+                      onClick={() => setApplicationFilter('pending')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm ${applicationFilter === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    >
                       Pending ({applications.filter(app => app.status === 'pending').length})
                     </button>
-                    <button className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg font-semibold text-sm hover:bg-gray-600">
+                    <button
+                      onClick={() => setApplicationFilter('approved')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm ${applicationFilter === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    >
                       Approved ({applications.filter(app => app.status === 'approved').length})
                     </button>
-                    <button className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg font-semibold text-sm hover:bg-gray-600">
+                    <button
+                      onClick={() => setApplicationFilter('rejected')}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm ${applicationFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    >
                       Rejected ({applications.filter(app => app.status === 'rejected').length})
                     </button>
                   </div>
 
                   {/* Applications List */}
                   <div className="space-y-4">
-                    {applications.filter(app => app.status === 'pending').length === 0 ? (
+                    {applications.filter(app => app.status === applicationFilter).length === 0 ? (
                       <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                        <p className="text-gray-400">No pending applications.</p>
+                        <p className="text-gray-400">No {applicationFilter} applications.</p>
                       </div>
                     ) : (
                       applications
-                        .filter(app => app.status === 'pending')
+                        .filter(app => app.status === applicationFilter)
                         .map((app) => (
                           <div key={app.id} className="bg-gray-800 border border-gray-700 rounded-lg p-6">
                             <div className="flex items-start justify-between mb-4">
@@ -1628,26 +1639,35 @@ export default function AdminPage() {
                     <div>
                       {/* Filter Tabs */}
                       <div className="flex gap-4 mb-6">
-                        <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg font-semibold text-sm">
+                        <button
+                          onClick={() => setAppealFilter('pending')}
+                          className={`px-4 py-2 rounded-lg font-semibold text-sm ${appealFilter === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                        >
                           Pending ({appeals.filter(a => a.status === 'pending').length})
                         </button>
-                        <button className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg font-semibold text-sm hover:bg-gray-600">
+                        <button
+                          onClick={() => setAppealFilter('approved')}
+                          className={`px-4 py-2 rounded-lg font-semibold text-sm ${appealFilter === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                        >
                           Approved ({appeals.filter(a => a.status === 'approved').length})
                         </button>
-                        <button className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg font-semibold text-sm hover:bg-gray-600">
+                        <button
+                          onClick={() => setAppealFilter('rejected')}
+                          className={`px-4 py-2 rounded-lg font-semibold text-sm ${appealFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                        >
                           Rejected ({appeals.filter(a => a.status === 'rejected').length})
                         </button>
                       </div>
 
                       {/* Appeals List */}
                       <div className="space-y-4">
-                        {appeals.filter(a => a.status === 'pending').length === 0 ? (
+                        {appeals.filter(a => a.status === appealFilter).length === 0 ? (
                           <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                            <p className="text-gray-400">No pending appeals.</p>
+                            <p className="text-gray-400">No {appealFilter} appeals.</p>
                           </div>
                         ) : (
                           appeals
-                            .filter(a => a.status === 'pending')
+                            .filter(a => a.status === appealFilter)
                             .map((appeal) => (
                               <div
                                 key={appeal.id}
