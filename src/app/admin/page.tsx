@@ -635,7 +635,7 @@ export default function AdminPage() {
           <h1 className="text-4xl font-bold text-white">Admin Panel</h1>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex gap-8 overflow-hidden">
           {/* Sidebar */}
           <div className="w-64 flex-shrink-0">
             <div className="bg-gray-900 border border-primary-700 rounded-lg p-4">
@@ -708,7 +708,7 @@ export default function AdminPage() {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="bg-gray-900 border border-primary-700 rounded-lg p-6">
               {/* Booster Applications Tab */}
               {activeTab === 'applications' && (
@@ -810,36 +810,30 @@ export default function AdminPage() {
               {/* Orders Tab */}
               {activeTab === 'orders' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-6">Orders & Jobs Management</h2>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-white">Orders & Jobs Management</h2>
 
-                  {/* Aggregated Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Total Orders</div>
-                      <div className="text-3xl font-bold text-white">{orders.length}</div>
-                      <div className="text-xs text-gray-300 mt-1">All time</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Active Orders</div>
-                      <div className="text-3xl font-bold text-white">
-                        {orders.filter(o => o.status === 'in_progress' || o.status === 'assigned').length}
+                    {/* Compact Stats */}
+                    <div className="flex items-center gap-4 text-sm bg-gray-800 border border-gray-700 rounded-lg px-4 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-gray-400">Orders:</span>
+                        <span className="font-semibold text-white">{orders.length}</span>
                       </div>
-                      <div className="text-xs text-gray-300 mt-1">In progress</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Total Jobs</div>
-                      <div className="text-3xl font-bold text-white">{jobs.length}</div>
-                      <div className="text-xs text-gray-300 mt-1">All time</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Available Jobs</div>
-                      <div className="text-3xl font-bold text-white">
-                        {jobs.filter(j => j.status === 'available').length}
+                      <div className="w-px h-4 bg-gray-700"></div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-gray-400">Active:</span>
+                        <span className="font-semibold text-green-400">{orders.filter(o => o.status === 'in_progress' || o.status === 'assigned').length}</span>
                       </div>
-                      <div className="text-xs text-gray-300 mt-1">Awaiting boosters</div>
+                      <div className="w-px h-4 bg-gray-700"></div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-gray-400">Jobs:</span>
+                        <span className="font-semibold text-white">{jobs.length}</span>
+                      </div>
+                      <div className="w-px h-4 bg-gray-700"></div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-gray-400">Available:</span>
+                        <span className="font-semibold text-yellow-400">{jobs.filter(j => j.status === 'available').length}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -1044,34 +1038,34 @@ export default function AdminPage() {
                   ) : (
                     <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
                       <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full text-sm">
                           <thead className="bg-gray-900 border-b border-gray-700">
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 User
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Email
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Role
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Status
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Strikes
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Phone
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Earnings
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Joined
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Actions
                               </th>
                             </tr>
@@ -1305,31 +1299,6 @@ export default function AdminPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">Conversations Monitor</h2>
 
-                  {/* Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Total Conversations</div>
-                      <div className="text-3xl font-bold text-white">{conversations.length}</div>
-                      <div className="text-xs text-gray-300 mt-1">All time</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Active Conversations</div>
-                      <div className="text-3xl font-bold text-white">
-                        {conversations.filter(c => c.status === 'active').length}
-                      </div>
-                      <div className="text-xs text-gray-300 mt-1">Currently active</div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
-                      <div className="text-sm text-gray-200 mb-1">Unread Messages</div>
-                      <div className="text-3xl font-bold text-white">
-                        {conversations.reduce((sum, c) => sum + c.unread_count, 0)}
-                      </div>
-                      <div className="text-xs text-gray-300 mt-1">Across all conversations</div>
-                    </div>
-                  </div>
-
                   {/* Conversations List */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Conversation List */}
@@ -1472,32 +1441,6 @@ export default function AdminPage() {
                     </div>
                   ) : (
                     <div>
-                      {/* Stats Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg p-4">
-                          <div className="text-sm text-yellow-100 mb-1">Total Reviews</div>
-                          <div className="text-3xl font-bold text-white">{reviews.length}</div>
-                        </div>
-                        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg p-4">
-                          <div className="text-sm text-green-100 mb-1">Average Rating</div>
-                          <div className="text-3xl font-bold text-white">
-                            {(reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)} ★
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-4">
-                          <div className="text-sm text-blue-100 mb-1">Complete Deliveries</div>
-                          <div className="text-3xl font-bold text-white">
-                            {reviews.filter(r => r.delivery_status === 'complete').length}
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-4">
-                          <div className="text-sm text-red-100 mb-1">Flagged Reviews</div>
-                          <div className="text-3xl font-bold text-white">
-                            {reviews.filter(r => r.is_flagged || r.requires_admin_review).length}
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Reviews List */}
                       <div className="space-y-4">
                         {reviews.map((review) => (
