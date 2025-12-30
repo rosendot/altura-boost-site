@@ -51,6 +51,7 @@ export default function BoosterHub() {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [suspended, setSuspended] = useState(false);
   const [suspensionReason, setSuspensionReason] = useState<string | null>(null);
+  const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(30);
 
   // Filter states
   const [selectedGame, setSelectedGame] = useState<string>('all');
@@ -67,10 +68,25 @@ export default function BoosterHub() {
     fetchAvailableJobs();
   }, []);
 
+  // Countdown timer that updates every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSecondsUntilRefresh((prev) => {
+        if (prev <= 1) {
+          return 30; // Reset to 30 when it hits 0
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Polling for job updates every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       fetchAvailableJobs(true); // Pass true for background refresh
+      setSecondsUntilRefresh(30); // Reset countdown
     }, POLLING_INTERVAL);
 
     return () => clearInterval(interval);
@@ -257,18 +273,28 @@ export default function BoosterHub() {
   }
 
   return (
-    <main className="min-h-screen bg-black pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4">
+    <main className="min-h-screen bg-black pt-24 pb-12 relative">
+      {/* Purple glow overlay effect */}
+      <div
+        className={`fixed inset-0 pointer-events-none transition-opacity duration-500 ${
+          isRefreshing ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          background: 'radial-gradient(circle at center, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
+          boxShadow: 'inset 0 0 100px rgba(168, 85, 247, 0.3)'
+        }}
+      />
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-4xl font-bold text-white">Booster Hub</h1>
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full transition-all ${
               isRefreshing
-                ? 'bg-yellow-500 animate-spin'
+                ? 'bg-purple-500 animate-pulse'
                 : 'bg-green-500 animate-pulse'
             }`}></div>
             <span className="text-sm text-gray-400">
-              {isRefreshing ? 'Refreshing jobs...' : 'Auto-refreshing every 30s'}
+              {isRefreshing ? 'Refreshing jobs...' : `Auto-refreshing in ${secondsUntilRefresh}s`}
             </span>
           </div>
         </div>
