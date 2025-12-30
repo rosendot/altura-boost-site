@@ -3,6 +3,29 @@
 import { useState, useEffect, useMemo } from 'react';
 import { timeAgo, isJobNew } from '@/utils/timeAgo';
 
+// Skeleton loader for job cards
+const JobSkeleton = () => (
+  <div className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden animate-pulse">
+    <div className="flex items-center gap-4 p-4">
+      <div className="flex-1 min-w-0">
+        <div className="h-6 bg-gray-700 rounded w-2/3 mb-2"></div>
+        <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+      </div>
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="text-right">
+          <div className="h-6 bg-gray-700 rounded w-20 mb-1"></div>
+        </div>
+        <div className="text-right min-w-[70px]">
+          <div className="h-4 bg-gray-700 rounded w-16 mb-1"></div>
+          <div className="h-5 bg-gray-700 rounded w-12"></div>
+        </div>
+        <div className="h-10 bg-gray-700 rounded w-28"></div>
+        <div className="h-10 bg-gray-700 rounded w-10"></div>
+      </div>
+    </div>
+  </div>
+);
+
 interface Job {
   id: string;
   job_number: string;
@@ -21,7 +44,7 @@ const POLLING_INTERVAL = 30000; // 30 seconds
 
 export default function BoosterHub() {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -47,7 +70,7 @@ export default function BoosterHub() {
   // Polling for job updates every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      fetchAvailableJobs();
+      fetchAvailableJobs(true); // Pass true for background refresh
     }, POLLING_INTERVAL);
 
     return () => clearInterval(interval);
@@ -110,7 +133,11 @@ export default function BoosterHub() {
     return filtered;
   }, [jobs, selectedGame, minPayout, maxPayout, maxHours, selectedWeaponClass, sortBy]);
 
-  const fetchAvailableJobs = async () => {
+  const fetchAvailableJobs = async (isBackgroundRefresh = false) => {
+    if (isBackgroundRefresh) {
+      setIsRefreshing(true);
+    }
+
     try {
       const response = await fetch('/api/jobs/available');
 
@@ -133,7 +160,9 @@ export default function BoosterHub() {
       console.error('Error fetching jobs:', error);
       setJobs([]);
     } finally {
-      setLoading(false);
+      if (isBackgroundRefresh) {
+        setIsRefreshing(false);
+      }
     }
   };
 
@@ -190,18 +219,6 @@ export default function BoosterHub() {
     }
   };
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-black pb-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-center py-20">
-            <div className="text-gray-400">Loading available jobs...</div>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
   if (suspended) {
     return (
       <main className="min-h-screen bg-black pt-24 pb-12">
@@ -245,9 +262,13 @@ export default function BoosterHub() {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-4xl font-bold text-white">Booster Hub</h1>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            <div className={`w-2 h-2 rounded-full transition-all ${
+              isRefreshing
+                ? 'bg-yellow-500 animate-spin'
+                : 'bg-green-500 animate-pulse'
+            }`}></div>
             <span className="text-sm text-gray-400">
-              Auto-refreshing every 30s
+              {isRefreshing ? 'Refreshing jobs...' : 'Auto-refreshing every 30s'}
             </span>
           </div>
         </div>
@@ -380,7 +401,15 @@ export default function BoosterHub() {
         </div>
 
         {/* Available Jobs List */}
-        {filteredAndSortedJobs.length === 0 ? (
+        {jobs.length === 0 ? (
+          <div className="space-y-2">
+            <JobSkeleton />
+            <JobSkeleton />
+            <JobSkeleton />
+            <JobSkeleton />
+            <JobSkeleton />
+          </div>
+        ) : filteredAndSortedJobs.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-400 text-lg">No available jobs at the moment</p>
             <p className="text-gray-500 text-sm mt-2">Check back later for new opportunities</p>
