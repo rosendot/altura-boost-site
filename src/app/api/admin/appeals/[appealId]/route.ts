@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { appealId: string } }
+  { params }: { params: Promise<{ appealId: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -32,7 +32,7 @@ export async function PATCH(
       );
     }
 
-    const { appealId } = params;
+    const { appealId } = await params;
     const body = await request.json();
     const { status, admin_notes } = body;
 
