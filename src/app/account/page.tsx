@@ -1069,7 +1069,7 @@ export default function AccountPage() {
                             {/* Review Content */}
                             {review.review_text && (
                               <div className="mb-4">
-                                <p className="text-gray-300 text-sm italic">"{review.review_text}"</p>
+                                <p className="text-gray-300 text-sm italic">&ldquo;{review.review_text}&rdquo;</p>
                               </div>
                             )}
 

@@ -1690,7 +1690,7 @@ export default function AdminPage() {
                             {/* Review Content */}
                             {review.review_text && (
                               <div className="mb-4 p-3 bg-gray-900 rounded-lg">
-                                <p className="text-gray-300 text-sm italic">"{review.review_text}"</p>
+                                <p className="text-gray-300 text-sm italic">&ldquo;{review.review_text}&rdquo;</p>
                               </div>
                             )}
 
@@ -2111,7 +2111,7 @@ export default function AdminPage() {
 
               {/* Appeal Text */}
               <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-gray-300 mb-2">Booster's Appeal</h3>
+                <h3 className="text-sm font-semibold text-gray-300 mb-2">Booster&apos;s Appeal</h3>
                 <p className="text-white text-sm whitespace-pre-wrap">{selectedAppeal.appeal_text}</p>
                 <p className="text-xs text-gray-500 mt-2">
                   Submitted: {new Date(selectedAppeal.submitted_at).toLocaleDateString('en-US', {

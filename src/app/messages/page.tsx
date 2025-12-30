@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { timeAgo } from '@/utils/timeAgo';
+import Image from 'next/image';
 
 interface Attachment {
   id: string;
@@ -297,9 +298,11 @@ export default function MessagesPage() {
                                   rel="noopener noreferrer"
                                   className="block"
                                 >
-                                  <img
+                                  <Image
                                     src={att.file_url}
                                     alt={att.file_name}
+                                    width={500}
+                                    height={500}
                                     className="rounded max-w-full h-auto"
                                   />
                                 </a>
