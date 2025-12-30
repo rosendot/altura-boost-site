@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 // PATCH - Deactivate a strike (set is_active = false)
 export async function PATCH(
   request: Request,
-  { params }: { params: { strikeId: string } }
+  { params }: { params: Promise<{ strikeId: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -33,7 +33,7 @@ export async function PATCH(
       );
     }
 
-    const { strikeId } = params;
+    const { strikeId } = await params;
 
     // Deactivate the strike
     const { data: strike, error: strikeError } = await supabase
@@ -76,7 +76,7 @@ export async function PATCH(
 // DELETE - Permanently delete a strike
 export async function DELETE(
   request: Request,
-  { params }: { params: { strikeId: string } }
+  { params }: { params: Promise<{ strikeId: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -105,7 +105,7 @@ export async function DELETE(
       );
     }
 
-    const { strikeId } = params;
+    const { strikeId } = await params;
 
     // Get strike info before deleting
     const { data: strikeInfo, error: strikeInfoError } = await supabase

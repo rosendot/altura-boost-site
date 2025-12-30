@@ -244,7 +244,7 @@ export default function AdminPage() {
       // Fetch user data from public.users
       const { data: publicUserData } = await supabase
         .from('users')
-        .select('id, email, role, full_name, phone, total_earnings, created_at')
+        .select('id, email, role, full_name, phone, total_earnings, created_at, strike_count, suspension_count, is_suspended, suspended_at')
         .eq('id', user.id)
         .single();
 

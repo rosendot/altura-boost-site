@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET(
   request: Request,
-  { params }: { params: { boosterId: string } }
+  { params }: { params: Promise<{ boosterId: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -32,7 +32,7 @@ export async function GET(
       );
     }
 
-    const { boosterId } = params;
+    const { boosterId } = await params;
 
     // Fetch all strikes for this booster
     const { data: strikes, error: strikesError } = await supabase
