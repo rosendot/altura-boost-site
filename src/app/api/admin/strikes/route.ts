@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/security/rate-limit';
+import { logAuthFailure, logAdminAction } from '@/lib/security/audit-logger';
+import { isValidUUID, sanitizeString, isValidLength } from '@/lib/security/validation';
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +12,7 @@ export async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      await logAuthFailure(null, 'strike_create', 'No authenticated user', request);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -18,14 +22,33 @@ export async function POST(request: Request) {
     // Check if user is admin
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('role')
+      .select('role, email')
       .eq('id', user.id)
       .single();
 
     if (userError || !userData || userData.role !== 'admin') {
+      await logAuthFailure(user.id, 'strike_create', 'User is not admin', request);
       return NextResponse.json(
         { error: 'Forbidden - Admin access required' },
         { status: 403 }
+      );
+    }
+
+    // Rate limiting: 30 requests per admin per hour
+    const rateLimitResult = checkRateLimit(user.id, {
+      maxRequests: 30,
+      windowMs: 60 * 60 * 1000,
+      identifier: 'strike_create',
+    });
+
+    if (!rateLimitResult.allowed) {
+      await logAuthFailure(user.id, 'strike_create', 'Rate limit exceeded', request);
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
       );
     }
 
@@ -37,6 +60,24 @@ export async function POST(request: Request) {
     if (!booster_id || !job_id || !reason) {
       return NextResponse.json(
         { error: 'Missing required fields: booster_id, job_id, reason' },
+        { status: 400 }
+      );
+    }
+
+    // Validate UUID formats
+    if (!isValidUUID(booster_id)) {
+      return NextResponse.json({ error: 'Invalid booster ID format' }, { status: 400 });
+    }
+
+    if (!isValidUUID(job_id)) {
+      return NextResponse.json({ error: 'Invalid job ID format' }, { status: 400 });
+    }
+
+    // Validate and sanitize reason
+    const sanitizedReason = sanitizeString(reason);
+    if (!isValidLength(sanitizedReason, 10, 500)) {
+      return NextResponse.json(
+        { error: 'Reason must be between 10 and 500 characters' },
         { status: 400 }
       );
     }
@@ -83,7 +124,7 @@ export async function POST(request: Request) {
         booster_id,
         job_id,
         order_id: job.order_id,
-        reason: reason.trim(),
+        reason: sanitizedReason,
         strike_type: 'poor_quality',
         severity: 'moderate',
         is_active: true,
@@ -93,12 +134,23 @@ export async function POST(request: Request) {
       .single();
 
     if (strikeError) {
-      console.error('Error creating strike:', strikeError);
+      console.error('Database operation failed');
       return NextResponse.json(
         { error: 'Failed to create strike' },
         { status: 500 }
       );
     }
+
+    // Log successful strike creation
+    await logAdminAction(
+      user.id,
+      userData.email,
+      'strike_created',
+      'booster_strike',
+      strike.id,
+      { booster_id, job_id, reason: sanitizedReason },
+      request
+    );
 
     // The database trigger should automatically:
     // 1. Increment users.strike_count
@@ -106,12 +158,17 @@ export async function POST(request: Request) {
     // 3. Set users.can_appeal = true if suspended
     // 4. Set users.suspended_at timestamp if suspended
 
-    return NextResponse.json({
-      strike,
-      message: 'Strike issued successfully'
-    });
+    return NextResponse.json(
+      {
+        strike,
+        message: 'Strike issued successfully'
+      },
+      {
+        headers: getRateLimitHeaders(rateLimitResult),
+      }
+    );
   } catch (error) {
-    console.error('Error in POST /api/admin/strikes:', error);
+    console.error('Unexpected error occurred');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

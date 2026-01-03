@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/security/rate-limit';
+import { logAuthFailure, logAdminAction } from '@/lib/security/audit-logger';
+import { isValidUUID } from '@/lib/security/validation';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-11-17.clover' as any,
@@ -17,18 +20,38 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
+      await logAuthFailure(null, 'payout_initiate', 'No authenticated user', request);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
     const { data: userData, error: userDataError } = await supabase
       .from('users')
-      .select('role')
+      .select('role, email')
       .eq('id', user.id)
       .single();
 
     if (userDataError || !userData || userData.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+      await logAuthFailure(user.id, 'payout_initiate', 'User is not admin', request);
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+    }
+
+    // Rate limiting: 50 requests per admin per hour (financial operations)
+    const rateLimitResult = checkRateLimit(user.id, {
+      maxRequests: 50,
+      windowMs: 60 * 60 * 1000,
+      identifier: 'payout_initiate',
+    });
+
+    if (!rateLimitResult.allowed) {
+      await logAuthFailure(user.id, 'payout_initiate', 'Rate limit exceeded', request);
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     // Get job ID from request body
@@ -37,6 +60,11 @@ export async function POST(request: Request) {
 
     if (!jobId) {
       return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
+    }
+
+    // Validate job ID format
+    if (!isValidUUID(jobId)) {
+      return NextResponse.json({ error: 'Invalid job ID format' }, { status: 400 });
     }
 
     // Get job details
@@ -102,7 +130,7 @@ export async function POST(request: Request) {
         );
       }
     } catch (stripeError: any) {
-      console.error('Error retrieving Stripe account:', stripeError);
+      console.error('Payment account verification failed');
       return NextResponse.json(
         { error: 'Invalid or deleted Stripe Connect account' },
         { status: 500 }
@@ -122,7 +150,7 @@ export async function POST(request: Request) {
       .single();
 
     if (transactionError || !transaction) {
-      console.error('Error creating transaction:', transactionError);
+      console.error('Database operation failed');
       return NextResponse.json(
         { error: 'Failed to create transaction record' },
         { status: 500 }
@@ -155,8 +183,16 @@ export async function POST(request: Request) {
         .eq('id', transaction.id);
 
       if (updateError) {
-        console.error('Error updating transaction:', updateError);
-        // Transfer succeeded but DB update failed - log for manual reconciliation
+        console.error('Database operation failed');
+        await logAdminAction(
+          user.id,
+          userData.email,
+          'payout_db_update_failed',
+          'transaction',
+          transaction.id,
+          { job_id: jobId, transfer_id: transfer.id },
+          request
+        );
         return NextResponse.json(
           {
             warning: 'Transfer succeeded but failed to update database. Please verify manually.',
@@ -167,18 +203,39 @@ export async function POST(request: Request) {
         );
       }
 
-      return NextResponse.json({
-        success: true,
-        transactionId: transaction.id,
-        transferId: transfer.id,
-        amount: job.payout_amount,
-        booster: {
-          name: booster.full_name || booster.email,
-          email: booster.email,
+      // Log successful payout
+      await logAdminAction(
+        user.id,
+        userData.email,
+        'payout_initiated',
+        'transaction',
+        transaction.id,
+        {
+          job_id: jobId,
+          booster_id: job.booster_id,
+          amount: job.payout_amount,
+          transfer_id: transfer.id,
         },
-      });
+        request
+      );
+
+      return NextResponse.json(
+        {
+          success: true,
+          transactionId: transaction.id,
+          transferId: transfer.id,
+          amount: job.payout_amount,
+          booster: {
+            name: booster.full_name || booster.email,
+            email: booster.email,
+          },
+        },
+        {
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     } catch (stripeError: any) {
-      console.error('Stripe transfer error:', stripeError);
+      console.error('Payment processing failed');
 
       // Mark transaction as failed
       await supabase
@@ -186,15 +243,26 @@ export async function POST(request: Request) {
         .update({ status: 'failed' })
         .eq('id', transaction.id);
 
+      // Log failed payout
+      await logAdminAction(
+        user.id,
+        userData.email,
+        'payout_failed',
+        'transaction',
+        transaction.id,
+        { job_id: jobId, booster_id: job.booster_id },
+        request
+      );
+
       return NextResponse.json(
-        { error: stripeError.message || 'Stripe transfer failed' },
+        { error: 'Failed to process payout' },
         { status: 500 }
       );
     }
   } catch (error: any) {
-    console.error('Error in /api/admin/payouts/initiate:', error);
+    console.error('Unexpected error occurred');
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
