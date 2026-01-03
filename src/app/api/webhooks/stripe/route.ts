@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
 
@@ -53,10 +53,11 @@ export async function POST(request: Request) {
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
 
   try {
     const customerId = session.metadata?.customer_id;
+
     if (!customerId) {
       console.error('No customer_id in session metadata');
       return;
@@ -116,7 +117,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       });
     }
 
-    console.log(`Order ${order.order_number} created successfully for payment ${session.payment_intent}`);
+    console.log(`Order ${order.order_number} created for payment ${session.payment_intent}`);
   } catch (error) {
     console.error('Error in handleCheckoutSessionCompleted:', error);
   }
