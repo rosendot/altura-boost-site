@@ -56,10 +56,13 @@ src/
 │   ├── hub/                        # Booster job dashboard with auto-refresh
 │   ├── cart/                       # Shopping cart with full CRUD functionality
 │   ├── admin/                      # Admin panel for managing applications
+│   ├── account/                    # User account page with Earnings tab
 │   ├── faq/                        # FAQ page
 │   ├── work-with-us/               # Booster recruitment
 │   ├── terms/                      # Terms of service
 │   └── api/
+│       ├── boosters/connect/       # Stripe Connect onboarding, status, disconnect
+│       ├── admin/payouts/          # Admin payout initiation
 │       ├── webhooks/stripe/        # Stripe webhooks
 │       ├── jobs/                   # Job management endpoints
 │       └── signup/                 # Registration endpoints
@@ -118,6 +121,18 @@ src/
 - ✅ Message read/unread tracking
 - ✅ Two-sided archive system (customer and booster can archive independently)
 - ✅ Dark theme matching overall site design
+
+### Stripe Connect Integration
+- ✅ Stripe Connect Express accounts for booster payouts
+- ✅ Hosted onboarding flow for bank account connection
+- ✅ Account verification status checking
+- ✅ Bank account last 4 digits display
+- ✅ Manual payout system (admin-triggered)
+- ✅ Job acceptance blocked until bank account verified
+- ✅ Hub access restricted for unverified boosters
+- ✅ Disconnect/reconnect bank account functionality
+- ✅ Transaction logging in database
+- ✅ Race condition protection for payouts
 
 ## Getting Started
 
@@ -190,12 +205,18 @@ Copy the output and paste it in `.env.local`:
 GAME_CREDENTIALS_ENCRYPTION_KEY=your-generated-key-here
 ```
 
-#### 4. Stripe Configuration (Optional)
-For payment processing, add your Stripe keys:
+#### 4. Stripe Configuration
+For Stripe Connect payouts to boosters:
 ```env
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
+
+**Important:**
+- Get your `STRIPE_SECRET_KEY` from Stripe Dashboard → Developers → API keys
+- Use test mode keys (`sk_test_...`) for development
+- `NEXT_PUBLIC_BASE_URL` is required for Stripe Connect redirect URLs
+- For production, change to your live domain (e.g., `https://alturaboost.com`)
 
 ## Development
 
@@ -385,6 +406,122 @@ The current polling approach works well for **up to 200+ concurrent users**. Whe
 
 The atomic update protection will work with any of these approaches.
 
+## Stripe Connect Payouts
+
+The platform uses Stripe Connect Express accounts to pay boosters. This is a marketplace model where customers pay Altura Boost, and then Altura Boost pays boosters after job completion.
+
+### How It Works
+
+#### 1. Booster Onboarding
+When boosters want to receive payouts, they connect their bank account:
+
+1. Booster clicks "Connect Bank Account" in the Earnings tab
+2. Redirected to Stripe-hosted onboarding form
+3. Stripe collects identity verification and bank details
+4. Booster returns to Altura Boost after completion
+5. Account enters verification (1-2 business days)
+
+#### 2. Verification States
+
+Boosters can be in one of three states:
+
+- **Not Connected**: No bank account linked, cannot accept jobs
+- **Verification in Progress**: Bank connected but not verified by Stripe
+- **Verified**: Fully verified, can accept jobs and receive payouts
+
+The hub page blocks access until the booster is verified.
+
+#### 3. Manual Payouts
+
+Admins trigger payouts manually from the admin panel:
+
+```typescript
+// Admin initiates payout for a completed job
+POST /api/admin/payouts/initiate
+{
+  "jobId": "uuid-of-completed-job"
+}
+```
+
+The API automatically:
+- Verifies job is completed
+- Checks booster has verified bank account
+- Prevents duplicate payouts
+- Creates Stripe transfer
+- Logs transaction in database
+
+#### 4. Money Flow
+
+```
+Customer → Altura Boost (Stripe account)
+                ↓
+        (Job completed)
+                ↓
+Altura Boost → Booster (via Stripe Transfer)
+```
+
+### API Routes
+
+#### Connect Bank Account
+```typescript
+POST /api/boosters/connect/onboarding
+// Returns Stripe onboarding URL
+// Saves stripe_connect_id to database
+```
+
+#### Check Status
+```typescript
+GET /api/boosters/connect/status
+// Returns: connected, verified, details_submitted, bank_last4
+```
+
+#### Disconnect
+```typescript
+POST /api/boosters/connect/disconnect
+// Removes stripe_connect_id from database
+```
+
+#### Initiate Payout (Admin only)
+```typescript
+POST /api/admin/payouts/initiate
+{
+  "jobId": "uuid"
+}
+// Creates Stripe transfer and transaction record
+```
+
+### Database Schema
+
+#### users table
+- `stripe_connect_id`: Stripe Connect account ID (e.g., `acct_xxxxx`)
+
+#### transactions table
+- `booster_id`: Who receives the payout
+- `job_id`: Which job is being paid for
+- `amount`: Payout amount in USD
+- `status`: pending | completed | failed
+- `stripe_payout_id`: Stripe transfer ID
+- `completed_at`: When payout succeeded
+
+### Security Features
+
+✅ **No hardcoded credentials** - All secrets in environment variables
+✅ **Admin-only payouts** - Role verification on payout endpoint
+✅ **Duplicate prevention** - Checks for existing transactions
+✅ **Atomic updates** - Race condition protection
+✅ **Bank verification** - Blocks payouts to unverified accounts
+✅ **Job completion check** - Only pays for completed jobs
+
+### Testing in Development
+
+Use Stripe test mode to test the full flow without real money:
+
+1. Set `STRIPE_SECRET_KEY=sk_test_...` in `.env.local`
+2. Booster connects bank account (use Stripe test data)
+3. Mark job as completed
+4. Admin triggers payout
+5. Check Stripe Dashboard → Connect → Accounts to see test transfer
+
 ## Deployment
 
 ### Production Build
@@ -489,14 +626,26 @@ The app is fully Vercel-ready with no special configuration needed:
 - Automatic strike deactivation when appeals are approved
 - Database triggers for automatic strike count updates
 
-### 🚧 Phase 8: Stripe Integration & Payment Testing (In Progress)
-- Set up Stripe Connect for booster payouts
-- Implement Stripe Checkout for customer payments
-- Build webhook handlers for payment events
-- Create transaction logging and reconciliation
-- Test payment flows (sandbox mode)
+### ✅ Phase 8: Stripe Connect Integration (Complete)
+- Stripe Connect Express accounts for booster payouts
+- Hosted onboarding flow with KYC/bank verification
+- Account status checking (connected, verified, bank details)
+- Manual payout system via admin panel
+- Job acceptance blocking until bank verified
+- Hub access restriction for unverified boosters
+- Transaction logging with payout tracking
+- Disconnect/reconnect bank account functionality
+- Race condition protection for duplicate payouts
+- Security audit (no hardcoded credentials)
 
-### 📋 Phase 9: Production & Enhancement (Planned)
+### 📋 Phase 9: Customer Payment Collection (Planned)
+- Stripe Checkout integration for customer orders
+- Payment intent creation for cart checkout
+- Webhook handlers for payment success/failure
+- Order status updates based on payment events
+- Receipt generation and email notifications
+
+### 📋 Phase 10: Production & Enhancement (Planned)
 - Analytics and reporting dashboard
 - Email notification system
 - Performance optimization and caching

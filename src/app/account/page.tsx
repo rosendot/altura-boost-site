@@ -128,6 +128,14 @@ export default function AccountPage() {
   const [boosterReviewsLoading, setBoosterReviewsLoading] = useState(false);
   const [appealText, setAppealText] = useState('');
   const [submittingAppeal, setSubmittingAppeal] = useState(false);
+  const [connectStatus, setConnectStatus] = useState<{
+    connected: boolean;
+    verified: boolean;
+    details_submitted: boolean;
+    bank_last4: string | null;
+  } | null>(null);
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -181,6 +189,13 @@ export default function AccountPage() {
   useEffect(() => {
     if (activeTab === 'reviews' && userData?.role === 'booster' && userData?.booster_approval_status === 'approved') {
       fetchBoosterReviews();
+    }
+  }, [activeTab, userData]);
+
+  // Fetch Connect status when earnings tab is active and user is approved booster
+  useEffect(() => {
+    if (activeTab === 'earnings' && userData?.role === 'booster' && userData?.booster_approval_status === 'approved') {
+      fetchConnectStatus();
     }
   }, [activeTab, userData]);
 
@@ -268,6 +283,74 @@ export default function AccountPage() {
       setBoosterReviews([]);
     } finally {
       setBoosterReviewsLoading(false);
+    }
+  };
+
+  const fetchConnectStatus = async () => {
+    try {
+      const response = await fetch('/api/boosters/connect/status');
+
+      if (response.ok) {
+        const data = await response.json();
+        setConnectStatus(data);
+      } else {
+        console.error('Failed to fetch Connect status');
+        setConnectStatus(null);
+      }
+    } catch (error) {
+      console.error('Error fetching Connect status:', error);
+      setConnectStatus(null);
+    }
+  };
+
+  const handleConnectBank = async () => {
+    setConnectLoading(true);
+
+    try {
+      const response = await fetch('/api/boosters/connect/onboarding', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to Stripe onboarding
+        window.location.href = data.url;
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to start onboarding. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error starting onboarding:', error);
+      alert('Failed to start onboarding. Please try again.');
+    } finally {
+      setConnectLoading(false);
+    }
+  };
+
+  const handleDisconnectBank = async () => {
+    if (!confirm('Are you sure you want to disconnect your bank account? You will need to reconnect it to receive future payouts.')) {
+      return;
+    }
+
+    setDisconnecting(true);
+
+    try {
+      const response = await fetch('/api/boosters/connect/disconnect', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        alert('Bank account disconnected successfully.');
+        await fetchConnectStatus();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to disconnect. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error disconnecting:', error);
+      alert('Failed to disconnect. Please try again.');
+    } finally {
+      setDisconnecting(false);
     }
   };
 
@@ -618,20 +701,144 @@ export default function AccountPage() {
                   <h2 className="text-2xl font-bold text-white mb-6">Earnings</h2>
 
                   <div className="space-y-6">
-                    {/* Total Earnings */}
-                    <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6">
-                      <div className="text-sm text-gray-200 mb-1">Total Lifetime Earnings</div>
-                      <div className="text-4xl font-bold text-white">
-                        ${(userData.total_earnings || 0).toFixed(2)}
+                    {/* Bank Account Connection Status */}
+                    {!connectStatus ? (
+                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+                        <div className="text-center py-4">
+                          <div className="text-gray-400">Loading connection status...</div>
+                        </div>
                       </div>
-                    </div>
+                    ) : !connectStatus.connected ? (
+                      /* Scenario A: Not Connected */
+                      <div className="bg-yellow-900/20 border-2 border-yellow-500 rounded-lg p-6">
+                        <div className="flex items-start gap-4">
+                          <svg className="w-8 h-8 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-yellow-400 mb-2">Bank Account Required</h3>
+                            <p className="text-yellow-200 text-sm mb-4">
+                              You need to connect your bank account to receive payouts for completed jobs.
+                            </p>
+                            <button
+                              onClick={handleConnectBank}
+                              disabled={connectLoading}
+                              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {connectLoading ? 'Loading...' : 'Connect Bank Account'}
+                            </button>
+                            <p className="text-xs text-yellow-200/80 mt-4 flex items-center gap-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                              Powered by Stripe - Your banking information is secure and encrypted.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : !connectStatus.verified ? (
+                      /* Scenario B: Connected but Pending Verification */
+                      <div className="bg-blue-900/20 border-2 border-blue-500 rounded-lg p-6">
+                        <div className="flex items-start gap-4">
+                          <svg className="w-8 h-8 text-blue-400 flex-shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-blue-400 mb-2">Verification in Progress</h3>
+                            <p className="text-blue-200 text-sm mb-4">
+                              Stripe is verifying your information. This usually takes 1-2 business days.
+                            </p>
+                            {!connectStatus.details_submitted && (
+                              <p className="text-yellow-300 text-sm mb-4 flex items-center gap-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                You may need to complete your Stripe onboarding. Click below to continue setup.
+                              </p>
+                            )}
+                            <div className="flex gap-3">
+                              <button
+                                onClick={fetchConnectStatus}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm"
+                              >
+                                Refresh Status
+                              </button>
+                              {!connectStatus.details_submitted && (
+                                <button
+                                  onClick={handleConnectBank}
+                                  disabled={connectLoading}
+                                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {connectLoading ? 'Loading...' : 'Continue Setup'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Scenario C: Fully Verified */
+                      <div className="bg-green-900/20 border-2 border-green-500 rounded-lg p-6">
+                        <div className="flex items-start gap-4 mb-4">
+                          <svg className="w-8 h-8 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-green-400 mb-2">Bank Account Connected</h3>
+                            <p className="text-green-200 text-sm mb-4">
+                              Your bank account is verified and ready to receive payouts.
+                            </p>
+                            {connectStatus.bank_last4 && (
+                              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-4">
+                                <p className="text-xs text-gray-400 mb-1">Bank Account</p>
+                                <p className="text-white font-mono">•••• {connectStatus.bank_last4}</p>
+                              </div>
+                            )}
+                            <div className="flex gap-3">
+                              <button
+                                onClick={handleConnectBank}
+                                disabled={connectLoading}
+                                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {connectLoading ? 'Loading...' : 'Update Bank Account'}
+                              </button>
+                              <button
+                                onClick={handleDisconnectBank}
+                                disabled={disconnecting}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {disconnecting ? 'Disconnecting...' : 'Disconnect'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Earnings Info */}
+                    {/* Payment Information */}
                     <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-white mb-4">Payment Information</h3>
-                      <p className="text-gray-400 text-sm">
-                        Payments are processed via Stripe Connect. You will receive payouts after completing jobs.
-                      </p>
+                      <h3 className="text-lg font-semibold text-white mb-4">How Payouts Work</h3>
+                      <div className="space-y-3 text-sm text-gray-400">
+                        <div className="flex items-start gap-3">
+                          <svg className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p>Payouts are processed manually by admins after job completion</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <svg className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p>Money arrives in your bank account within 2-7 business days</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <svg className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p>All payments are processed securely through Stripe</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -52,6 +52,9 @@ export default function BoosterHub() {
   const [suspended, setSuspended] = useState(false);
   const [suspensionReason, setSuspensionReason] = useState<string | null>(null);
   const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(30);
+  const [stripeNotConnected, setStripeNotConnected] = useState(false);
+  const [stripeNotVerified, setStripeNotVerified] = useState(false);
+  const [checkingStripe, setCheckingStripe] = useState(true);
 
   // Filter states
   const [selectedGame, setSelectedGame] = useState<string>('all');
@@ -66,6 +69,7 @@ export default function BoosterHub() {
   // Initial fetch
   useEffect(() => {
     fetchAvailableJobs();
+    checkStripeStatus();
   }, []);
 
   // Countdown timer that updates every second
@@ -148,6 +152,30 @@ export default function BoosterHub() {
 
     return filtered;
   }, [jobs, selectedGame, minPayout, maxPayout, maxHours, selectedWeaponClass, sortBy]);
+
+  const checkStripeStatus = async () => {
+    setCheckingStripe(true);
+    try {
+      const response = await fetch('/api/boosters/connect/status');
+
+      if (response.ok) {
+        const data = await response.json();
+        setStripeNotConnected(!data.connected);
+        setStripeNotVerified(data.connected && !data.verified);
+      } else {
+        // If API fails, assume not connected to be safe
+        setStripeNotConnected(true);
+        setStripeNotVerified(false);
+      }
+    } catch (error) {
+      console.error('Error checking Stripe status:', error);
+      // If network error, assume not connected to be safe
+      setStripeNotConnected(true);
+      setStripeNotVerified(false);
+    } finally {
+      setCheckingStripe(false);
+    }
+  };
 
   const fetchAvailableJobs = async (isBackgroundRefresh = false) => {
     if (isBackgroundRefresh) {
@@ -235,6 +263,28 @@ export default function BoosterHub() {
     }
   };
 
+  // Show loading screen while checking Stripe status
+  if (checkingStripe) {
+    return (
+      <main className="min-h-screen bg-black pt-24 pb-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 text-center">
+              <div className="mb-4">
+                <svg className="w-16 h-16 text-primary-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-white mb-2">Loading...</h2>
+              <p className="text-gray-400 text-sm">Checking account status</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   if (suspended) {
     return (
       <main className="min-h-screen bg-black pt-24 pb-12">
@@ -265,6 +315,79 @@ export default function BoosterHub() {
               >
                 Go to Account Page
               </a>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (stripeNotConnected) {
+    return (
+      <main className="min-h-screen bg-black pt-24 pb-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-yellow-900/20 border-2 border-yellow-500 rounded-lg p-8 text-center">
+              <div className="mb-4">
+                <svg className="w-16 h-16 text-yellow-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold text-yellow-400 mb-4">Bank Account Required</h1>
+              <p className="text-gray-300 mb-6">
+                You need to connect your bank account before you can accept jobs.
+              </p>
+              <p className="text-gray-400 mb-6">
+                Go to your Earnings tab to connect your bank account via Stripe. This is required to receive payouts for completed jobs.
+              </p>
+              <a
+                href="/account?tab=earnings"
+                className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold"
+              >
+                Connect Bank Account
+              </a>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (stripeNotVerified) {
+    return (
+      <main className="min-h-screen bg-black pt-24 pb-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-blue-900/20 border-2 border-blue-500 rounded-lg p-8 text-center">
+              <div className="mb-4">
+                <svg className="w-16 h-16 text-blue-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold text-blue-400 mb-4">Verification in Progress</h1>
+              <p className="text-gray-300 mb-6">
+                Your bank account is being verified by Stripe.
+              </p>
+              <p className="text-gray-400 mb-6">
+                This usually takes 1-2 business days. You&apos;ll be able to accept jobs once your account is verified.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => {
+                    checkStripeStatus();
+                  }}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                >
+                  Refresh Status
+                </button>
+                <a
+                  href="/account?tab=earnings"
+                  className="inline-block px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-semibold"
+                >
+                  View Earnings
+                </a>
+              </div>
             </div>
           </div>
         </div>
