@@ -13,7 +13,7 @@ export default function CartPage() {
     try {
       // Prepare cart items for API
       const cartItems = items.map((item) => ({
-        serviceId: item.id,
+        serviceId: item.serviceId,
         quantity: item.quantity,
       }));
 

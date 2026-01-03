@@ -86,6 +86,7 @@ export default function GameDetailPage({
 
     addToCart({
       id: `${game.id}-${service.id}`,
+      serviceId: service.id, // Real service UUID for checkout
       gameId: game.id,
       gameName: game.name,
       serviceName: service.name,

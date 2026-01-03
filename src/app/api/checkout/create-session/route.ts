@@ -41,6 +41,7 @@ export async function POST(request: Request) {
 
     // Fetch service details from database to ensure prices are current
     const serviceIds = cartItems.map((item: any) => item.serviceId);
+
     const { data: services, error: servicesError } = await supabase
       .from('services')
       .select('id, name, price, game_id, games!inner(name)')
@@ -108,7 +109,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: session.url, sessionId: session.id });
   } catch (error: any) {
-    console.error('Error creating checkout session:', error);
+    console.error('Checkout error:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to create checkout session' },
       { status: 500 }

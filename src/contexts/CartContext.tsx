@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 export interface CartItem {
   id: string;
+  serviceId: string; // Real service UUID for database
   gameId: string;
   gameName: string;
   serviceName: string;
