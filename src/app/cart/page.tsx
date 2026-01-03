@@ -1,10 +1,45 @@
 'use client';
 
 import Link from "next/link";
+import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, getTotalItems, getSubtotal, getTax, getTotal } = useCart();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const handleCheckout = async () => {
+    setCheckoutLoading(true);
+    try {
+      // Prepare cart items for API
+      const cartItems = items.map((item) => ({
+        serviceId: item.serviceId,
+        quantity: item.quantity,
+      }));
+
+      const response = await fetch('/api/checkout/create-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cartItems }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+
+      // Redirect to Stripe Checkout
+      window.location.href = url;
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      alert(error.message || 'Failed to start checkout. Please try again.');
+      setCheckoutLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-black max-w-7xl mx-auto px-4 py-8">
@@ -128,14 +163,15 @@ export default function CartPage() {
             </div>
 
             <button
-              disabled={getTotalItems() === 0}
+              onClick={handleCheckout}
+              disabled={getTotalItems() === 0 || checkoutLoading}
               className={`w-full py-3 rounded-lg mb-3 font-semibold transition ${
-                getTotalItems() === 0
+                getTotalItems() === 0 || checkoutLoading
                   ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                   : "gradient-purple text-white hover:opacity-90"
               }`}
             >
-              Checkout
+              {checkoutLoading ? 'Redirecting to Checkout...' : 'Checkout'}
             </button>
 
             <Link
