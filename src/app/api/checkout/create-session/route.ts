@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const serviceIds = cartItems.map((item: any) => item.serviceId);
     const { data: services, error: servicesError } = await supabase
       .from('services')
-      .select('id, name, price, game_id, games(name)')
+      .select('id, name, price, game_id, games!inner(name)')
       .in('id', serviceIds)
       .eq('active', true);
 
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
           currency: 'usd',
           product_data: {
             name: service.name,
-            description: service.games?.name || 'Gaming Service',
+            description: (service.games as any)?.name || 'Gaming Service',
           },
           unit_amount: Math.round(service.price * 100), // Convert to cents
         },

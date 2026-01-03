@@ -62,7 +62,7 @@ function SuccessPageContent() {
                 <svg className="w-6 h-6 text-primary-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <p>You'll receive an email confirmation shortly with your order details</p>
+                <p>You&apos;ll receive an email confirmation shortly with your order details</p>
               </div>
               <div className="flex items-start gap-3">
                 <svg className="w-6 h-6 text-primary-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

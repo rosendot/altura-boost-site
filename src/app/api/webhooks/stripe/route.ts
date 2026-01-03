@@ -71,7 +71,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
     // Calculate totals
     const subtotal = session.amount_subtotal ? session.amount_subtotal / 100 : 0;
-    const tax = session.amount_tax ? session.amount_tax / 100 : 0;
+    const tax = session.total_details?.amount_tax ? session.total_details.amount_tax / 100 : 0;
     const total = session.amount_total ? session.amount_total / 100 : 0;
 
     // Create order
@@ -96,8 +96,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
     // Create order items
     for (const item of lineItems) {
-      const productName = typeof item.price?.product === 'object'
-        ? item.price.product.name
+      const product = item.price?.product;
+      const productName = typeof product === 'object' && 'name' in product
+        ? product.name
         : 'Unknown Product';
 
       const pricePerUnit = item.price?.unit_amount ? item.price.unit_amount / 100 : 0;
@@ -106,8 +107,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       await supabase.from('order_items').insert({
         order_id: order.id,
         service_name: productName,
-        game_name: typeof item.price?.product === 'object'
-          ? (item.price.product as any).description || 'Gaming Service'
+        game_name: typeof product === 'object' && 'description' in product
+          ? product.description || 'Gaming Service'
           : 'Gaming Service',
         quantity: quantity,
         price_per_unit: pricePerUnit,
