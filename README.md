@@ -206,16 +206,20 @@ GAME_CREDENTIALS_ENCRYPTION_KEY=your-generated-key-here
 ```
 
 #### 4. Stripe Configuration
-For Stripe Connect payouts to boosters:
+For both customer payments and booster payouts:
 ```env
 STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
 **Important:**
 - Get your `STRIPE_SECRET_KEY` from Stripe Dashboard → Developers → API keys
 - Use test mode keys (`sk_test_...`) for development
-- `NEXT_PUBLIC_BASE_URL` is required for Stripe Connect redirect URLs
+- `STRIPE_WEBHOOK_SECRET` is required for webhook signature verification
+  - For local testing: Run `stripe listen --forward-to localhost:3000/api/webhooks/stripe` and copy the webhook secret
+  - For production: Create webhook endpoint in Stripe Dashboard and copy the signing secret
+- `NEXT_PUBLIC_BASE_URL` is required for Stripe Checkout and Connect redirect URLs
 - For production, change to your live domain (e.g., `https://alturaboost.com`)
 
 ## Development
@@ -406,9 +410,80 @@ The current polling approach works well for **up to 200+ concurrent users**. Whe
 
 The atomic update protection will work with any of these approaches.
 
-## Stripe Connect Payouts
+## Stripe Integration
 
-The platform uses Stripe Connect Express accounts to pay boosters. This is a marketplace model where customers pay Altura Boost, and then Altura Boost pays boosters after job completion.
+The platform uses Stripe for both customer payments and booster payouts. This is a marketplace model where customers pay Altura Boost, and then Altura Boost pays boosters after job completion.
+
+### Customer Payment Collection
+
+Customers pay for services using Stripe Checkout, a hosted payment page that securely collects payment information.
+
+#### 1. Shopping Cart Flow
+
+1. Customer adds services to cart from game pages
+2. Cart items stored in localStorage with proper service IDs
+3. Customer clicks "Checkout" button
+4. Frontend calls `/api/checkout/create-session` with cart items
+
+#### 2. Checkout Session Creation
+
+```typescript
+POST /api/checkout/create-session
+{
+  "cartItems": [
+    { "serviceId": "uuid", "quantity": 1 }
+  ]
+}
+```
+
+The API:
+- Authenticates the user
+- Fetches current service prices from database (prevents price manipulation)
+- Creates or retrieves Stripe Customer ID
+- Creates Stripe Checkout session with line items
+- Returns checkout URL
+
+#### 3. Payment Processing
+
+1. Customer redirected to Stripe Checkout page
+2. Customer enters payment details
+3. Stripe processes payment
+4. Customer redirected to success page
+5. Stripe sends `checkout.session.completed` webhook to server
+
+#### 4. Webhook Handler
+
+The webhook (`/api/webhooks/stripe`) handles payment events:
+
+- **checkout.session.completed**: Creates order and order_items in database
+- **payment_intent.payment_failed**: Logs payment failure
+
+The webhook:
+- Verifies signature for security
+- Retrieves session with line items
+- Creates order record with payment details
+- Creates order_items for each cart item
+- Associates order with customer via `customer_id`
+
+#### 5. API Routes
+
+**Create Checkout Session**
+```typescript
+POST /api/checkout/create-session
+// Requires authentication
+// Returns: { url: string, sessionId: string }
+```
+
+**Webhook Handler**
+```typescript
+POST /api/webhooks/stripe
+// Requires valid Stripe signature
+// Handles: checkout.session.completed, payment_intent.payment_failed
+```
+
+### Stripe Connect Payouts
+
+Stripe Connect Express accounts are used to pay boosters after job completion.
 
 ### How It Works
 
@@ -493,7 +568,26 @@ POST /api/admin/payouts/initiate
 ### Database Schema
 
 #### users table
-- `stripe_connect_id`: Stripe Connect account ID (e.g., `acct_xxxxx`)
+- `stripe_connect_id`: Stripe Connect account ID for boosters (e.g., `acct_xxxxx`)
+- `stripe_customer_id`: Stripe Customer ID for customers (e.g., `cus_xxxxx`)
+
+#### orders table
+- `customer_id`: Reference to users table
+- `subtotal`: Order subtotal before tax
+- `tax_amount`: Tax amount
+- `total_price`: Total amount charged
+- `status`: pending | paid | failed
+- `stripe_payment_intent_id`: Stripe Payment Intent ID
+- `paid_at`: Timestamp when payment succeeded
+- `order_number`: Auto-generated order number (e.g., `ORD-20250103-001`)
+
+#### order_items table
+- `order_id`: Reference to orders table
+- `service_name`: Name of service purchased
+- `game_name`: Name of game
+- `quantity`: Number of units
+- `price_per_unit`: Price per unit
+- `total_price`: Total price for this line item
 
 #### transactions table
 - `booster_id`: Who receives the payout
@@ -516,11 +610,22 @@ POST /api/admin/payouts/initiate
 
 Use Stripe test mode to test the full flow without real money:
 
+**Customer Payments:**
 1. Set `STRIPE_SECRET_KEY=sk_test_...` in `.env.local`
-2. Booster connects bank account (use Stripe test data)
-3. Mark job as completed
-4. Admin triggers payout
-5. Check Stripe Dashboard → Connect → Accounts to see test transfer
+2. Run Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
+3. Copy webhook secret to `STRIPE_WEBHOOK_SECRET` in `.env.local`
+4. Restart dev server
+5. Add items to cart and checkout
+6. Use test card: `4242 4242 4242 4242`, any future expiry, any CVC
+7. Complete payment
+8. Check terminal for webhook logs
+9. Verify order created in database
+
+**Booster Payouts:**
+1. Booster connects bank account (use Stripe test data)
+2. Mark job as completed
+3. Admin triggers payout
+4. Check Stripe Dashboard → Connect → Accounts to see test transfer
 
 ## Deployment
 
@@ -638,12 +743,17 @@ The app is fully Vercel-ready with no special configuration needed:
 - Race condition protection for duplicate payouts
 - Security audit (no hardcoded credentials)
 
-### 📋 Phase 9: Customer Payment Collection (Planned)
-- Stripe Checkout integration for customer orders
-- Payment intent creation for cart checkout
-- Webhook handlers for payment success/failure
-- Order status updates based on payment events
-- Receipt generation and email notifications
+### ✅ Phase 9: Customer Payment Collection (Complete)
+- Stripe Checkout integration for cart checkout
+- Stripe Customer creation and management
+- Checkout session creation with line items
+- Webhook handlers for payment events (checkout.session.completed, payment_intent.payment_failed)
+- Order and order_items creation on successful payment
+- Webhook signature verification for security
+- Success page with order confirmation
+- Shopping cart with localStorage persistence
+- Service ID handling to prevent UUID errors
+- Price validation from database (prevents client-side price manipulation)
 
 ### 📋 Phase 10: Production & Enhancement (Planned)
 - Analytics and reporting dashboard
