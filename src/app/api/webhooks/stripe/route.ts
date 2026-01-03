@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        break;
     }
 
     return NextResponse.json({ received: true });
@@ -117,17 +117,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       });
     }
 
-    console.log(`Order ${order.order_number} created for payment ${session.payment_intent}`);
   } catch (error) {
     console.error('Error in handleCheckoutSessionCompleted:', error);
   }
 }
 
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
-  console.log(`Payment failed for intent: ${paymentIntent.id}`);
-
-  // You could add logic here to:
-  // - Notify the customer via email
-  // - Log the failure for analytics
-  // - Update any pending orders
+  // Future: Add logic to notify customer via email
+  // Future: Log failure for analytics
+  // Future: Update pending orders
 }

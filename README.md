@@ -33,6 +33,10 @@ The platform features secure payment processing via Stripe, automatic job update
   - [Running Locally](#running-locally)
   - [Supabase Client Usage](#supabase-client-usage)
   - [Authentication Flow](#authentication-flow)
+- [Authentication System](#authentication-system)
+  - [Database Architecture](#database-architecture)
+  - [Signup Flows](#signup-flows)
+  - [Booster Approval Process](#booster-approval-process)
 - [Job Updates](#job-updates)
   - [How It Works](#how-it-works)
   - [Race Condition Protection](#race-condition-protection)
@@ -329,6 +333,109 @@ const { data: { user } } = await supabase.auth.getUser()
 const { error } = await supabase.auth.signOut()
 ```
 
+## Authentication System
+
+The platform uses a dual-table authentication architecture with role-based access control and approval workflows.
+
+### Database Architecture
+
+#### Two-Table System
+
+**`auth.users` (Supabase Managed)**
+- Handles login credentials and sessions
+- Stores email, encrypted password, and metadata
+- Created immediately on signup for all user types
+
+**`public.users` (Application Data)**
+- Extended user profile and role management
+- Contains role (`customer`, `booster`, `admin`)
+- For boosters: includes `booster_approval_status` (`pending`, `approved`, `rejected`)
+- Connected via foreign key to `auth.users.id`
+
+**`public.booster_applications`**
+- Stores booster application questionnaire responses
+- Tracks approval workflow (status, reviewed_by, reviewed_at)
+- Used by admins to review applications
+
+### Signup Flows
+
+#### Customer Signup
+
+```
+1. User fills signup form (email, password, username)
+2. POST to /api/signup/customer
+3. supabase.auth.signUp() creates auth.users record
+4. Database trigger (handle_new_user) creates public.users with role='customer'
+5. User can log in immediately with full access
+```
+
+#### Booster Signup
+
+```
+1. User fills signup form + questionnaire (5 questions)
+2. POST to /api/signup/booster
+3. supabase.auth.signUp() creates auth.users record
+4. Database trigger (handle_new_user) creates:
+   - public.users with role='booster' and booster_approval_status='pending'
+   - booster_applications with status='pending'
+5. User can log in but cannot access jobs until approved (RLS gating)
+```
+
+**Questionnaire Fields:**
+- Gaming experience (years)
+- Proficient games (checkboxes)
+- Weekly availability (hours)
+- Motivation (why become a booster)
+- Additional information (optional)
+
+### Booster Approval Process
+
+#### Admin Review
+
+Admins can view pending applications in the admin panel and take action:
+
+**Approve:**
+1. Update `public.users.booster_approval_status = 'approved'`
+2. Update `booster_applications.status = 'approved'`
+3. Booster can now access job board and accept jobs
+
+**Reject:**
+1. Update `public.users.booster_approval_status = 'rejected'`
+2. Update `booster_applications.status = 'rejected'`
+3. Store rejection reason in `booster_applications.rejection_reason`
+4. Booster sees rejection message when logging in
+
+#### Access Control
+
+**Pending Boosters:**
+- ✅ Can log in and navigate app
+- ✅ Can view account page
+- ❌ Cannot access Booster Hub (RLS blocks job queries)
+- ❌ Cannot accept jobs
+
+**Approved Boosters:**
+- ✅ Full access to Booster Hub
+- ✅ Can view and accept available jobs
+- ✅ Can receive payouts via Stripe Connect
+
+#### Database Functions & Triggers
+
+**`handle_new_user()` Trigger**
+- Fires on `auth.users` INSERT
+- Creates `public.users` record for all user types
+- For boosters: creates both `public.users` and `booster_applications`
+
+**`sync_user_role_to_auth()` Trigger**
+- Fires on `public.users` role or approval status change
+- Syncs role and `booster_approval_status` to `auth.users.raw_app_meta_data`
+- Ensures JWT claims stay in sync for RLS policies
+
+**Row Level Security (RLS)**
+- Jobs table policies check `booster_approval_status = 'approved'`
+- Only approved boosters can view/accept jobs
+- Customers can view their own orders/jobs
+- Admins have full access to all tables
+
 ## Job Updates
 
 The booster hub uses a simple polling mechanism to keep job listings up-to-date. This approach is perfect for the initial launch with 5-10 concurrent users and can easily scale to hundreds of users.
@@ -485,6 +592,26 @@ POST /api/webhooks/stripe
 
 Stripe Connect Express accounts are used to pay boosters after job completion.
 
+#### Money Flow
+
+```
+Customer pays $100 for boost
+    ↓
+Stripe charges customer → Platform receives $97 (after fees)
+    ↓
+Booster completes job
+    ↓
+Admin triggers payout: $80
+    ↓
+Stripe Transfer: $80 from platform → Booster's Connect account
+    ↓
+Database trigger: users.total_earnings += $80
+    ↓
+Booster's bank receives $80 (2-7 days)
+    ↓
+Platform keeps: $17 profit
+```
+
 ### How It Works
 
 #### 1. Booster Onboarding
@@ -605,6 +732,32 @@ POST /api/admin/payouts/initiate
 ✅ **Atomic updates** - Race condition protection
 ✅ **Bank verification** - Blocks payouts to unverified accounts
 ✅ **Job completion check** - Only pays for completed jobs
+✅ **Webhook signature verification** - All webhooks verified with Stripe signatures
+✅ **Service role for webhooks** - Bypasses RLS for trusted server-to-server webhooks (industry standard)
+
+### Complete User Flow
+
+**For Boosters:**
+1. Booster applies → Admin approves → `booster_approval_status = 'approved'`
+2. Booster goes to Account → Earnings tab → Clicks "Connect Bank Account"
+3. System creates Stripe Connect Express account → Stores `stripe_connect_id`
+4. Redirected to Stripe onboarding (personal info, bank account, ID verification)
+5. Stripe verifies information (instant in test mode, 1-2 days in production)
+6. Redirected back → Shows "Verification in Progress" or "Bank Account Connected"
+7. Once verified, booster can accept jobs from the hub
+8. After completing job, admin triggers payout → Money sent via Stripe Transfer
+9. Money arrives in booster's bank (2-7 business days)
+10. Total earnings automatically updated via database trigger
+
+**For Customers:**
+1. Customer adds services to cart → Clicks "Checkout"
+2. System creates Stripe Checkout session with line items from database
+3. Customer redirected to Stripe Checkout page → Enters payment details
+4. Stripe processes payment → Customer redirected to success page
+5. Stripe sends webhook to `/api/webhooks/stripe`
+6. Webhook creates order and order_items in database
+7. Order number auto-generated via database trigger (e.g., ORD-20250103-001)
+8. Admin creates job from order → Job appears in Booster Hub
 
 ### Testing in Development
 
