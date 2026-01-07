@@ -1,14 +1,35 @@
 # Supabase Password Reset Configuration
 
-This guide walks you through configuring Supabase to enable password reset functionality for your application.
+This guide walks you through configuring Supabase and AWS SES to enable password reset functionality for Altura Boost.
+
+---
+
+## Quick Start Checklist
+
+Complete these steps in order:
+
+- [ ] **Step 1**: Configure email template in Supabase (5 minutes)
+- [ ] **Step 2**: Add redirect URLs in Supabase (2 minutes)
+- [ ] **Step 3**: Set up AWS SES for email delivery (30-60 minutes)
+  - [ ] Create AWS account (if needed)
+  - [ ] Verify domain (alturaboost.com) with DNS records
+  - [ ] Request production access (24-hour approval)
+  - [ ] Create SMTP credentials
+  - [ ] Configure SMTP in Supabase
+  - [ ] Add SPF/DMARC DNS records
+- [ ] **Step 4**: Test password reset flow end-to-end
+
+**Total Time**: ~1 hour setup + 24 hours for AWS approval
 
 ---
 
 ## Prerequisites
 
-- Supabase project already set up
+- Supabase project already set up (`aiqthgvrpzikxlszylql` - Altura Boost)
 - Access to Supabase Dashboard (https://supabase.com/dashboard)
-- Your application deployed or running locally
+- AWS account (or create one in Step 3)
+- Access to your domain DNS settings (for alturaboost.com)
+- Production site: https://www.alturaboost.com
 
 ---
 
@@ -19,7 +40,8 @@ This guide walks you through configuring Supabase to enable password reset funct
 1. Go to your Supabase Dashboard
 2. Select your project (`aiqthgvrpzikxlszylql` - Altura Boost)
 3. Click on **Authentication** in the left sidebar
-4. Click on **Email Templates**
+4. Scroll down to **NOTIFICATIONS** section
+5. Click on **Email** (this is where email templates are now located)
 
 ### 1.2 Configure "Reset Password" Template
 
@@ -71,9 +93,11 @@ Reset Your Password - Altura Boost
 
 ### 2.2 Add Site URL
 
-**For Production:**
+Set your primary site URL:
+
+**For Production (Altura Boost):**
 ```
-https://your-production-domain.com
+https://www.alturaboost.com
 ```
 
 **For Development (if testing locally):**
@@ -81,17 +105,19 @@ https://your-production-domain.com
 http://localhost:3000
 ```
 
+**Choose one** as your primary Site URL (use production URL since you're already live).
+
 ### 2.3 Add Redirect URLs
 
 Add the following URLs to the **Redirect URLs** list:
 
 **For Production:**
 ```
-https://your-production-domain.com/reset-password
-https://your-production-domain.com/auth/callback
+https://www.alturaboost.com/reset-password
+https://www.alturaboost.com/auth/callback
 ```
 
-**For Development:**
+**For Development (if testing locally):**
 ```
 http://localhost:3000/reset-password
 http://localhost:3000/auth/callback
@@ -99,57 +125,229 @@ http://localhost:3000/auth/callback
 
 **Important:**
 - Add **both** production and development URLs if you want to test locally
-- Remove development URLs before going to production for security
+- Keep both since you're testing on production - just make sure both are in the list
+- These URLs must be whitelisted for Supabase Auth to redirect to them
 
 4. Click **Save**
 
 ---
 
-## Step 3: Configure Email Provider (SMTP)
+## Step 3: Configure AWS SES (Simple Email Service)
 
-By default, Supabase uses its own email service with rate limits. For production, you should configure your own SMTP provider.
+For production, we're using **AWS SES** because it's the most cost-effective solution at scale ($0.10 per 1,000 emails) and provides unlimited scalability.
 
-### 3.1 Navigate to SMTP Settings
+---
 
-1. Go to **Project Settings** (gear icon)
-2. Click **Auth**
-3. Scroll down to **SMTP Settings**
+## AWS SES Setup Guide
 
-### 3.2 Enable Custom SMTP (Recommended for Production)
+### 3.1 Create AWS Account (if you don't have one)
 
-**Option A: Use a Service (Recommended)**
+1. Go to https://aws.amazon.com/
+2. Click **"Create an AWS Account"**
+3. Follow the signup process (requires credit card, but SES is very cheap)
 
-Popular options:
-- **SendGrid** (free tier: 100 emails/day)
-- **Mailgun** (free tier: 1000 emails/month)
-- **AWS SES** (very cheap, $0.10 per 1000 emails)
-- **Resend** (modern, developer-friendly)
+---
 
-**Option B: Use Gmail (For Testing Only)**
+### 3.2 Navigate to AWS SES
 
-⚠️ **Not recommended for production** - Gmail has strict sending limits
+1. Sign in to AWS Console: https://console.aws.amazon.com/
+2. In the search bar at the top, type **"SES"**
+3. Click on **"Amazon Simple Email Service"**
+4. **IMPORTANT**: Select your region (top-right corner)
+   - Recommended: **US East (N. Virginia) us-east-1** (lowest cost)
+   - Or choose the region closest to your users
 
-If using Gmail for testing:
-- Enable 2FA on your Google account
-- Generate an "App Password" (not your regular password)
-- Use the app password in SMTP settings
+---
 
-### 3.3 SMTP Configuration Example (SendGrid)
+### 3.3 Verify Your Domain (alturaboost.com)
+
+**Why?** AWS requires you to verify you own the domain before sending emails from it.
+
+1. In AWS SES Console, click **"Verified identities"** (left sidebar)
+2. Click **"Create identity"**
+3. Select **"Domain"**
+4. Enter your domain: `alturaboost.com`
+5. Check **"Use a default DKIM signing key pair"** (recommended)
+6. Click **"Create identity"**
+
+**You'll see DNS records to add:**
+
+AWS will provide DNS records like these:
+
+| Type  | Name                                    | Value                                      |
+|-------|-----------------------------------------|--------------------------------------------|
+| CNAME | abc123._domainkey.alturaboost.com      | abc123.dkim.amazonses.com                  |
+| CNAME | xyz789._domainkey.alturaboost.com      | xyz789.dkim.amazonses.com                  |
+| CNAME | def456._domainkey.alturaboost.com      | def456.dkim.amazonses.com                  |
+| TXT   | _amazonses.alturaboost.com             | aBcDeFgHiJkLmNoPqRsTuVwXyZ=                |
+
+**Add these records to your domain DNS:**
+
+- Go to your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)
+- Add each DNS record exactly as shown in AWS
+- **Wait 10-30 minutes** for DNS propagation
+- Return to AWS SES and click **"Refresh status"**
+- Status should change from "Pending" to **"Verified"** ✅
+
+---
+
+### 3.4 Request Production Access (IMPORTANT)
+
+**By default, AWS SES is in "Sandbox Mode"** which limits you to:
+- Only send to verified email addresses
+- Max 200 emails per day
+
+**To send to any email address (production):**
+
+1. In AWS SES Console, click **"Account dashboard"** (left sidebar)
+2. Look for **"Sending statistics"** section
+3. Click **"Request production access"** button
+4. Fill out the form:
+   - **Mail type**: Transactional
+   - **Website URL**: https://www.alturaboost.com
+   - **Use case description**:
+     ```
+     We are a game boosting marketplace (Altura Boost) that sends transactional emails to our users:
+     - Password reset emails when users forget their password
+     - Order confirmation emails when customers purchase boosting services
+     - Order completion emails when boosting jobs are finished
+     - Account verification emails for new users
+
+     All emails are opt-in and transactional (not marketing). We expect to send approximately 1,000-5,000 emails per month.
+     ```
+   - **Compliance**: Confirm you will only send to opted-in recipients
+5. Click **"Submit request"**
+
+**Processing Time**: Usually approved within **24 hours** (sometimes instantly)
+
+**While waiting for approval**, you can still test by verifying individual email addresses:
+1. Go to **"Verified identities"**
+2. Click **"Create identity"**
+3. Select **"Email address"**
+4. Enter your email (e.g., `your-email@gmail.com`)
+5. Check your inbox and click the verification link
+6. Now you can send test emails to this address while in sandbox mode
+
+---
+
+### 3.5 Create SMTP Credentials
+
+1. In AWS SES Console, click **"SMTP settings"** (left sidebar)
+2. Click **"Create SMTP credentials"**
+3. You'll be taken to IAM (Identity and Access Management)
+4. Keep the default username (like `ses-smtp-user.20260107-123456`)
+5. Click **"Create user"**
+6. **IMPORTANT**: You'll see your SMTP credentials **ONCE**:
+   - **SMTP Username**: (looks like `AKIAIOSFODNN7EXAMPLE`)
+   - **SMTP Password**: (long string, looks like `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`)
+7. Click **"Download credentials"** or copy them to a secure location
+8. **DO NOT LOSE THESE** - You cannot view the password again
+
+**Your SMTP settings** (copy these from the SES Console):
 
 ```
-SMTP Host: smtp.sendgrid.net
+SMTP Endpoint: email-smtp.us-east-1.amazonaws.com
+Port: 587 (or 465 for SSL)
+SMTP Username: [Your SMTP Username from step 6]
+SMTP Password: [Your SMTP Password from step 6]
+```
+
+---
+
+### 3.6 Configure SMTP in Supabase
+
+Now that you have AWS SES credentials, configure Supabase to use them:
+
+1. Go to **Supabase Dashboard**: https://supabase.com/dashboard
+2. Select your project: **Altura Boost**
+3. Click **Project Settings** (gear icon, bottom left)
+4. Click **Auth** (left sidebar)
+5. Scroll down to **SMTP Settings**
+6. Click **"Enable Custom SMTP"**
+7. Enter your AWS SES credentials:
+
+```
+SMTP Host: email-smtp.us-east-1.amazonaws.com
 SMTP Port: 587
-SMTP User: apikey
-SMTP Password: [Your SendGrid API Key]
-Sender Email: noreply@your-domain.com
+SMTP User: [Your SMTP Username]
+SMTP Password: [Your SMTP Password]
+Sender Email: noreply@alturaboost.com
 Sender Name: Altura Boost
 ```
 
-### 3.4 Test Email Sending
+8. Click **"Save"**
 
-1. After saving SMTP settings
-2. Click **"Send Test Email"**
-3. Check your inbox to confirm emails are working
+---
+
+### 3.7 Test Email Sending
+
+1. In Supabase SMTP Settings, click **"Send Test Email"**
+2. Enter your email address
+3. Check your inbox (and spam folder)
+4. You should receive a test email from `noreply@alturaboost.com`
+
+**If you don't receive it:**
+- Check your spam folder
+- Verify your domain is verified in AWS SES (Step 3.3)
+- If still in sandbox mode, verify your email address in AWS SES (Step 3.4)
+- Check AWS SES logs in AWS Console → SES → "Sending statistics"
+
+---
+
+### 3.8 Set Up SPF and DMARC Records (Recommended)
+
+To improve email deliverability and prevent your emails from going to spam:
+
+**Add SPF Record** (if you don't have one):
+```
+Type: TXT
+Name: @
+Value: v=spf1 include:amazonses.com ~all
+```
+
+**Add DMARC Record** (recommended):
+```
+Type: TXT
+Name: _dmarc
+Value: v=DMARC1; p=none; rua=mailto:dmarc@alturaboost.com
+```
+
+**What this does:**
+- **SPF**: Tells email providers that AWS SES is authorized to send emails on behalf of alturaboost.com
+- **DMARC**: Provides reporting on email authentication (helps you monitor for spoofing)
+- **DKIM**: Already configured automatically when you verified your domain in Step 3.3
+
+Add these to your domain DNS (same place you added the verification records).
+
+---
+
+### 3.9 Monitor Email Sending
+
+**AWS SES Dashboard** provides metrics:
+1. Go to AWS Console → SES → **"Account dashboard"**
+2. You'll see:
+   - **Sends**: Total emails sent
+   - **Bounces**: Failed deliveries (invalid emails)
+   - **Complaints**: Users marked your email as spam
+   - **Delivery rate**: Percentage successfully delivered
+
+**Keep your bounce rate below 5%** and complaint rate below 0.1% to maintain good standing.
+
+---
+
+## AWS SES Pricing
+
+**Extremely cost-effective:**
+- **$0.10 per 1,000 emails** sent
+- **$0.00 per email** received (if you set up receiving, which we're not)
+- **First 62,000 emails per month are FREE** if you send from EC2 (not applicable here, but still very cheap)
+
+**Examples:**
+- 1,000 emails/month = **$0.10/month**
+- 10,000 emails/month = **$1.00/month**
+- 100,000 emails/month = **$10.00/month**
+
+**No monthly fees, no minimums** - you only pay for what you send.
 
 ---
 
