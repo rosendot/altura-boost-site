@@ -4,9 +4,13 @@ import FAQClient from "./FAQClient";
 export const metadata: Metadata = {
   title: 'FAQ',
   description: 'Frequently asked questions about Altura Boost. Learn about our game boosting services, account security, payment methods, order tracking, and how to become a booster.',
+  alternates: {
+    canonical: '/faq',
+  },
   openGraph: {
     title: 'Frequently Asked Questions - Altura Boost',
     description: 'Find answers to common questions about our game boosting services, account security, payments, and more.',
+    url: '/faq',
   },
   twitter: {
     title: 'Frequently Asked Questions - Altura Boost',

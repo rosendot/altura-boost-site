@@ -1,5 +1,14 @@
 import { Metadata } from 'next';
 
+// Helper function to create canonical URLs
+export function getCanonicalUrl(path: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://alturaboost.com';
+  // Remove trailing slash from base URL and leading slash from path if present
+  const cleanBase = baseUrl.replace(/\/$/, '');
+  const cleanPath = path.replace(/^\//, '');
+  return cleanPath ? `${cleanBase}/${cleanPath}` : cleanBase;
+}
+
 export const baseMetadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://alturaboost.com'),
   title: {
@@ -59,5 +68,8 @@ export const baseMetadata: Metadata = {
     // google: 'your-google-verification-code',
     // yandex: 'your-yandex-verification-code',
     // bing: 'your-bing-verification-code',
+  },
+  alternates: {
+    canonical: '/',
   },
 };

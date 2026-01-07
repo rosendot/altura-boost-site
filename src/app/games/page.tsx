@@ -7,9 +7,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: 'Our Games',
   description: 'Browse our premium game boosting services. Professional boosting for Call of Duty, rank advancement, coaching, and more. Choose your game and unlock your potential.',
+  alternates: {
+    canonical: '/games',
+  },
   openGraph: {
     title: 'Our Games - Altura Boost',
     description: 'Browse our premium game boosting services. Professional boosting for Call of Duty, rank advancement, coaching, and more.',
+    url: '/games',
   },
   twitter: {
     title: 'Our Games - Altura Boost',

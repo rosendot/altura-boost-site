@@ -6,9 +6,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: 'Home',
   description: 'Elevate your game with Altura Boost. Premium boosting services for Call of Duty and other popular games. 100% secure, fast delivery, and satisfaction guaranteed.',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: 'Altura Boost - Elevate Your Game, Unlock Your Potential',
     description: 'Premium boosting services for Call of Duty Black Ops 7 and more. 100% secure, fast delivery, and satisfaction guaranteed.',
+    url: '/',
   },
   twitter: {
     title: 'Altura Boost - Elevate Your Game, Unlock Your Potential',

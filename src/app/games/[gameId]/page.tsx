@@ -50,9 +50,13 @@ export async function generateMetadata({
   return {
     title: `${game.name} Boosting Services`,
     description: `Premium ${game.name} boosting services. Professional rank boosting, coaching, and account services. 100% hand-played, VPN protection, 24/7 updates, and money-back guarantee.`,
+    alternates: {
+      canonical: `/games/${gameId}`,
+    },
     openGraph: {
       title: `${game.name} Boosting Services - Altura Boost`,
       description: `Premium ${game.name} boosting services. Professional rank boosting, coaching, and account services with guaranteed results.`,
+      url: `/games/${gameId}`,
       images: [
         {
           url: imageUrl,

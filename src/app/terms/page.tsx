@@ -3,9 +3,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description: 'Terms of Service for Altura Boost. Read our terms regarding gaming services, account security, payment terms, booster requirements, prohibited activities, and liability.',
+  alternates: {
+    canonical: '/terms',
+  },
   openGraph: {
     title: 'Terms of Service - Altura Boost',
     description: 'Read our Terms of Service for game boosting services, account security, payments, and user agreements.',
+    url: '/terms',
   },
   twitter: {
     title: 'Terms of Service - Altura Boost',
