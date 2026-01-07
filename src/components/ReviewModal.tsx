@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -31,6 +31,8 @@ export default function ReviewModal({
   const [deliveryStatus, setDeliveryStatus] = useState<'complete' | 'incomplete' | 'poor_quality'>('complete');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,54 +81,106 @@ export default function ReviewModal({
     }
   };
 
+  // Focus trap and escape key handling
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Focus the close button when modal opens
+    closeButtonRef.current?.focus();
+
+    // Handle escape key
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    // Focus trap
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !modalRef.current) return;
+
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleTabKey);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleTabKey);
+    };
+  }, [isOpen, onClose]);
+
   const StarRating = ({
     rating,
     setRating,
-    label
+    label,
+    required = false
   }: {
     rating: number;
     setRating: (rating: number) => void;
     label: string;
-  }) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-300 mb-2">
-        {label} {label === 'Overall Rating' && <span className="text-red-500">*</span>}
-      </label>
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => setRating(star)}
-            className={`text-3xl transition ${
-              star <= rating ? 'text-yellow-400' : 'text-gray-600'
-            } hover:text-yellow-300`}
-          >
-            ★
-          </button>
-        ))}
+    required?: boolean;
+  }) => {
+    const ratingId = `rating-${label.toLowerCase().replace(/\s+/g, '-')}`;
+    return (
+      <div className="mb-4">
+        <label id={`${ratingId}-label`} className="block text-sm font-medium text-gray-300 mb-2">
+          {label} {required && <span className="text-red-500" aria-label="required">*</span>}
+        </label>
+        <div className="flex gap-1" role="radiogroup" aria-labelledby={`${ratingId}-label`} aria-required={required}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => setRating(star)}
+              role="radio"
+              aria-checked={star === rating}
+              aria-label={`${star} star${star !== 1 ? 's' : ''}`}
+              className={`text-3xl transition ${
+                star <= rating ? 'text-yellow-400' : 'text-gray-600'
+              } hover:text-yellow-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded`}
+            >
+              ★
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+      <div ref={modalRef} className="bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
         <div className="p-6">
           {/* Header */}
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-white">Leave a Review</h2>
+              <h2 id="review-modal-title" className="text-2xl font-bold text-white">Leave a Review</h2>
               <p className="text-gray-400 mt-1">
                 Job #{jobNumber} - {gameName} - {serviceName}
               </p>
               <p className="text-gray-500 text-sm">Booster: {boosterName}</p>
             </div>
             <button
+              ref={closeButtonRef}
               onClick={onClose}
-              className="text-gray-400 hover:text-white text-2xl"
+              aria-label="Close review modal"
+              className="text-gray-400 hover:text-white text-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
             >
               ×
             </button>
@@ -135,14 +189,16 @@ export default function ReviewModal({
           {/* Form */}
           <form onSubmit={handleSubmit}>
             {/* Delivery Status */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Delivery Status <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2">
+            <fieldset className="mb-4">
+              <legend className="block text-sm font-medium text-gray-300 mb-2">
+                Delivery Status <span className="text-red-500" aria-label="required">*</span>
+              </legend>
+              <div className="flex gap-2" role="group" aria-label="Delivery status options">
                 <button
                   type="button"
                   onClick={() => setDeliveryStatus('complete')}
+                  role="radio"
+                  aria-checked={deliveryStatus === 'complete'}
                   className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
                     deliveryStatus === 'complete'
                       ? 'bg-green-600 text-white'
@@ -154,6 +210,8 @@ export default function ReviewModal({
                 <button
                   type="button"
                   onClick={() => setDeliveryStatus('incomplete')}
+                  role="radio"
+                  aria-checked={deliveryStatus === 'incomplete'}
                   className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
                     deliveryStatus === 'incomplete'
                       ? 'bg-yellow-600 text-white'
@@ -165,6 +223,8 @@ export default function ReviewModal({
                 <button
                   type="button"
                   onClick={() => setDeliveryStatus('poor_quality')}
+                  role="radio"
+                  aria-checked={deliveryStatus === 'poor_quality'}
                   className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
                     deliveryStatus === 'poor_quality'
                       ? 'bg-red-600 text-white'
@@ -174,12 +234,13 @@ export default function ReviewModal({
                   Poor Quality
                 </button>
               </div>
-            </div>
+            </fieldset>
 
             <StarRating
               rating={rating}
               setRating={setRating}
               label="Overall Rating"
+              required={true}
             />
 
             <StarRating
@@ -201,10 +262,11 @@ export default function ReviewModal({
             />
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="review-text" className="block text-sm font-medium text-gray-300 mb-2">
                 Review (Optional)
               </label>
               <textarea
+                id="review-text"
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
                 placeholder="Share your experience with this booster..."
@@ -214,7 +276,7 @@ export default function ReviewModal({
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm">
+              <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm" role="alert" aria-live="assertive">
                 {error}
               </div>
             )}

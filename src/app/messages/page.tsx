@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { timeAgo } from '@/utils/timeAgo';
 import Image from 'next/image';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Attachment {
   id: string;
@@ -59,6 +60,8 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { showToast } = useToast();
 
   // Fetch user
   useEffect(() => {
@@ -172,11 +175,11 @@ export default function MessagesPage() {
         fetchConversations();
       } else {
         const error = await res.json();
-        alert(error.error || 'Failed to upload file');
+        showToast(error.error || 'Failed to upload file', 'error');
       }
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('Failed to upload file');
+      showToast('Failed to upload file', 'error');
     } finally {
       setUploading(false);
       if (fileInputRef.current) {

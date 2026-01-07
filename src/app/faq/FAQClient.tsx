@@ -20,7 +20,10 @@ export default function FAQClient({ faqs }: FAQClientProps) {
         <div key={index} className="bg-gray-900 border border-primary-700 rounded-lg">
           <button
             onClick={() => setOpenIndex(openIndex === index ? null : index)}
-            className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-800 transition"
+            aria-expanded={openIndex === index}
+            aria-controls={`faq-answer-${index}`}
+            id={`faq-question-${index}`}
+            className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-800 transition focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <span className="font-semibold text-lg text-white">{faq.question}</span>
             <svg
@@ -30,6 +33,7 @@ export default function FAQClient({ faqs }: FAQClientProps) {
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -40,7 +44,12 @@ export default function FAQClient({ faqs }: FAQClientProps) {
             </svg>
           </button>
           {openIndex === index && (
-            <div className="px-6 pb-4 text-gray-300">
+            <div
+              id={`faq-answer-${index}`}
+              role="region"
+              aria-labelledby={`faq-question-${index}`}
+              className="px-6 pb-4 text-gray-300"
+            >
               <p>{faq.answer}</p>
             </div>
           )}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Navbar() {
@@ -14,8 +14,11 @@ export default function Navbar() {
   const [userName, setUserName] = useState<string | null>(null);
   const [boosterApprovalStatus, setBoosterApprovalStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [showGamesMenu, setShowGamesMenu] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+  const gamesMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -81,23 +84,35 @@ export default function Navbar() {
     fetchUnreadCount();
   }, [user]);
 
-  // Close account menu when clicking outside
+  // Close menus when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest('.account-menu-container')) {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(target)) {
         setShowAccountMenu(false);
+      }
+      if (gamesMenuRef.current && !gamesMenuRef.current.contains(target)) {
+        setShowGamesMenu(false);
       }
     };
 
-    if (showAccountMenu) {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowAccountMenu(false);
+        setShowGamesMenu(false);
+      }
+    };
+
+    if (showAccountMenu || showGamesMenu) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
-  }, [showAccountMenu]);
+  }, [showAccountMenu, showGamesMenu]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -107,7 +122,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 w-full py-1 px-3 border-b border-primary-900/20 bg-black/90 backdrop-blur-sm shadow-lg z-50">
+    <nav className="fixed top-0 left-0 right-0 w-full py-1 px-3 border-b border-primary-900/20 bg-black/90 backdrop-blur-sm shadow-lg z-50" aria-label="Main navigation">
       <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
         {/* Left side - Logo and Role-based Navigation Links */}
         <div className="flex items-center gap-3">
@@ -136,26 +151,41 @@ export default function Navbar() {
 
         {/* Right side - Info Links, Login, Cart */}
         <div className="flex items-center gap-3">
-          <div className="relative group">
-            <Link href="/games" className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">
+          <div className="relative" ref={gamesMenuRef}>
+            <button
+              onClick={() => setShowGamesMenu(!showGamesMenu)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setShowGamesMenu(!showGamesMenu);
+                }
+              }}
+              aria-expanded={showGamesMenu}
+              aria-haspopup="true"
+              aria-label="Games menu"
+              className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
+            >
               Games
-            </Link>
+            </button>
 
             {/* Mega Menu Dropdown */}
-            <div className="absolute left-0 top-full mt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-              <div className="bg-gray-900 border border-primary-700/50 rounded-lg shadow-2xl p-2 min-w-[200px]">
-                {/* Game Item */}
-                <Link
-                  href="/games/black-ops-7"
-                  className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-primary-700/30 transition-colors duration-200 group/item"
-                >
-                  <span className="text-2xl">🎯</span>
-                  <span className="text-white text-sm font-medium group-hover/item:text-primary-400">
-                    Black Ops 7
-                  </span>
-                </Link>
+            {showGamesMenu && (
+              <div className="absolute left-0 top-full mt-1 z-50">
+                <div className="bg-gray-900 border border-primary-700/50 rounded-lg shadow-2xl p-2 min-w-[200px]">
+                  {/* Game Item */}
+                  <Link
+                    href="/games/black-ops-7"
+                    className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-primary-700/30 transition-colors duration-200 group/item"
+                    onClick={() => setShowGamesMenu(false)}
+                  >
+                    <span className="text-2xl" role="img" aria-label="Target">🎯</span>
+                    <span className="text-white text-sm font-medium group-hover/item:text-primary-400">
+                      Black Ops 7
+                    </span>
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <Link href="/work-with-us" className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">
             Work with us
@@ -172,19 +202,28 @@ export default function Navbar() {
 
           {/* Login Button or Account Icon */}
           {user ? (
-            <div className="relative account-menu-container">
+            <div className="relative" ref={accountMenuRef}>
               <button
                 onClick={() => setShowAccountMenu(!showAccountMenu)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowAccountMenu(!showAccountMenu);
+                  }
+                }}
+                aria-expanded={showAccountMenu}
+                aria-haspopup="true"
+                aria-label="Account menu"
                 className="p-1 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group"
               >
-                <svg className="w-5 h-5 text-gray-300 group-hover:text-primary-400 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-gray-300 group-hover:text-primary-400 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </button>
 
               {/* Account Dropdown Menu */}
               {showAccountMenu && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-gray-900 border border-primary-700/50 rounded-lg shadow-2xl p-1.5 z-50">
+                <div className="absolute right-0 top-full mt-1 w-44 bg-gray-900 border border-primary-700/50 rounded-lg shadow-2xl p-1.5 z-50" role="menu" aria-label="Account options">
                   <div className="px-2 py-1 border-b border-gray-700 mb-1">
                     <p className="text-xs text-gray-400">Signed in as</p>
                     <p className="text-sm text-white font-medium truncate">{userName}</p>
@@ -193,6 +232,7 @@ export default function Navbar() {
                     href="/account"
                     className="block px-2 py-1 text-sm text-gray-300 hover:bg-primary-700/30 hover:text-white rounded-md transition-colors duration-200"
                     onClick={() => setShowAccountMenu(false)}
+                    role="menuitem"
                   >
                     My Account
                   </Link>
@@ -200,12 +240,14 @@ export default function Navbar() {
                     href="/messages"
                     className="block px-2 py-1 text-sm text-gray-300 hover:bg-primary-700/30 hover:text-white rounded-md transition-colors duration-200"
                     onClick={() => setShowAccountMenu(false)}
+                    role="menuitem"
                   >
-                    Messages{unreadCount > 0 ? ` (${unreadCount})` : ''}
+                    Messages{unreadCount > 0 && <span className="sr-only"> ({unreadCount} unread)</span>}{unreadCount > 0 ? ` (${unreadCount})` : ''}
                   </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-2 py-1 text-sm text-gray-300 hover:bg-red-900/30 hover:text-red-400 rounded-md transition-colors duration-200"
+                    role="menuitem"
                   >
                     Logout
                   </button>
@@ -219,12 +261,12 @@ export default function Navbar() {
           )}
 
           {/* Cart Icon */}
-          <Link href="/cart" className="relative p-1 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group">
-            <svg className="w-5 h-5 text-gray-300 group-hover:text-primary-400 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Link href="/cart" className="relative p-1 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group" aria-label={`Shopping cart${getTotalItems() > 0 ? ` with ${getTotalItems()} item${getTotalItems() !== 1 ? 's' : ''}` : ', empty'}`}>
+            <svg className="w-5 h-5 text-gray-300 group-hover:text-primary-400 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             {getTotalItems() > 0 && (
-              <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-lg">
+              <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-lg" aria-hidden="true">
                 {getTotalItems()}
               </span>
             )}

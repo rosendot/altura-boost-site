@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { timeAgo, isJobNew } from '@/utils/timeAgo';
+import { useToast } from '@/contexts/ToastContext';
 
 // Skeleton loader for job cards
 const JobSkeleton = () => (
@@ -55,6 +56,8 @@ export default function BoosterHub() {
   const [stripeNotConnected, setStripeNotConnected] = useState(false);
   const [stripeNotVerified, setStripeNotVerified] = useState(false);
   const [checkingStripe, setCheckingStripe] = useState(true);
+
+  const { showToast } = useToast();
 
   // Filter states
   const [selectedGame, setSelectedGame] = useState<string>('all');
@@ -228,14 +231,14 @@ export default function BoosterHub() {
       if (response.ok) {
         // Refresh jobs list
         await fetchAvailableJobs();
-        alert('Job accepted successfully!');
+        showToast('Job accepted successfully!', 'success');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to accept job. Please try again.');
+        showToast(error.error || 'Failed to accept job. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Error accepting job:', error);
-      alert('Failed to accept job. Please try again.');
+      showToast('Failed to accept job. Please try again.', 'error');
     }
   };
 
@@ -252,14 +255,14 @@ export default function BoosterHub() {
         await fetchAvailableJobs();
         setShowConfirmModal(false);
         setSelectedJob(null);
-        alert('Job accepted! Redirecting to My Jobs...');
+        showToast('Job accepted! Redirecting to My Jobs...', 'success');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to accept job. Please try again.');
+        showToast(error.error || 'Failed to accept job. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Error accepting job:', error);
-      alert('Failed to accept job. Please try again.');
+      showToast('Failed to accept job. Please try again.', 'error');
     }
   };
 

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import GameCarousel from '@/components/GameCarousel';
 import StrikeModal from '@/components/StrikeModal';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import { useToast } from '@/contexts/ToastContext';
 
 interface UserData {
   id: string;
@@ -229,6 +231,11 @@ export default function AdminPage() {
   const [applicationFilter, setApplicationFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [appealFilter, setAppealFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
 
+  const { showToast } = useToast();
+  const [deactivateStrikeModal, setDeactivateStrikeModal] = useState<{show: boolean, strikeId: string | null}>({show: false, strikeId: null});
+  const [deleteStrikeModal, setDeleteStrikeModal] = useState<{show: boolean, strikeId: string | null}>({show: false, strikeId: null});
+  const [appealActionModal, setAppealActionModal] = useState<{show: boolean, appealId: string | null, action: 'approved' | 'rejected' | null}>({show: false, appealId: null, action: null});
+
   useEffect(() => {
     const fetchUser = async () => {
       const supabase = createClient();
@@ -434,54 +441,58 @@ export default function AdminPage() {
   };
 
   const handleDeactivateStrike = async (strikeId: string) => {
-    if (!confirm('Are you sure you want to deactivate this strike? It will no longer count toward suspension.')) {
-      return;
-    }
+    setDeactivateStrikeModal({show: true, strikeId});
+  };
+
+  const deactivateStrikeConfirmed = async () => {
+    if (!deactivateStrikeModal.strikeId) return;
 
     try {
-      const res = await fetch(`/api/admin/strikes/${strikeId}`, {
+      const res = await fetch(`/api/admin/strikes/${deactivateStrikeModal.strikeId}`, {
         method: 'PATCH',
       });
 
       if (res.ok) {
-        alert('Strike deactivated successfully');
+        showToast('Strike deactivated successfully', 'success');
         if (selectedUserForStrikes) {
           await fetchUserStrikes(selectedUserForStrikes.id);
           await fetchUsers();
         }
       } else {
         const error = await res.json();
-        alert(error.error || 'Failed to deactivate strike');
+        showToast(error.error || 'Failed to deactivate strike', 'error');
       }
     } catch (error) {
       console.error('Error deactivating strike:', error);
-      alert('Failed to deactivate strike');
+      showToast('Failed to deactivate strike', 'error');
     }
   };
 
   const handleDeleteStrike = async (strikeId: string) => {
-    if (!confirm('Are you sure you want to permanently DELETE this strike? This action cannot be undone.')) {
-      return;
-    }
+    setDeleteStrikeModal({show: true, strikeId});
+  };
+
+  const deleteStrikeConfirmed = async () => {
+    if (!deleteStrikeModal.strikeId) return;
 
     try {
-      const res = await fetch(`/api/admin/strikes/${strikeId}`, {
+      const res = await fetch(`/api/admin/strikes/${deleteStrikeModal.strikeId}`, {
         method: 'DELETE',
       });
 
       if (res.ok) {
-        alert('Strike deleted successfully');
+        showToast('Strike deleted successfully', 'success');
         if (selectedUserForStrikes) {
           await fetchUserStrikes(selectedUserForStrikes.id);
           await fetchUsers();
         }
       } else {
         const error = await res.json();
-        alert(error.error || 'Failed to delete strike');
+        showToast(error.error || 'Failed to delete strike', 'error');
       }
     } catch (error) {
       console.error('Error deleting strike:', error);
-      alert('Failed to delete strike');
+      showToast('Failed to delete strike', 'error');
     }
   };
 
@@ -501,36 +512,34 @@ export default function AdminPage() {
   };
 
   const handleAppealAction = async (appealId: string, action: 'approved' | 'rejected') => {
-    const confirmMsg = action === 'approved'
-      ? 'Are you sure you want to APPROVE this appeal? The booster will be unsuspended.'
-      : 'Are you sure you want to REJECT this appeal? The booster will remain suspended.';
+    setAppealActionModal({show: true, appealId, action});
+  };
 
-    if (!confirm(confirmMsg)) {
-      return;
-    }
+  const appealActionConfirmed = async () => {
+    if (!appealActionModal.appealId || !appealActionModal.action) return;
 
     try {
-      const res = await fetch(`/api/admin/appeals/${appealId}`, {
+      const res = await fetch(`/api/admin/appeals/${appealActionModal.appealId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status: action,
+          status: appealActionModal.action,
           admin_notes: adminNotes.trim() || null,
         }),
       });
 
       if (res.ok) {
-        alert(`Appeal ${action} successfully`);
+        showToast(`Appeal ${appealActionModal.action} successfully`, 'success');
         setSelectedAppeal(null);
         setAdminNotes('');
         await fetchAppeals();
       } else {
         const error = await res.json();
-        alert(error.error || `Failed to ${action} appeal`);
+        showToast(error.error || `Failed to ${appealActionModal.action} appeal`, 'error');
       }
     } catch (error) {
-      console.error(`Error ${action} appeal:`, error);
-      alert(`Failed to ${action} appeal`);
+      console.error(`Error ${appealActionModal.action} appeal:`, error);
+      showToast(`Failed to ${appealActionModal.action} appeal`, 'error');
     }
   };
 
@@ -552,7 +561,7 @@ export default function AdminPage() {
         .eq('id', userId);
 
       if (userError) {
-        alert('Error updating user status: ' + userError.message);
+        showToast('Error updating user status: ' + userError.message, 'error');
         return;
       }
 
@@ -567,11 +576,11 @@ export default function AdminPage() {
         .eq('id', applicationId);
 
       if (appError) {
-        alert('Error updating application: ' + appError.message);
+        showToast('Error updating application: ' + appError.message, 'error');
         return;
       }
 
-      alert('Application approved successfully!');
+      showToast('Application approved successfully!', 'success');
     } else {
       // Update user's booster_approval_status to 'rejected'
       const { error: userError } = await supabase
@@ -582,7 +591,7 @@ export default function AdminPage() {
         .eq('id', userId);
 
       if (userError) {
-        alert('Error updating user status: ' + userError.message);
+        showToast('Error updating user status: ' + userError.message, 'error');
         return;
       }
 
@@ -598,11 +607,11 @@ export default function AdminPage() {
         .eq('id', applicationId);
 
       if (appError) {
-        alert('Error updating application: ' + appError.message);
+        showToast('Error updating application: ' + appError.message, 'error');
         return;
       }
 
-      alert('Application rejected successfully!');
+      showToast('Application rejected successfully!', 'success');
     }
 
     fetchApplications();
@@ -1955,6 +1964,44 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* Deactivate Strike Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deactivateStrikeModal.show}
+        onClose={() => setDeactivateStrikeModal({show: false, strikeId: null})}
+        onConfirm={deactivateStrikeConfirmed}
+        title="Deactivate Strike"
+        message="Are you sure you want to deactivate this strike? It will no longer count toward suspension."
+        confirmText="Deactivate"
+        cancelText="Cancel"
+        variant="warning"
+      />
+
+      {/* Delete Strike Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteStrikeModal.show}
+        onClose={() => setDeleteStrikeModal({show: false, strikeId: null})}
+        onConfirm={deleteStrikeConfirmed}
+        title="Delete Strike"
+        message="Are you sure you want to permanently DELETE this strike? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+
+      {/* Appeal Action Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={appealActionModal.show}
+        onClose={() => setAppealActionModal({show: false, appealId: null, action: null})}
+        onConfirm={appealActionConfirmed}
+        title={appealActionModal.action === 'approved' ? 'Approve Appeal' : 'Reject Appeal'}
+        message={appealActionModal.action === 'approved'
+          ? 'Are you sure you want to APPROVE this appeal? The booster will be unsuspended.'
+          : 'Are you sure you want to REJECT this appeal? The booster will remain suspended.'}
+        confirmText={appealActionModal.action === 'approved' ? 'Approve' : 'Reject'}
+        cancelText="Cancel"
+        variant={appealActionModal.action === 'approved' ? 'info' : 'danger'}
+      />
     </div>
   );
 }

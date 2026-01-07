@@ -93,20 +93,23 @@ export default function CartPage() {
 
                       {/* Quantity Controls */}
                       <div className="flex items-center gap-3 mt-4">
-                        <span className="text-gray-400 text-sm">Quantity:</span>
-                        <div className="flex items-center gap-2">
+                        <span id={`quantity-label-${item.id}`} className="text-gray-400 text-sm">Quantity:</span>
+                        <div className="flex items-center gap-2" role="group" aria-labelledby={`quantity-label-${item.id}`}>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="w-8 h-8 bg-gray-800 hover:bg-gray-700 text-white rounded flex items-center justify-center transition"
+                            aria-label={`Decrease quantity of ${item.serviceName}`}
+                            disabled={item.quantity <= 1}
+                            className="w-8 h-8 bg-gray-800 hover:bg-gray-700 text-white rounded flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                           >
                             -
                           </button>
-                          <span className="w-12 text-center font-semibold text-white">
+                          <span className="w-12 text-center font-semibold text-white" aria-live="polite" aria-atomic="true">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="w-8 h-8 bg-gray-800 hover:bg-gray-700 text-white rounded flex items-center justify-center transition"
+                            aria-label={`Increase quantity of ${item.serviceName}`}
+                            className="w-8 h-8 bg-gray-800 hover:bg-gray-700 text-white rounded flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-primary-500"
                           >
                             +
                           </button>
@@ -124,7 +127,8 @@ export default function CartPage() {
                       )}
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-400 text-sm font-medium transition"
+                        aria-label={`Remove ${item.serviceName} from cart`}
+                        className="text-red-500 hover:text-red-400 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-red-500 rounded px-2 py-1"
                       >
                         Remove
                       </button>
@@ -165,7 +169,8 @@ export default function CartPage() {
             <button
               onClick={handleCheckout}
               disabled={getTotalItems() === 0 || checkoutLoading}
-              className={`w-full py-3 rounded-lg mb-3 font-semibold transition ${
+              aria-disabled={getTotalItems() === 0 || checkoutLoading}
+              className={`w-full py-3 rounded-lg mb-3 font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                 getTotalItems() === 0 || checkoutLoading
                   ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                   : "gradient-purple text-white hover:opacity-90"

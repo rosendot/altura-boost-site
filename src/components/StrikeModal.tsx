@@ -66,13 +66,18 @@ export default function StrikeModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="strike-modal-title"
+    >
       <div className="bg-gray-900 rounded-lg max-w-lg w-full border border-gray-700">
         <div className="p-6">
           {/* Header */}
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-white">Issue Strike</h2>
+              <h2 id="strike-modal-title" className="text-2xl font-bold text-white">Issue Strike</h2>
               <p className="text-gray-400 mt-1">
                 Booster: {boosterName}
               </p>
@@ -80,7 +85,8 @@ export default function StrikeModal({
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white text-2xl"
+              aria-label="Close strike modal"
+              className="text-gray-400 hover:text-white text-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
             >
               ×
             </button>

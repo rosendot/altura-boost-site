@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ReviewModal from '@/components/ReviewModal';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import { useToast } from '@/contexts/ToastContext';
 
 interface UserData {
   id: string;
@@ -104,6 +106,7 @@ interface BoosterReview {
 
 export default function AccountPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,6 +145,8 @@ export default function AccountPage() {
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
+  const [appealError, setAppealError] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -323,21 +328,21 @@ export default function AccountPage() {
         window.location.href = data.url;
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to start onboarding. Please try again.');
+        showToast(error.error || 'Failed to start onboarding. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Error starting onboarding:', error);
-      alert('Failed to start onboarding. Please try again.');
+      showToast('Failed to start onboarding. Please try again.', 'error');
     } finally {
       setConnectLoading(false);
     }
   };
 
   const handleDisconnectBank = async () => {
-    if (!confirm('Are you sure you want to disconnect your bank account? You will need to reconnect it to receive future payouts.')) {
-      return;
-    }
+    setShowDisconnectModal(true);
+  };
 
+  const disconnectBankConfirmed = async () => {
     setDisconnecting(true);
 
     try {
@@ -346,15 +351,15 @@ export default function AccountPage() {
       });
 
       if (response.ok) {
-        alert('Bank account disconnected successfully.');
+        showToast('Bank account disconnected successfully.', 'success');
         await fetchConnectStatus();
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to disconnect. Please try again.');
+        showToast(error.error || 'Failed to disconnect. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Error disconnecting:', error);
-      alert('Failed to disconnect. Please try again.');
+      showToast('Failed to disconnect. Please try again.', 'error');
     } finally {
       setDisconnecting(false);
     }
@@ -395,14 +400,14 @@ export default function AccountPage() {
         // Refresh jobs list
         await fetchBoosterJobs();
         handleCloseProgressModal();
-        alert('Progress updated successfully!');
+        showToast('Progress updated successfully!', 'success');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to update progress. Please try again.');
+        showToast(error.error || 'Failed to update progress. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Error updating progress:', error);
-      alert('Failed to update progress. Please try again.');
+      showToast('Failed to update progress. Please try again.', 'error');
     } finally {
       setUpdatingProgress(false);
     }
@@ -664,20 +669,23 @@ export default function AccountPage() {
 
                     {/* Full Name */}
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">Full Name</label>
+                      <label htmlFor="full-name" className="block text-sm text-gray-400 mb-2">Full Name</label>
                       <input
+                        id="full-name"
                         type="text"
                         value={editedFullName}
                         onChange={(e) => setEditedFullName(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
                         placeholder="Enter your full name"
+                        aria-required="true"
                       />
                     </div>
 
                     {/* Phone */}
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">Phone Number (Optional)</label>
+                      <label htmlFor="phone-number" className="block text-sm text-gray-400 mb-2">Phone Number (Optional)</label>
                       <input
+                        id="phone-number"
                         type="tel"
                         value={editedPhone}
                         onChange={(e) => setEditedPhone(e.target.value)}
@@ -698,7 +706,7 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    <button className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold">
+                    <button className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500">
                       Save Changes
                     </button>
                   </div>
@@ -731,42 +739,48 @@ export default function AccountPage() {
 
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm text-gray-400 mb-2">Current Password</label>
+                          <label htmlFor="current-password" className="block text-sm text-gray-400 mb-2">Current Password</label>
                           <input
+                            id="current-password"
                             type="password"
                             value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)}
                             className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
                             placeholder="Enter current password"
+                            aria-required="true"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm text-gray-400 mb-2">New Password</label>
+                          <label htmlFor="new-password" className="block text-sm text-gray-400 mb-2">New Password</label>
                           <input
+                            id="new-password"
                             type="password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
                             placeholder="Enter new password (min 8 characters)"
+                            aria-required="true"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm text-gray-400 mb-2">Confirm New Password</label>
+                          <label htmlFor="confirm-password" className="block text-sm text-gray-400 mb-2">Confirm New Password</label>
                           <input
+                            id="confirm-password"
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
                             placeholder="Confirm new password"
+                            aria-required="true"
                           />
                         </div>
 
                         <button
                           onClick={handleUpdatePassword}
                           disabled={updatingPassword}
-                          className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                           {updatingPassword ? 'Updating...' : 'Update Password'}
                         </button>
@@ -804,7 +818,7 @@ export default function AccountPage() {
                             <button
                               onClick={handleConnectBank}
                               disabled={connectLoading}
-                              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                             >
                               {connectLoading ? 'Loading...' : 'Connect Bank Account'}
                             </button>
@@ -880,14 +894,14 @@ export default function AccountPage() {
                               <button
                                 onClick={handleConnectBank}
                                 disabled={connectLoading}
-                                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                               >
                                 {connectLoading ? 'Loading...' : 'Update Bank Account'}
                               </button>
                               <button
                                 onClick={handleDisconnectBank}
                                 disabled={disconnecting}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500"
                               >
                                 {disconnecting ? 'Disconnecting...' : 'Disconnect'}
                               </button>
@@ -982,7 +996,9 @@ export default function AccountPage() {
                                     ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-500'
                                     : 'bg-gray-700 text-gray-300 border border-gray-600'
                                 }`}>
-                                  {order.status.toUpperCase().replace('_', ' ')}
+                                  <span aria-hidden="true">
+                                    {order.status === 'completed' ? '✓' : order.status === 'in_progress' ? '⏳' : order.status === 'paid' ? '💳' : '⏱️'}
+                                  </span> {order.status.toUpperCase().replace('_', ' ')}
                                 </span>
                               </div>
                             </div>
@@ -1037,7 +1053,9 @@ export default function AccountPage() {
                                             ? 'bg-indigo-900/50 text-indigo-400'
                                             : 'bg-gray-700 text-gray-300'
                                         }`}>
-                                          {job.status.toUpperCase().replace('_', ' ')}
+                                          <span aria-hidden="true">
+                                            {job.status === 'completed' ? '✓' : job.status === 'in_progress' ? '⏳' : job.status === 'accepted' ? '✓' : job.status === 'available' ? '📋' : job.status === 'assigned' ? '👤' : '⏱️'}
+                                          </span> {job.status.toUpperCase().replace('_', ' ')}
                                         </span>
                                         <p className="text-xs text-gray-500 mt-1">
                                           {job.progress_percentage}% Complete
@@ -1137,7 +1155,9 @@ export default function AccountPage() {
                                     ? 'bg-yellow-900/50 text-yellow-400'
                                     : 'bg-red-900/50 text-red-400'
                                 }`}>
-                                  {job.review.delivery_status === 'complete' ? 'Complete Delivery' :
+                                  <span aria-hidden="true">
+                                    {job.review.delivery_status === 'complete' ? '✓' : job.review.delivery_status === 'incomplete' ? '⚠️' : '✕'}
+                                  </span> {job.review.delivery_status === 'complete' ? 'Complete Delivery' :
                                    job.review.delivery_status === 'incomplete' ? 'Incomplete Delivery' :
                                    'Poor Quality'}
                                 </span>
@@ -1157,7 +1177,7 @@ export default function AccountPage() {
                             <div className="border-t border-gray-700 pt-4">
                               <button
                                 onClick={() => handleOpenReviewModal(job)}
-                                className="w-full py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-bold"
+                                className="w-full py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-bold focus:outline-none focus:ring-2 focus:ring-primary-500"
                               >
                                 LEAVE A REVIEW
                               </button>
@@ -1502,7 +1522,7 @@ export default function AccountPage() {
                             <div className="mt-4">
                               <button
                                 onClick={() => handleOpenProgressModal(job)}
-                                className="w-full py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-bold"
+                                className="w-full py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-bold focus:outline-none focus:ring-2 focus:ring-primary-500"
                               >
                                 UPDATE PROGRESS
                               </button>
@@ -1598,10 +1618,11 @@ export default function AccountPage() {
                       <form onSubmit={async (e) => {
                         e.preventDefault();
                         if (!appealText.trim()) {
-                          alert('Please provide an explanation for your appeal.');
+                          setAppealError('Please provide an explanation for your appeal.');
                           return;
                         }
 
+                        setAppealError('');
                         setSubmittingAppeal(true);
                         try {
                           const response = await fetch('/api/appeals/submit', {
@@ -1611,7 +1632,7 @@ export default function AccountPage() {
                           });
 
                           if (response.ok) {
-                            alert('Your appeal has been submitted successfully. We will review it and get back to you soon.');
+                            showToast('Your appeal has been submitted successfully. We will review it and get back to you soon.', 'success');
                             setAppealText('');
                             // Refresh user data
                             const userResponse = await fetch('/api/user/me');
@@ -1621,11 +1642,11 @@ export default function AccountPage() {
                             }
                           } else {
                             const error = await response.json();
-                            alert(error.error || 'Failed to submit appeal. Please try again.');
+                            showToast(error.error || 'Failed to submit appeal. Please try again.', 'error');
                           }
                         } catch (error) {
                           console.error('Error submitting appeal:', error);
-                          alert('Failed to submit appeal. Please try again.');
+                          showToast('Failed to submit appeal. Please try again.', 'error');
                         } finally {
                           setSubmittingAppeal(false);
                         }
@@ -1643,6 +1664,11 @@ export default function AccountPage() {
                             required
                             disabled={submittingAppeal}
                           />
+                          {appealError && (
+                            <p className="text-sm text-red-400 mt-2" role="alert">
+                              {appealError}
+                            </p>
+                          )}
                           <p className="text-xs text-gray-500 mt-2">
                             Be honest and respectful in your explanation.
                           </p>
@@ -1651,7 +1677,7 @@ export default function AccountPage() {
                         <button
                           type="submit"
                           disabled={submittingAppeal || !appealText.trim()}
-                          className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
                           {submittingAppeal ? 'Submitting Appeal...' : 'Submit Appeal'}
                         </button>
@@ -1764,6 +1790,18 @@ export default function AccountPage() {
           </div>
         </div>
       )}
+
+      {/* Disconnect Bank Account Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDisconnectModal}
+        onClose={() => setShowDisconnectModal(false)}
+        onConfirm={disconnectBankConfirmed}
+        title="Disconnect Bank Account"
+        message="Are you sure you want to disconnect your bank account? You will need to reconnect it to receive future payouts."
+        confirmText="Disconnect"
+        cancelText="Cancel"
+        variant="warning"
+      />
     </div>
   );
 }

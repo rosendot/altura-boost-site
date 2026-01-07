@@ -43,11 +43,14 @@ export default function GameCarousel({ games, onGameClick }: GameCarouselProps) 
   }
 
   return (
-    <div className="relative">
+    <div className="relative" role="region" aria-label="Game carousel" aria-roledescription="carousel">
       <div className="overflow-hidden">
         <div
           className="flex gap-6 transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          role="group"
+          aria-live="polite"
+          aria-atomic="false"
         >
           {games.map((game) => {
             const imageUrl = getGameImageUrl(game.image_url);
@@ -150,33 +153,48 @@ export default function GameCarousel({ games, onGameClick }: GameCarouselProps) 
         <>
           <button
             onClick={scrollPrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-12 h-12 rounded-full bg-gray-900 border border-gray-800 hover:border-primary-700 flex items-center justify-center transition-all hover:scale-110 z-10"
-            aria-label="Previous game"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                scrollPrev();
+              }
+            }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-12 h-12 rounded-full bg-gray-900 border border-gray-800 hover:border-primary-700 flex items-center justify-center transition-all hover:scale-110 z-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            aria-label={`Previous game, currently showing page ${currentIndex + 1} of ${totalPages}`}
+            aria-controls="carousel-content"
           >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <button
             onClick={scrollNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-12 h-12 rounded-full bg-gray-900 border border-gray-800 hover:border-primary-700 flex items-center justify-center transition-all hover:scale-110 z-10"
-            aria-label="Next game"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                scrollNext();
+              }
+            }}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-12 h-12 rounded-full bg-gray-900 border border-gray-800 hover:border-primary-700 flex items-center justify-center transition-all hover:scale-110 z-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            aria-label={`Next game, currently showing page ${currentIndex + 1} of ${totalPages}`}
+            aria-controls="carousel-content"
           >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center gap-2 mt-6">
+          <div className="flex justify-center gap-2 mt-6" role="group" aria-label="Carousel page indicators">
             {Array.from({ length: totalPages }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
+                className={`w-2 h-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                   index === currentIndex ? "bg-primary-500 w-8" : "bg-gray-600"
                 }`}
-                aria-label={`Go to page ${index + 1}`}
+                aria-label={`Go to page ${index + 1} of ${totalPages}`}
+                aria-current={index === currentIndex ? "true" : "false"}
               />
             ))}
           </div>
