@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import FAQClient from "./FAQClient";
+import { getFAQPageSchema, StructuredData } from "@/lib/structuredData";
 
 export const metadata: Metadata = {
   title: 'FAQ',
@@ -62,8 +63,12 @@ export default function FAQ() {
     },
   ];
 
+  // Generate FAQ structured data
+  const faqSchema = getFAQPageSchema(faqs);
+
   return (
     <main className="min-h-screen bg-black max-w-4xl mx-auto px-4 py-8">
+      <StructuredData data={faqSchema} />
       <h1 className="text-4xl font-bold mb-6 text-white">Frequently Asked Questions</h1>
       <p className="text-gray-400 mb-8">
         Find answers to common questions about our services

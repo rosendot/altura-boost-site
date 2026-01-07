@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getGameImageUrl } from "@/lib/supabase/storage";
 import type { Metadata } from "next";
 import GameDetailClient from "./GameDetailClient";
+import { getProductSchema, getBreadcrumbSchema, StructuredData } from "@/lib/structuredData";
 
 interface Service {
   id: string;
@@ -118,8 +119,28 @@ export default async function GameDetailPage({
     "Money-back guarantee",
   ];
 
+  // Generate structured data schemas
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Games', url: '/games' },
+    { name: game.name, url: `/games/${gameId}` },
+  ]);
+
+  // Create Product schema for each service
+  const productSchemas = (services || []).map((service) =>
+    getProductSchema({
+      name: service.name,
+      gameName: game.name,
+      description: service.description || `Professional ${service.name} service for ${game.name}`,
+      price: service.price,
+      imageUrl: imageUrl,
+      slug: gameId,
+    })
+  );
+
   return (
     <main className="min-h-screen bg-black">
+      <StructuredData data={[breadcrumbSchema, ...productSchemas]} />
       {/* Hero Banner */}
       <section className="relative overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-black">
         {/* Background Image */}
