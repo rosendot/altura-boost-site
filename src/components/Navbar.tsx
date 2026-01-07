@@ -152,40 +152,74 @@ export default function Navbar() {
         {/* Right side - Info Links, Login, Cart */}
         <div className="flex items-center gap-3">
           <div className="relative" ref={gamesMenuRef}>
-            <button
-              onClick={() => setShowGamesMenu(!showGamesMenu)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setShowGamesMenu(!showGamesMenu);
-                }
-              }}
-              aria-expanded={showGamesMenu}
-              aria-haspopup="true"
-              aria-label="Games menu"
-              className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
+            <div
+              onMouseEnter={() => setShowGamesMenu(true)}
+              onMouseLeave={() => setShowGamesMenu(false)}
+              className="inline-block"
             >
-              Games
-            </button>
+              <Link
+                href="/games"
+                onFocus={() => setShowGamesMenu(true)}
+                onBlur={(e) => {
+                  // Only close if focus moves outside the entire menu container
+                  if (!gamesMenuRef.current?.contains(e.relatedTarget as Node)) {
+                    setShowGamesMenu(false);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                    e.preventDefault();
+                    setShowGamesMenu(true);
+                    // Focus first menu item
+                    setTimeout(() => {
+                      const firstMenuItem = gamesMenuRef.current?.querySelector('a[href*="/games/"]') as HTMLElement;
+                      firstMenuItem?.focus();
+                    }, 0);
+                  }
+                }}
+                aria-expanded={showGamesMenu}
+                aria-haspopup="true"
+                aria-controls="games-menu"
+                className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
+              >
+                Games
+              </Link>
 
-            {/* Mega Menu Dropdown */}
-            {showGamesMenu && (
-              <div className="absolute left-0 top-full mt-1 z-50">
-                <div className="bg-gray-900 border border-primary-700/50 rounded-lg shadow-2xl p-2 min-w-[200px]">
-                  {/* Game Item */}
-                  <Link
-                    href="/games/black-ops-7"
-                    className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-primary-700/30 transition-colors duration-200 group/item"
-                    onClick={() => setShowGamesMenu(false)}
-                  >
-                    <span className="text-2xl" role="img" aria-label="Target">🎯</span>
-                    <span className="text-white text-sm font-medium group-hover/item:text-primary-400">
-                      Black Ops 7
-                    </span>
-                  </Link>
+              {/* Mega Menu Dropdown */}
+              {showGamesMenu && (
+                <div
+                  id="games-menu"
+                  role="menu"
+                  aria-label="Games list"
+                  className="absolute left-0 top-full mt-1 z-50"
+                  onMouseEnter={() => setShowGamesMenu(true)}
+                  onMouseLeave={() => setShowGamesMenu(false)}
+                >
+                  <div className="bg-gray-900 border border-primary-700/50 rounded-lg shadow-2xl p-2 min-w-[200px]">
+                    {/* Game Item */}
+                    <Link
+                      href="/games/black-ops-7"
+                      role="menuitem"
+                      className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-primary-700/30 transition-colors duration-200 group/item"
+                      onClick={() => setShowGamesMenu(false)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setShowGamesMenu(false);
+                          // Return focus to the games link
+                          const gamesLink = gamesMenuRef.current?.querySelector('a[href="/games"]') as HTMLElement;
+                          gamesLink?.focus();
+                        }
+                      }}
+                    >
+                      <span className="text-2xl" role="img" aria-label="Target">🎯</span>
+                      <span className="text-white text-sm font-medium group-hover/item:text-primary-400">
+                        Black Ops 7
+                      </span>
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           <Link href="/work-with-us" className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">
             Work with us
