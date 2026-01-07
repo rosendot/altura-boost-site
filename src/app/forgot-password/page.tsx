@@ -43,10 +43,11 @@ export default function ForgotPasswordPage() {
       <div
         className="absolute inset-0 bg-cover bg-center opacity-60"
         style={{ backgroundImage: "url('/login_page_background.webp')" }}
+        aria-hidden="true"
       ></div>
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" aria-hidden="true"></div>
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-md">
@@ -61,7 +62,7 @@ export default function ForgotPasswordPage() {
 
           {/* Success Message */}
           {success && (
-            <div className="mb-6 bg-green-900/30 border border-green-500 rounded-lg p-4">
+            <div className="mb-6 bg-green-900/30 border border-green-500 rounded-lg p-4" role="status" aria-live="polite">
               <p className="text-green-400 text-sm text-center">
                 Password reset email sent! Check your inbox and click the link to reset your password.
               </p>
@@ -70,7 +71,7 @@ export default function ForgotPasswordPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 bg-red-900/30 border border-red-500 rounded-lg p-4">
+            <div className="mb-6 bg-red-900/30 border border-red-500 rounded-lg p-4" role="alert" aria-live="assertive">
               <p className="text-red-400 text-sm text-center">{error}</p>
             </div>
           )}
@@ -79,7 +80,7 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email Address
+                Email Address <span className="text-red-500" aria-label="required">*</span>
               </label>
               <input
                 id="email"
@@ -88,16 +89,17 @@ export default function ForgotPasswordPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
                 placeholder="Enter your email"
                 disabled={loading || success}
+                aria-required="true"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || success}
-              className="w-full py-3 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               {loading ? 'Sending...' : success ? 'Email Sent!' : 'Send Reset Link'}
             </button>
@@ -107,7 +109,7 @@ export default function ForgotPasswordPage() {
           <div className="mt-6 text-center">
             <Link
               href="/login"
-              className="text-sm text-primary-400 hover:text-primary-300 transition"
+              className="text-sm text-primary-400 hover:text-primary-300 transition focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
             >
               ← Back to Login
             </Link>

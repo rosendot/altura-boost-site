@@ -82,10 +82,11 @@ export default function ResetPasswordPage() {
       <div
         className="absolute inset-0 bg-cover bg-center opacity-60"
         style={{ backgroundImage: "url('/login_page_background.webp')" }}
+        aria-hidden="true"
       ></div>
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" aria-hidden="true"></div>
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-md">
@@ -100,7 +101,7 @@ export default function ResetPasswordPage() {
 
           {/* Success Message */}
           {success && (
-            <div className="mb-6 bg-green-900/30 border border-green-500 rounded-lg p-4">
+            <div className="mb-6 bg-green-900/30 border border-green-500 rounded-lg p-4" role="status" aria-live="polite">
               <p className="text-green-400 text-sm text-center">
                 Password reset successful! Redirecting to login...
               </p>
@@ -109,7 +110,7 @@ export default function ResetPasswordPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 bg-red-900/30 border border-red-500 rounded-lg p-4">
+            <div className="mb-6 bg-red-900/30 border border-red-500 rounded-lg p-4" role="alert" aria-live="assertive">
               <p className="text-red-400 text-sm text-center">{error}</p>
             </div>
           )}
@@ -118,7 +119,7 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                  New Password
+                  New Password <span className="text-red-500" aria-label="required">*</span>
                 </label>
                 <input
                   id="newPassword"
@@ -127,15 +128,17 @@ export default function ResetPasswordPage() {
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                  className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
                   placeholder="Enter new password (min 8 characters)"
                   disabled={loading}
+                  aria-required="true"
+                  aria-invalid={error === 'Passwords do not match' || error === 'Password must be at least 8 characters' ? 'true' : 'false'}
                 />
               </div>
 
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                  Confirm New Password
+                  Confirm New Password <span className="text-red-500" aria-label="required">*</span>
                 </label>
                 <input
                   id="confirmPassword"
@@ -144,16 +147,18 @@ export default function ResetPasswordPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                  className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
                   placeholder="Confirm new password"
                   disabled={loading}
+                  aria-required="true"
+                  aria-invalid={error === 'Passwords do not match' ? 'true' : 'false'}
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 {loading ? 'Resetting...' : 'Reset Password'}
               </button>
@@ -161,7 +166,7 @@ export default function ResetPasswordPage() {
           )}
 
           {!validSession && !error && (
-            <div className="text-center py-8">
+            <div className="text-center py-8" role="status" aria-live="polite">
               <div className="text-gray-400">Verifying reset link...</div>
             </div>
           )}

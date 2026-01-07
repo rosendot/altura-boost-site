@@ -23,7 +23,7 @@ export default function FAQClient({ faqs }: FAQClientProps) {
             aria-expanded={openIndex === index}
             aria-controls={`faq-answer-${index}`}
             id={`faq-question-${index}`}
-            className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-800 transition focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-800 transition focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
           >
             <span className="font-semibold text-lg text-white">{faq.question}</span>
             <svg

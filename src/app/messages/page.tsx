@@ -191,7 +191,7 @@ export default function MessagesPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center pt-24">
-        <div className="text-xl text-gray-400">Loading...</div>
+        <div className="text-xl text-gray-400" role="status" aria-live="polite">Loading...</div>
       </div>
     );
   }
@@ -203,13 +203,13 @@ export default function MessagesPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-220px)]">
           {/* Conversations List */}
-          <div className="bg-gray-900 border border-gray-700 rounded-lg shadow overflow-hidden">
+          <nav className="bg-gray-900 border border-gray-700 rounded-lg shadow overflow-hidden" aria-label="Conversations list">
             <div className="p-4 border-b border-gray-700">
-              <h2 className="font-semibold text-white">Conversations</h2>
+              <h2 id="conversations-heading" className="font-semibold text-white">Conversations</h2>
             </div>
-            <div className="overflow-y-auto h-full">
+            <div className="overflow-y-auto h-full" role="list" aria-labelledby="conversations-heading">
               {conversations.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">
+                <div className="p-4 text-center text-gray-500" role="status">
                   No conversations yet
                 </div>
               ) : (
@@ -217,16 +217,18 @@ export default function MessagesPage() {
                   <button
                     key={conv.id}
                     onClick={() => setSelectedConversation(conv)}
-                    className={`w-full p-4 border-b border-gray-800 hover:bg-gray-800 text-left transition ${
+                    className={`w-full p-4 border-b border-gray-800 hover:bg-gray-800 text-left transition focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                       selectedConversation?.id === conv.id ? 'bg-gray-800' : ''
                     }`}
+                    aria-label={`Conversation for ${conv.jobs.game_name} - ${conv.jobs.service_name}, Job ${conv.jobs.job_number}${conv.unread_count > 0 ? `, ${conv.unread_count} unread messages` : ''}`}
+                    role="listitem"
                   >
                     <div className="flex justify-between items-start mb-1">
                       <div className="font-semibold text-sm text-white">
                         {conv.jobs.game_name}
                       </div>
                       {conv.unread_count > 0 && (
-                        <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                        <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full" aria-label={`${conv.unread_count} unread`}>
                           {conv.unread_count}
                         </span>
                       )}
@@ -246,31 +248,31 @@ export default function MessagesPage() {
                 ))
               )}
             </div>
-          </div>
+          </nav>
 
           {/* Messages Area */}
-          <div className="md:col-span-2 bg-gray-900 border border-gray-700 rounded-lg shadow flex flex-col">
+          <section className="md:col-span-2 bg-gray-900 border border-gray-700 rounded-lg shadow flex flex-col" aria-label="Message thread">
             {selectedConversation ? (
               <>
                 {/* Header */}
-                <div className="p-4 border-b border-gray-700">
-                  <div className="font-semibold text-white">
+                <header className="p-4 border-b border-gray-700">
+                  <h2 className="font-semibold text-white">
                     {selectedConversation.jobs.game_name} - {selectedConversation.jobs.service_name}
-                  </div>
+                  </h2>
                   <div className="text-sm text-gray-400">
                     Job #{selectedConversation.jobs.job_number}
                   </div>
-                </div>
+                </header>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black flex flex-col">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black flex flex-col" role="log" aria-live="polite" aria-atomic="false">
                   {messages.map((msg) => {
                     const isOwnMessage = msg.sender_id === user?.id;
                     const isSystemMessage = msg.is_system_message;
 
                     if (isSystemMessage) {
                       return (
-                        <div key={msg.id} className="flex justify-center">
+                        <div key={msg.id} className="flex justify-center" role="status">
                           <div className="bg-gray-800 text-gray-400 text-xs px-3 py-1 rounded-full">
                             {msg.message_text}
                           </div>
@@ -339,7 +341,8 @@ export default function MessagesPage() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg disabled:opacity-50 transition"
+                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg disabled:opacity-50 transition focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      aria-label="Attach file"
                     >
                       📎
                     </button>
@@ -350,11 +353,12 @@ export default function MessagesPage() {
                       placeholder="Type a message..."
                       disabled={sending || uploading}
                       className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-gray-500"
+                      aria-label="Message input"
                     />
                     <button
                       type="submit"
                       disabled={!newMessage.trim() || sending || uploading}
-                      className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                       {sending ? 'Sending...' : uploading ? 'Uploading...' : 'Send'}
                     </button>
@@ -362,11 +366,11 @@ export default function MessagesPage() {
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-500">
+              <div className="flex-1 flex items-center justify-center text-gray-500" role="status">
                 Select a conversation to start messaging
               </div>
             )}
-          </div>
+          </section>
         </div>
       </div>
     </div>

@@ -72,10 +72,11 @@ export default function CustomerSignUpPage() {
       <div
         className="absolute inset-0 bg-cover bg-center opacity-60"
         style={{ backgroundImage: "url('/login_page_background.webp')" }}
+        aria-hidden="true"
       ></div>
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" aria-hidden="true"></div>
 
       {/* Sign Up Form */}
       <div className="max-w-md w-full bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow relative z-10 max-h-[calc(100vh-2rem)] overflow-y-auto">
@@ -90,7 +91,9 @@ export default function CustomerSignUpPage() {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label htmlFor="username" className="block text-sm text-gray-400 mb-1">Username</label>
+            <label htmlFor="username" className="block text-sm text-gray-400 mb-1">
+              Username <span className="text-red-500" aria-label="required">*</span>
+            </label>
             <input
               id="username"
               type="text"
@@ -105,7 +108,9 @@ export default function CustomerSignUpPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm text-gray-400 mb-1">Email</label>
+            <label htmlFor="email" className="block text-sm text-gray-400 mb-1">
+              Email <span className="text-red-500" aria-label="required">*</span>
+            </label>
             <input
               id="email"
               type="email"
@@ -120,7 +125,9 @@ export default function CustomerSignUpPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm text-gray-400 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm text-gray-400 mb-1">
+              Password <span className="text-red-500" aria-label="required">*</span>
+            </label>
             <input
               id="password"
               type="password"
@@ -131,11 +138,14 @@ export default function CustomerSignUpPage() {
               className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
               required
               aria-required="true"
+              aria-invalid={error === 'Passwords do not match!' ? 'true' : 'false'}
             />
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm text-gray-400 mb-1">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="block text-sm text-gray-400 mb-1">
+              Confirm Password <span className="text-red-500" aria-label="required">*</span>
+            </label>
             <input
               id="confirmPassword"
               type="password"
@@ -146,13 +156,14 @@ export default function CustomerSignUpPage() {
               className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
               required
               aria-required="true"
+              aria-invalid={error === 'Passwords do not match!' ? 'true' : 'false'}
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold mt-4 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             {loading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
           </button>
@@ -161,13 +172,13 @@ export default function CustomerSignUpPage() {
         <div className="mt-4 text-center text-sm">
           <p className="text-gray-400">
             Already have an account?{' '}
-            <a href="/login" className="text-primary-400 hover:text-primary-300 transition font-semibold">
+            <a href="/login" className="text-primary-400 hover:text-primary-300 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 rounded">
               Login
             </a>
           </p>
           <p className="text-gray-400 mt-2">
             Want to become a booster?{' '}
-            <a href="/signup/booster" className="text-primary-400 hover:text-primary-300 transition font-semibold">
+            <a href="/signup/booster" className="text-primary-400 hover:text-primary-300 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 rounded">
               Apply Here
             </a>
           </p>

@@ -37,9 +37,9 @@ export default async function GamesPage() {
   return (
     <main className="min-h-screen bg-black">
       {/* Header */}
-      <section className="max-w-7xl mx-auto px-4 py-8">
+      <section className="max-w-7xl mx-auto px-4 py-8" aria-labelledby="games-heading">
         <div className="text-center space-y-4">
-          <h1 className="text-5xl md:text-6xl font-bold text-white">
+          <h1 id="games-heading" className="text-5xl md:text-6xl font-bold text-white">
             Our Games
           </h1>
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
@@ -49,9 +49,9 @@ export default async function GamesPage() {
       </section>
 
       {/* Games Grid */}
-      <section className="max-w-7xl mx-auto px-4 pb-20">
+      <section className="max-w-7xl mx-auto px-4 pb-20" aria-label="Available games">
         {!games || games.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12" role="status">
             <p className="text-gray-400">No games available at the moment.</p>
           </div>
         ) : (
@@ -62,7 +62,7 @@ export default async function GamesPage() {
                 <Link
                   key={game.id}
                   href={`/games/${game.slug}`}
-                  className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-black border border-gray-800 hover:border-primary-500 transition-all duration-300 transform hover:scale-105"
+                  className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-black border border-gray-800 hover:border-primary-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   {/* Game Image Background */}
                   <div className="absolute inset-0">
@@ -77,7 +77,7 @@ export default async function GamesPage() {
                   </div>
 
                   {/* Background Pattern */}
-                  <div className="absolute inset-0 opacity-10">
+                  <div className="absolute inset-0 opacity-10" aria-hidden="true">
                     <div
                       className="absolute inset-0"
                       style={{
@@ -103,6 +103,7 @@ export default async function GamesPage() {
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"

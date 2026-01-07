@@ -48,15 +48,17 @@ export default function CartPage() {
       {/* Cart Items Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
-        <div className="lg:col-span-2">
+        <section className="lg:col-span-2" aria-labelledby="cart-items-heading">
+          <h2 id="cart-items-heading" className="sr-only">Cart Items</h2>
           {getTotalItems() === 0 ? (
             /* Empty Cart State */
-            <div className="bg-gray-900 border border-primary-700 rounded-lg p-8 text-center">
+            <div className="bg-gray-900 border border-primary-700 rounded-lg p-8 text-center" role="status">
               <svg
                 className="w-24 h-24 mx-auto mb-4 text-primary-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -68,7 +70,7 @@ export default function CartPage() {
               <p className="text-xl text-gray-300 mb-4">Your cart is empty</p>
               <Link
                 href="/games/black-ops-7"
-                className="inline-block px-6 py-3 gradient-purple text-white rounded-lg hover:opacity-90 transition font-semibold"
+                className="inline-block px-6 py-3 gradient-purple text-white rounded-lg hover:opacity-90 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 Browse Services
               </Link>
@@ -138,12 +140,12 @@ export default function CartPage() {
               ))}
             </div>
           )}
-        </div>
+        </section>
 
         {/* Order Summary */}
-        <div className="lg:col-span-1">
+        <section className="lg:col-span-1" aria-labelledby="order-summary-heading">
           <div className="bg-gray-900 border border-primary-700 rounded-lg p-6 sticky top-4">
-            <h2 className="text-2xl font-bold mb-4 text-white">Order Summary</h2>
+            <h2 id="order-summary-heading" className="text-2xl font-bold mb-4 text-white">Order Summary</h2>
 
             <div className="space-y-2 mb-4">
               <div className="flex justify-between">
@@ -181,12 +183,12 @@ export default function CartPage() {
 
             <Link
               href="/"
-              className="block text-center text-primary-400 hover:text-primary-300 transition"
+              className="block text-center text-primary-400 hover:text-primary-300 transition focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
             >
               Continue Shopping
             </Link>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   );

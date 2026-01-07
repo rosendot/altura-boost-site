@@ -482,7 +482,13 @@ export default function AccountPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="text-center" role="status" aria-live="polite">
+          <svg className="w-16 h-16 text-primary-500 mx-auto animate-spin mb-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-white text-xl">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -500,10 +506,11 @@ export default function AccountPage() {
           {/* Sidebar */}
           <div className="w-64 flex-shrink-0">
             <div className="bg-gray-900 border border-primary-700 rounded-lg p-4">
-              <nav className="space-y-2">
+              <nav className="space-y-2" aria-label="Account navigation">
                 <button
                   onClick={() => setActiveTab('profile')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  aria-pressed={activeTab === 'profile'}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                     activeTab === 'profile'
                       ? 'bg-primary-600 text-white'
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -513,7 +520,8 @@ export default function AccountPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('security')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  aria-pressed={activeTab === 'security'}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                     activeTab === 'security'
                       ? 'bg-primary-600 text-white'
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -525,7 +533,8 @@ export default function AccountPage() {
                   <>
                     <button
                       onClick={() => setActiveTab('orders')}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                      aria-pressed={activeTab === 'orders'}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                         activeTab === 'orders'
                           ? 'bg-primary-600 text-white'
                           : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -535,7 +544,8 @@ export default function AccountPage() {
                     </button>
                     <button
                       onClick={() => setActiveTab('completed')}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                      aria-pressed={activeTab === 'completed'}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                         activeTab === 'completed'
                           ? 'bg-primary-600 text-white'
                           : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -549,7 +559,8 @@ export default function AccountPage() {
                   <>
                     <button
                       onClick={() => setActiveTab('jobs')}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                      aria-pressed={activeTab === 'jobs'}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                         activeTab === 'jobs'
                           ? 'bg-primary-600 text-white'
                           : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -559,7 +570,8 @@ export default function AccountPage() {
                     </button>
                     <button
                       onClick={() => setActiveTab('reviews')}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                      aria-pressed={activeTab === 'reviews'}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                         activeTab === 'reviews'
                           ? 'bg-primary-600 text-white'
                           : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -569,7 +581,8 @@ export default function AccountPage() {
                     </button>
                     <button
                       onClick={() => setActiveTab('earnings')}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                      aria-pressed={activeTab === 'earnings'}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                         activeTab === 'earnings'
                           ? 'bg-primary-600 text-white'
                           : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -582,7 +595,8 @@ export default function AccountPage() {
                 {userData.role === 'booster' && userData.is_suspended && userData.can_appeal && (
                   <button
                     onClick={() => setActiveTab('appeals')}
-                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 border-2 ${
+                    aria-pressed={activeTab === 'appeals'}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 border-2 focus:outline-none focus:ring-2 focus:ring-red-500 ${
                       activeTab === 'appeals'
                         ? 'bg-red-600 text-white border-red-500'
                         : 'text-red-400 border-red-700 hover:bg-red-900/20 hover:text-red-300'

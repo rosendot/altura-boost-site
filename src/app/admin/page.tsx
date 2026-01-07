@@ -620,7 +620,13 @@ export default function AdminPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="text-center" role="status" aria-live="polite">
+          <svg className="w-16 h-16 text-primary-500 mx-auto animate-spin mb-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-white text-xl">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -640,10 +646,11 @@ export default function AdminPage() {
           {/* Sidebar */}
           <div className="w-64 flex-shrink-0">
             <div className="bg-gray-900 border border-primary-700 rounded-lg p-4">
-              <nav className="space-y-2">
+              <nav className="space-y-2" aria-label="Admin navigation">
                 <button
                   onClick={() => setActiveTab('applications')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'applications'
+                  aria-pressed={activeTab === 'applications'}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${activeTab === 'applications'
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }`}
@@ -652,7 +659,8 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('orders')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'orders'
+                  aria-pressed={activeTab === 'orders'}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${activeTab === 'orders'
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }`}
@@ -661,7 +669,8 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'users'
+                  aria-pressed={activeTab === 'users'}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${activeTab === 'users'
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }`}
@@ -670,7 +679,8 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('services')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'services'
+                  aria-pressed={activeTab === 'services'}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${activeTab === 'services'
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }`}
@@ -679,7 +689,8 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('conversations')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'conversations'
+                  aria-pressed={activeTab === 'conversations'}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${activeTab === 'conversations'
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }`}
@@ -688,7 +699,8 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('reviews')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'reviews'
+                  aria-pressed={activeTab === 'reviews'}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${activeTab === 'reviews'
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }`}
@@ -697,7 +709,8 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('appeals')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 ${activeTab === 'appeals'
+                  aria-pressed={activeTab === 'appeals'}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${activeTab === 'appeals'
                     ? 'bg-primary-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }`}
@@ -717,22 +730,25 @@ export default function AdminPage() {
                   <h2 className="text-2xl font-bold text-white mb-6">Booster Applications</h2>
 
                   {/* Filter Tabs */}
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex gap-4 mb-6" role="group" aria-label="Application status filter">
                     <button
                       onClick={() => setApplicationFilter('pending')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm ${applicationFilter === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                      aria-pressed={applicationFilter === 'pending'}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${applicationFilter === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                     >
                       Pending ({applications.filter(app => app.status === 'pending').length})
                     </button>
                     <button
                       onClick={() => setApplicationFilter('approved')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm ${applicationFilter === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                      aria-pressed={applicationFilter === 'approved'}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${applicationFilter === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                     >
                       Approved ({applications.filter(app => app.status === 'approved').length})
                     </button>
                     <button
                       onClick={() => setApplicationFilter('rejected')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm ${applicationFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                      aria-pressed={applicationFilter === 'rejected'}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${applicationFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                     >
                       Rejected ({applications.filter(app => app.status === 'rejected').length})
                     </button>
@@ -741,7 +757,7 @@ export default function AdminPage() {
                   {/* Applications List */}
                   <div className="space-y-4">
                     {applications.filter(app => app.status === applicationFilter).length === 0 ? (
-                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" role="status">
                         <p className="text-gray-400">No {applicationFilter} applications.</p>
                       </div>
                     ) : (
@@ -785,7 +801,7 @@ export default function AdminPage() {
                             <div className="flex gap-3">
                               <button
                                 onClick={() => handleApplicationAction(app.id, app.user_id, 'approve')}
-                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
                               >
                                 Approve
                               </button>
@@ -796,7 +812,7 @@ export default function AdminPage() {
                                     handleApplicationAction(app.id, app.user_id, 'reject', reason);
                                   }
                                 }}
-                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
                               >
                                 Reject
                               </button>
@@ -842,8 +858,8 @@ export default function AdminPage() {
                   <div className="mb-8">
                     <h3 className="text-xl font-semibold text-white mb-4">Recent Orders</h3>
                     {orders.length === 0 ? (
-                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                        <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" role="status">
+                        <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                         <h3 className="text-lg font-semibold text-white mb-2">No Orders Yet</h3>
@@ -906,7 +922,7 @@ export default function AdminPage() {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-4">All Jobs</h3>
                     {jobs.length === 0 ? (
-                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" role="status">
                         <p className="text-gray-400 text-sm">
                           No jobs created yet.
                         </p>
@@ -986,10 +1002,11 @@ export default function AdminPage() {
                   <h2 className="text-2xl font-bold text-white mb-6">User Management</h2>
 
                   {/* Filter Tabs */}
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex gap-4 mb-6" role="group" aria-label="User role filter">
                     <button
                       onClick={() => setUserFilter('all')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${userFilter === 'all'
+                      aria-pressed={userFilter === 'all'}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${userFilter === 'all'
                         ? 'bg-primary-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         }`}
@@ -998,7 +1015,8 @@ export default function AdminPage() {
                     </button>
                     <button
                       onClick={() => setUserFilter('customer')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${userFilter === 'customer'
+                      aria-pressed={userFilter === 'customer'}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${userFilter === 'customer'
                         ? 'bg-primary-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         }`}
@@ -1007,7 +1025,8 @@ export default function AdminPage() {
                     </button>
                     <button
                       onClick={() => setUserFilter('booster')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${userFilter === 'booster'
+                      aria-pressed={userFilter === 'booster'}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${userFilter === 'booster'
                         ? 'bg-primary-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         }`}
@@ -1016,7 +1035,8 @@ export default function AdminPage() {
                     </button>
                     <button
                       onClick={() => setUserFilter('admin')}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${userFilter === 'admin'
+                      aria-pressed={userFilter === 'admin'}
+                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${userFilter === 'admin'
                         ? 'bg-primary-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         }`}
@@ -1027,8 +1047,8 @@ export default function AdminPage() {
 
                   {/* Users List */}
                   {users.length === 0 ? (
-                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" role="status">
+                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
                       <h3 className="text-lg font-semibold text-white mb-2">No Users</h3>
@@ -1042,31 +1062,31 @@ export default function AdminPage() {
                         <table className="w-full text-sm">
                           <thead className="bg-gray-900 border-b border-gray-700">
                             <tr>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 User
                               </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Email
                               </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Role
                               </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Status
                               </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Strikes
                               </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Phone
                               </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Earnings
                               </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Joined
                               </th>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                 Actions
                               </th>
                             </tr>
@@ -1167,7 +1187,7 @@ export default function AdminPage() {
                                     {user.role === 'booster' && (
                                       <button
                                         onClick={() => handleViewStrikes(user)}
-                                        className="px-3 py-1.5 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition font-semibold"
+                                        className="px-3 py-1.5 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
                                       >
                                         View Strikes
                                       </button>
@@ -1209,7 +1229,7 @@ export default function AdminPage() {
                         </button>
                       </div>
                       {services.length === 0 ? (
-                        <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                        <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" role="status">
                           <p className="text-gray-400 text-sm">
                             No services found. Add services to games.
                           </p>
@@ -1220,22 +1240,22 @@ export default function AdminPage() {
                             <table className="w-full">
                               <thead className="bg-gray-900 border-b border-gray-700">
                                 <tr>
-                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                     Service
                                   </th>
-                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                     Game
                                   </th>
-                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                     Price
                                   </th>
-                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                     Delivery Time
                                   </th>
-                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                     Status
                                   </th>
-                                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                     Created
                                   </th>
                                 </tr>
@@ -1309,7 +1329,7 @@ export default function AdminPage() {
                       </div>
                       <div className="overflow-y-auto max-h-[600px]">
                         {conversations.length === 0 ? (
-                          <div className="p-6 text-center">
+                          <div className="p-6 text-center" role="status">
                             <p className="text-gray-400 text-sm">No conversations yet.</p>
                           </div>
                         ) : (
@@ -1431,8 +1451,8 @@ export default function AdminPage() {
                   <h2 className="text-2xl font-bold text-white mb-6">Customer Reviews</h2>
 
                   {reviews.length === 0 ? (
-                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
-                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" role="status">
+                      <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                       </svg>
                       <h3 className="text-lg font-semibold text-white mb-2">No Reviews Yet</h3>
@@ -1556,7 +1576,7 @@ export default function AdminPage() {
                                     setSelectedReviewForStrike(review);
                                     setStrikeModalOpen(true);
                                   }}
-                                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm"
+                                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                                 >
                                   Issue Strike
                                 </button>
@@ -1576,28 +1596,31 @@ export default function AdminPage() {
                   <h2 className="text-2xl font-bold text-white mb-6">Suspension Appeals</h2>
 
                   {appealsLoading ? (
-                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" role="status" aria-live="polite">
                       <p className="text-gray-400">Loading appeals...</p>
                     </div>
                   ) : (
                     <div>
                       {/* Filter Tabs */}
-                      <div className="flex gap-4 mb-6">
+                      <div className="flex gap-4 mb-6" role="group" aria-label="Appeal status filter">
                         <button
                           onClick={() => setAppealFilter('pending')}
-                          className={`px-4 py-2 rounded-lg font-semibold text-sm ${appealFilter === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                          aria-pressed={appealFilter === 'pending'}
+                          className={`px-4 py-2 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${appealFilter === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                         >
                           Pending ({appeals.filter(a => a.status === 'pending').length})
                         </button>
                         <button
                           onClick={() => setAppealFilter('approved')}
-                          className={`px-4 py-2 rounded-lg font-semibold text-sm ${appealFilter === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                          aria-pressed={appealFilter === 'approved'}
+                          className={`px-4 py-2 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${appealFilter === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                         >
                           Approved ({appeals.filter(a => a.status === 'approved').length})
                         </button>
                         <button
                           onClick={() => setAppealFilter('rejected')}
-                          className={`px-4 py-2 rounded-lg font-semibold text-sm ${appealFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                          aria-pressed={appealFilter === 'rejected'}
+                          className={`px-4 py-2 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${appealFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                         >
                           Rejected ({appeals.filter(a => a.status === 'rejected').length})
                         </button>
@@ -1606,7 +1629,7 @@ export default function AdminPage() {
                       {/* Appeals List */}
                       <div className="space-y-4">
                         {appeals.filter(a => a.status === appealFilter).length === 0 ? (
-                          <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center">
+                          <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" role="status">
                             <p className="text-gray-400">No {appealFilter} appeals.</p>
                           </div>
                         ) : (
@@ -1706,7 +1729,7 @@ export default function AdminPage() {
                                   <div className="border-t border-gray-700 pt-4">
                                     <button
                                       onClick={() => setSelectedAppeal(appeal)}
-                                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold text-sm"
+                                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                                     >
                                       Review Appeal
                                     </button>
@@ -1747,11 +1770,11 @@ export default function AdminPage() {
 
       {/* Strikes Management Modal */}
       {showStrikesModal && selectedUserForStrikes && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="strikes-modal-title">
           <div className="bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
             <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 flex justify-between items-start">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">Strike Management</h2>
+                <h2 id="strikes-modal-title" className="text-2xl font-bold text-white mb-1">Strike Management</h2>
                 <p className="text-gray-400">
                   {selectedUserForStrikes.full_name || selectedUserForStrikes.email}
                 </p>
@@ -1774,7 +1797,8 @@ export default function AdminPage() {
                   setSelectedUserForStrikes(null);
                   setUserStrikes([]);
                 }}
-                className="text-gray-400 hover:text-white text-2xl"
+                aria-label="Close strikes modal"
+                className="text-gray-400 hover:text-white text-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
               >
                 ×
               </button>
@@ -1782,12 +1806,12 @@ export default function AdminPage() {
 
             <div className="p-6">
               {strikesLoading ? (
-                <div className="text-center py-12">
+                <div className="text-center py-12" role="status" aria-live="polite">
                   <div className="text-gray-400">Loading strikes...</div>
                 </div>
               ) : userStrikes.length === 0 ? (
-                <div className="text-center py-12">
-                  <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-center py-12" role="status">
+                  <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <p className="text-gray-400">No strikes found for this booster.</p>
@@ -1843,7 +1867,7 @@ export default function AdminPage() {
                         {strike.is_active ? (
                           <button
                             onClick={() => handleDeactivateStrike(strike.id)}
-                            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition text-sm font-semibold"
+                            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-500"
                           >
                             Deactivate Strike
                           </button>
@@ -1854,7 +1878,7 @@ export default function AdminPage() {
                         )}
                         <button
                           onClick={() => handleDeleteStrike(strike.id)}
-                          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm font-semibold"
+                          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
                         >
                           Delete Permanently
                         </button>
@@ -1870,12 +1894,12 @@ export default function AdminPage() {
 
       {/* Review Appeal Modal */}
       {selectedAppeal && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="appeal-modal-title">
           <div className="bg-gray-900 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
             <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">Review Appeal</h2>
+                  <h2 id="appeal-modal-title" className="text-2xl font-bold text-white mb-1">Review Appeal</h2>
                   <p className="text-gray-400">
                     {selectedAppeal.users?.full_name || selectedAppeal.users?.email || 'Unknown User'}
                   </p>
@@ -1885,7 +1909,8 @@ export default function AdminPage() {
                     setSelectedAppeal(null);
                     setAdminNotes('');
                   }}
-                  className="text-gray-400 hover:text-white transition text-2xl"
+                  aria-label="Close appeal modal"
+                  className="text-gray-400 hover:text-white transition text-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
                 >
                   ×
                 </button>
@@ -1933,14 +1958,15 @@ export default function AdminPage() {
 
               {/* Admin Notes Input */}
               <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                <label htmlFor="admin-notes" className="block text-sm font-semibold text-gray-300 mb-2">
                   Admin Notes (Optional)
                 </label>
                 <textarea
+                  id="admin-notes"
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   placeholder="Add any notes about your decision..."
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-600"
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   rows={4}
                 />
               </div>
@@ -1949,13 +1975,13 @@ export default function AdminPage() {
               <div className="flex gap-3 pt-4 border-t border-gray-700">
                 <button
                   onClick={() => handleAppealAction(selectedAppeal.id, 'approved')}
-                  className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+                  className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   Approve & Unsuspend
                 </button>
                 <button
                   onClick={() => handleAppealAction(selectedAppeal.id, 'rejected')}
-                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   Reject Appeal
                 </button>

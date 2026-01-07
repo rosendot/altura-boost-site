@@ -272,9 +272,9 @@ export default function BoosterHub() {
       <main className="min-h-screen bg-black pt-24 pb-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 text-center">
+            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 text-center" role="status" aria-live="polite">
               <div className="mb-4">
-                <svg className="w-16 h-16 text-primary-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg className="w-16 h-16 text-primary-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -293,9 +293,9 @@ export default function BoosterHub() {
       <main className="min-h-screen bg-black pt-24 pb-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-red-900/20 border-2 border-red-500 rounded-lg p-8 text-center">
+            <div className="bg-red-900/20 border-2 border-red-500 rounded-lg p-8 text-center" role="alert" aria-live="assertive">
               <div className="mb-4">
-                <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
@@ -314,7 +314,7 @@ export default function BoosterHub() {
               </p>
               <a
                 href="/account"
-                className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold"
+                className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 Go to Account Page
               </a>
@@ -330,9 +330,9 @@ export default function BoosterHub() {
       <main className="min-h-screen bg-black pt-24 pb-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-yellow-900/20 border-2 border-yellow-500 rounded-lg p-8 text-center">
+            <div className="bg-yellow-900/20 border-2 border-yellow-500 rounded-lg p-8 text-center" role="status" aria-live="polite">
               <div className="mb-4">
-                <svg className="w-16 h-16 text-yellow-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-16 h-16 text-yellow-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -345,7 +345,7 @@ export default function BoosterHub() {
               </p>
               <a
                 href="/account?tab=earnings"
-                className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold"
+                className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 Connect Bank Account
               </a>
@@ -361,9 +361,9 @@ export default function BoosterHub() {
       <main className="min-h-screen bg-black pt-24 pb-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-blue-900/20 border-2 border-blue-500 rounded-lg p-8 text-center">
+            <div className="bg-blue-900/20 border-2 border-blue-500 rounded-lg p-8 text-center" role="status" aria-live="polite">
               <div className="mb-4">
-                <svg className="w-16 h-16 text-blue-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg className="w-16 h-16 text-blue-500 mx-auto animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -380,13 +380,13 @@ export default function BoosterHub() {
                   onClick={() => {
                     checkStripeStatus();
                   }}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Refresh Status
                 </button>
                 <a
                   href="/account?tab=earnings"
-                  className="inline-block px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-semibold"
+                  className="inline-block px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   View Earnings
                 </a>
@@ -409,16 +409,17 @@ export default function BoosterHub() {
           background: 'radial-gradient(circle at center, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
           boxShadow: 'inset 0 0 100px rgba(168, 85, 247, 0.3)'
         }}
+        aria-hidden="true"
       />
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-4xl font-bold text-white">Booster Hub</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" role="status" aria-live="polite" aria-atomic="true">
             <div className={`w-2 h-2 rounded-full transition-all ${
               isRefreshing
                 ? 'bg-purple-500 animate-pulse'
                 : 'bg-green-500 animate-pulse'
-            }`}></div>
+            }`} aria-hidden="true"></div>
             <span className="text-sm text-gray-400">
               {isRefreshing ? 'Refreshing jobs...' : `Auto-refreshing in ${secondsUntilRefresh}s`}
             </span>
@@ -429,15 +430,17 @@ export default function BoosterHub() {
         </p>
 
         {/* Filters and Sort */}
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6">
+        <section aria-labelledby="filters-heading" className="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6">
+          <h2 id="filters-heading" className="sr-only">Filter and sort jobs</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Game Filter */}
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Game</label>
+              <label htmlFor="game-filter" className="block text-xs text-gray-400 mb-1">Game</label>
               <select
+                id="game-filter"
                 value={selectedGame}
                 onChange={(e) => setSelectedGame(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 {uniqueGames.map((game) => (
                   <option key={game} value={game}>
@@ -449,46 +452,53 @@ export default function BoosterHub() {
 
             {/* Payout Range */}
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Min Payout</label>
+              <label htmlFor="min-payout" className="block text-xs text-gray-400 mb-1">Min Payout</label>
               <input
+                id="min-payout"
                 type="number"
                 value={minPayout}
                 onChange={(e) => setMinPayout(Number(e.target.value))}
-                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="$0"
+                aria-label="Minimum payout amount"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Max Payout</label>
+              <label htmlFor="max-payout" className="block text-xs text-gray-400 mb-1">Max Payout</label>
               <input
+                id="max-payout"
                 type="number"
                 value={maxPayout}
                 onChange={(e) => setMaxPayout(Number(e.target.value))}
-                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="$1000"
+                aria-label="Maximum payout amount"
               />
             </div>
 
             {/* Max Hours */}
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Max Hours</label>
+              <label htmlFor="max-hours" className="block text-xs text-gray-400 mb-1">Max Hours</label>
               <input
+                id="max-hours"
                 type="number"
                 value={maxHours}
                 onChange={(e) => setMaxHours(Number(e.target.value))}
-                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="100"
+                aria-label="Maximum hours"
               />
             </div>
 
             {/* Weapon Class */}
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Weapon Class</label>
+              <label htmlFor="weapon-class" className="block text-xs text-gray-400 mb-1">Weapon Class</label>
               <select
+                id="weapon-class"
                 value={selectedWeaponClass}
                 onChange={(e) => setSelectedWeaponClass(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:border-primary-500"
+                className="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 {uniqueWeaponClasses.map((wc) => (
                   <option key={wc} value={wc}>
@@ -501,60 +511,64 @@ export default function BoosterHub() {
 
           {/* Sort Options */}
           <div className="mt-4 pt-4 border-t border-gray-700">
-            <label className="block text-xs text-gray-400 mb-2">Sort By</label>
-            <div className="flex flex-wrap gap-2">
+            <p id="sort-label" className="block text-xs text-gray-400 mb-2">Sort By</p>
+            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="sort-label">
               <button
                 onClick={() => setSortBy('newest')}
-                className={`px-3 py-1.5 text-xs rounded transition ${
+                className={`px-3 py-1.5 text-xs rounded transition focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                   sortBy === 'newest'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}
+                aria-pressed={sortBy === 'newest'}
               >
                 Newest First
               </button>
               <button
                 onClick={() => setSortBy('oldest')}
-                className={`px-3 py-1.5 text-xs rounded transition ${
+                className={`px-3 py-1.5 text-xs rounded transition focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                   sortBy === 'oldest'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}
+                aria-pressed={sortBy === 'oldest'}
               >
                 Oldest First
               </button>
               <button
                 onClick={() => setSortBy('payout-high')}
-                className={`px-3 py-1.5 text-xs rounded transition ${
+                className={`px-3 py-1.5 text-xs rounded transition focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                   sortBy === 'payout-high'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}
+                aria-pressed={sortBy === 'payout-high'}
               >
                 Highest Payout
               </button>
               <button
                 onClick={() => setSortBy('hours-low')}
-                className={`px-3 py-1.5 text-xs rounded transition ${
+                className={`px-3 py-1.5 text-xs rounded transition focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                   sortBy === 'hours-low'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}
+                aria-pressed={sortBy === 'hours-low'}
               >
                 Quickest Jobs
               </button>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Job Count */}
-        <div className="mb-4 text-sm text-gray-400">
+        <div className="mb-4 text-sm text-gray-400" role="status" aria-live="polite">
           Showing {filteredAndSortedJobs.length} of {jobs.length} jobs
         </div>
 
         {/* Available Jobs List */}
         {jobs.length === 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-2" role="status" aria-live="polite" aria-label="Loading jobs">
             <JobSkeleton />
             <JobSkeleton />
             <JobSkeleton />
@@ -562,7 +576,7 @@ export default function BoosterHub() {
             <JobSkeleton />
           </div>
         ) : filteredAndSortedJobs.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12" role="status">
             <p className="text-gray-400 text-lg">No available jobs at the moment</p>
             <p className="text-gray-500 text-sm mt-2">Check back later for new opportunities</p>
           </div>
@@ -610,13 +624,16 @@ export default function BoosterHub() {
                         e.stopPropagation();
                         handleQuickAccept(job.id);
                       }}
-                      className="px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition font-bold whitespace-nowrap"
+                      className="px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition font-bold whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      aria-label={`Quick accept ${job.service_name} job`}
                     >
                       Quick Accept
                     </button>
                     <button
                       onClick={() => toggleExpand(job.id)}
-                      className="text-gray-400 hover:text-white transition p-2"
+                      className="text-gray-400 hover:text-white transition p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                      aria-label={expandedJob === job.id ? 'Collapse job details' : 'Expand job details'}
+                      aria-expanded={expandedJob === job.id}
                     >
                       <svg
                         className={`w-5 h-5 transition-transform ${
@@ -625,6 +642,7 @@ export default function BoosterHub() {
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"
@@ -661,7 +679,8 @@ export default function BoosterHub() {
                         e.stopPropagation();
                         handleAcceptJob(job.id);
                       }}
-                      className="w-full py-2.5 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold"
+                      className="w-full py-2.5 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      aria-label={`Accept ${job.service_name} job`}
                     >
                       ACCEPT JOB
                     </button>
@@ -674,9 +693,9 @@ export default function BoosterHub() {
 
         {/* Confirmation Modal */}
         {showConfirmModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <div className="bg-gray-900 border border-primary-700 rounded-lg p-8 max-w-md w-full">
-              <h3 className="text-2xl font-bold mb-4 text-white">
+              <h3 id="modal-title" className="text-2xl font-bold mb-4 text-white">
                 Confirm Job Acceptance
               </h3>
               <p className="text-gray-400 mb-6">
@@ -686,13 +705,13 @@ export default function BoosterHub() {
               <div className="flex gap-4">
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-semibold"
+                  className="flex-1 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmAcceptance}
-                  className="flex-1 py-3 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold"
+                  className="flex-1 py-3 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   Yes, Accept
                 </button>

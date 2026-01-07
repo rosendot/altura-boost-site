@@ -24,16 +24,16 @@ export default function TermsOfService() {
       <p className="text-gray-400 mb-8">Last updated: December 6, 2024</p>
 
       <div className="prose max-w-none space-y-8">
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">1. Acceptance of Terms</h2>
+        <section aria-labelledby="section-1">
+          <h2 id="section-1" className="text-2xl font-semibold mb-4 text-primary-400">1. Acceptance of Terms</h2>
           <p className="text-gray-300">
             By accessing and using Altura Boost&apos;s services, you agree to be bound by these Terms of
             Service. If you do not agree to these terms, please do not use our services.
           </p>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">2. Service Description</h2>
+        <section aria-labelledby="section-2">
+          <h2 id="section-2" className="text-2xl font-semibold mb-4 text-primary-400">2. Service Description</h2>
           <p className="text-gray-300 mb-4">
             Altura Boost provides gaming services including but not limited to:
           </p>
@@ -45,8 +45,8 @@ export default function TermsOfService() {
           </ul>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">3. User Accounts</h2>
+        <section aria-labelledby="section-3">
+          <h2 id="section-3" className="text-2xl font-semibold mb-4 text-primary-400">3. User Accounts</h2>
           <p className="text-gray-300 mb-4">
             When creating an account, you agree to:
           </p>
@@ -58,8 +58,8 @@ export default function TermsOfService() {
           </ul>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">4. Account Security</h2>
+        <section aria-labelledby="section-4">
+          <h2 id="section-4" className="text-2xl font-semibold mb-4 text-primary-400">4. Account Security</h2>
           <p className="text-gray-300 mb-4">
             For services requiring account access, you understand and agree that:
           </p>
@@ -74,8 +74,8 @@ export default function TermsOfService() {
           </ul>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">5. Payment Terms</h2>
+        <section aria-labelledby="section-5">
+          <h2 id="section-5" className="text-2xl font-semibold mb-4 text-primary-400">5. Payment Terms</h2>
           <p className="text-gray-300 mb-4">
             All payments are processed securely through Stripe. By making a purchase:
           </p>
@@ -87,8 +87,8 @@ export default function TermsOfService() {
           </ul>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">6. Booster Terms</h2>
+        <section aria-labelledby="section-6">
+          <h2 id="section-6" className="text-2xl font-semibold mb-4 text-primary-400">6. Booster Terms</h2>
           <p className="text-gray-300 mb-4">If you are working as a booster, you agree to:</p>
           <ul className="list-disc list-inside space-y-2 text-gray-300">
             <li>Complete all accepted jobs within the estimated timeframe</li>
@@ -99,8 +99,8 @@ export default function TermsOfService() {
           </ul>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">7. Prohibited Activities</h2>
+        <section aria-labelledby="section-7">
+          <h2 id="section-7" className="text-2xl font-semibold mb-4 text-primary-400">7. Prohibited Activities</h2>
           <p className="text-gray-300 mb-4">Users may not:</p>
           <ul className="list-disc list-inside space-y-2 text-gray-300">
             <li>Use the service for fraudulent purposes</li>
@@ -111,8 +111,8 @@ export default function TermsOfService() {
           </ul>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">8. Limitation of Liability</h2>
+        <section aria-labelledby="section-8">
+          <h2 id="section-8" className="text-2xl font-semibold mb-4 text-primary-400">8. Limitation of Liability</h2>
           <p className="text-gray-300">
             Altura Boost is not liable for any damages resulting from use of our services, including
             but not limited to account suspensions, bans, or loss of in-game items. Our maximum
@@ -120,24 +120,24 @@ export default function TermsOfService() {
           </p>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">9. Privacy</h2>
+        <section aria-labelledby="section-9">
+          <h2 id="section-9" className="text-2xl font-semibold mb-4 text-primary-400">9. Privacy</h2>
           <p className="text-gray-300">
             Your privacy is important to us. We collect and use information as described in our Privacy
             Policy. By using our services, you consent to our data practices.
           </p>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">10. Changes to Terms</h2>
+        <section aria-labelledby="section-10">
+          <h2 id="section-10" className="text-2xl font-semibold mb-4 text-primary-400">10. Changes to Terms</h2>
           <p className="text-gray-300">
             We reserve the right to modify these terms at any time. Continued use of our services after
             changes constitutes acceptance of the new terms.
           </p>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold mb-4 text-primary-400">11. Contact Information</h2>
+        <section aria-labelledby="section-11">
+          <h2 id="section-11" className="text-2xl font-semibold mb-4 text-primary-400">11. Contact Information</h2>
           <p className="text-gray-300">
             For questions about these Terms of Service, please contact us through our support channels.
           </p>

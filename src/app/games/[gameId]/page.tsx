@@ -142,7 +142,7 @@ export default async function GameDetailPage({
     <main className="min-h-screen bg-black">
       <StructuredData data={[breadcrumbSchema, ...productSchemas]} />
       {/* Hero Banner */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-black">
+      <section className="relative overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-black" aria-labelledby="game-title">
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
@@ -152,11 +152,11 @@ export default async function GameDetailPage({
             className="object-cover opacity-20"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-black"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-black" aria-hidden="true"></div>
         </div>
 
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-10" aria-hidden="true">
           <div
             className="absolute inset-0"
             style={{
@@ -171,13 +171,14 @@ export default async function GameDetailPage({
           <div className="flex items-center gap-4 mb-6">
             <Link
               href="/games"
-              className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
             >
               <svg
                 className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -191,7 +192,7 @@ export default async function GameDetailPage({
           </div>
 
           <div className="text-center md:text-left">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+            <h1 id="game-title" className="text-4xl md:text-6xl font-bold text-white mb-4">
               {game.name}
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-6">

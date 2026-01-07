@@ -154,10 +154,11 @@ export default function BoosterSignUpPage() {
       <div
         className="absolute inset-0 bg-cover bg-center opacity-60"
         style={{ backgroundImage: "url('/login_page_background.webp')" }}
+        aria-hidden="true"
       ></div>
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" aria-hidden="true"></div>
 
       {/* Sign Up Form */}
       <div className="max-w-2xl w-full bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow relative z-10 max-h-[calc(100vh-2rem)] overflow-y-auto">
@@ -169,26 +170,28 @@ export default function BoosterSignUpPage() {
         </p>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-sm">
+          <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-sm" role="alert" aria-live="polite">
             {error}
           </div>
         )}
 
         {/* Progress Indicator */}
-        <div className="flex items-center justify-center mb-6">
+        <div className="flex items-center justify-center mb-6" role="progressbar" aria-label="Application progress" aria-valuenow={currentStep === 'account' ? 1 : 2} aria-valuemin={1} aria-valuemax={2}>
           <div className="flex items-center">
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 currentStep === 'account' ? 'bg-primary-500' : 'bg-primary-700'
               }`}
+              aria-current={currentStep === 'account' ? 'step' : undefined}
             >
               1
             </div>
-            <div className="w-16 h-1 bg-gray-700 mx-2"></div>
+            <div className="w-16 h-1 bg-gray-700 mx-2" aria-hidden="true"></div>
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 currentStep === 'survey' ? 'bg-primary-500' : 'bg-gray-700'
               }`}
+              aria-current={currentStep === 'survey' ? 'step' : undefined}
             >
               2
             </div>
@@ -198,60 +201,78 @@ export default function BoosterSignUpPage() {
         {currentStep === 'account' ? (
           <form onSubmit={handleAccountSubmit} className="space-y-3">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Username</label>
+              <label htmlFor="username" className="block text-sm text-gray-400 mb-1">
+                Username <span className="text-red-500" aria-label="required">*</span>
+              </label>
               <input
                 type="text"
+                id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleAccountChange}
                 placeholder="Choose a username"
-                className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
+                aria-required="true"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Email</label>
+              <label htmlFor="email" className="block text-sm text-gray-400 mb-1">
+                Email <span className="text-red-500" aria-label="required">*</span>
+              </label>
               <input
                 type="email"
+                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleAccountChange}
                 placeholder="Enter your email"
-                className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
+                aria-required="true"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Password</label>
+              <label htmlFor="password" className="block text-sm text-gray-400 mb-1">
+                Password <span className="text-red-500" aria-label="required">*</span>
+              </label>
               <input
                 type="password"
+                id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleAccountChange}
                 placeholder="Create a password"
-                className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
+                aria-required="true"
+                aria-invalid={error === 'Passwords do not match!' ? 'true' : 'false'}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="block text-sm text-gray-400 mb-1">
+                Confirm Password <span className="text-red-500" aria-label="required">*</span>
+              </label>
               <input
                 type="password"
+                id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleAccountChange}
                 placeholder="Confirm your password"
-                className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
+                aria-required="true"
+                aria-invalid={error === 'Passwords do not match!' ? 'true' : 'false'}
                 required
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold mt-4"
+              className="w-full py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold mt-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               NEXT
             </button>
@@ -259,13 +280,13 @@ export default function BoosterSignUpPage() {
             <div className="mt-4 text-center text-sm">
               <p className="text-gray-400">
                 Already have an account?{' '}
-                <a href="/login" className="text-primary-400 hover:text-primary-300 transition font-semibold">
+                <a href="/login" className="text-primary-400 hover:text-primary-300 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 rounded">
                   Login
                 </a>
               </p>
               <p className="text-gray-400 mt-2">
                 Looking to buy boosts?{' '}
-                <a href="/signup/customer" className="text-primary-400 hover:text-primary-300 transition font-semibold">
+                <a href="/signup/customer" className="text-primary-400 hover:text-primary-300 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 rounded">
                   Sign up as Customer
                 </a>
               </p>
@@ -279,36 +300,42 @@ export default function BoosterSignUpPage() {
 
             {surveyQuestions.map((q) => (
               <div key={q.id}>
-                <label className="block text-sm text-gray-300 mb-2">
+                <label htmlFor={`survey-${q.id}`} className="block text-sm text-gray-300 mb-2">
                   {q.question}
-                  {q.required && <span className="text-red-500 ml-1">*</span>}
+                  {q.required && <span className="text-red-500 ml-1" aria-label="required">*</span>}
                 </label>
 
                 {q.type === 'text' && (
                   <input
                     type="text"
+                    id={`survey-${q.id}`}
                     value={(surveyAnswers[q.id] as string) || ''}
                     onChange={(e) => handleSurveyChange(q.id, e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                    className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
+                    aria-required={q.required}
                     required={q.required}
                   />
                 )}
 
                 {q.type === 'textarea' && (
                   <textarea
+                    id={`survey-${q.id}`}
                     value={(surveyAnswers[q.id] as string) || ''}
                     onChange={(e) => handleSurveyChange(q.id, e.target.value)}
                     rows={4}
-                    className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                    className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
+                    aria-required={q.required}
                     required={q.required}
                   />
                 )}
 
                 {q.type === 'select' && (
                   <select
+                    id={`survey-${q.id}`}
                     value={(surveyAnswers[q.id] as string) || ''}
                     onChange={(e) => handleSurveyChange(q.id, e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
+                    className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
+                    aria-required={q.required}
                     required={q.required}
                   >
                     <option value="">Select an option...</option>
@@ -321,7 +348,7 @@ export default function BoosterSignUpPage() {
                 )}
 
                 {q.type === 'radio' && (
-                  <div className="space-y-2">
+                  <div className="space-y-2" role="radiogroup" aria-labelledby={`survey-${q.id}`} aria-required={q.required}>
                     {q.options?.map((option) => (
                       <label key={option} className="flex items-center text-gray-300">
                         <input
@@ -330,7 +357,8 @@ export default function BoosterSignUpPage() {
                           value={option}
                           checked={(surveyAnswers[q.id] as string) === option}
                           onChange={(e) => handleSurveyChange(q.id, e.target.value)}
-                          className="mr-2"
+                          className="mr-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          aria-checked={(surveyAnswers[q.id] as string) === option}
                           required={q.required}
                         />
                         {option}
@@ -340,14 +368,15 @@ export default function BoosterSignUpPage() {
                 )}
 
                 {q.type === 'checkbox' && (
-                  <div className="space-y-2">
+                  <div className="space-y-2" role="group" aria-labelledby={`survey-${q.id}`}>
                     {q.options?.map((option) => (
                       <label key={option} className="flex items-center text-gray-300">
                         <input
                           type="checkbox"
                           checked={((surveyAnswers[q.id] as string[]) || []).includes(option)}
                           onChange={(e) => handleCheckboxChange(q.id, option, e.target.checked)}
-                          className="mr-2"
+                          className="mr-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          aria-checked={((surveyAnswers[q.id] as string[]) || []).includes(option)}
                         />
                         {option}
                       </label>
@@ -361,14 +390,14 @@ export default function BoosterSignUpPage() {
               <button
                 type="button"
                 onClick={() => setCurrentStep('account')}
-                className="flex-1 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-bold"
+                className="flex-1 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-bold focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 BACK
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 {loading ? 'SUBMITTING...' : 'SUBMIT APPLICATION'}
               </button>

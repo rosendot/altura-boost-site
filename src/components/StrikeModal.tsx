@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface StrikeModalProps {
   isOpen: boolean;
@@ -24,6 +24,50 @@ export default function StrikeModal({
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Focus trap and escape key handling
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Focus the textarea when modal opens
+    textareaRef.current?.focus();
+
+    // Handle escape key
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    // Focus trap
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !modalRef.current) return;
+
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleTabKey);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleTabKey);
+    };
+  }, [isOpen, onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,8 +115,13 @@ export default function StrikeModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="strike-modal-title"
+      onClick={onClose}
     >
-      <div className="bg-gray-900 rounded-lg max-w-lg w-full border border-gray-700">
+      <div
+        ref={modalRef}
+        className="bg-gray-900 rounded-lg max-w-lg w-full border border-gray-700"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           {/* Header */}
           <div className="flex justify-between items-start mb-6">
@@ -93,7 +142,7 @@ export default function StrikeModal({
           </div>
 
           {/* Warning */}
-          <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg">
+          <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg" role="alert">
             <p className="text-red-200 text-sm">
               This will issue a strike to the booster. After 3 strikes, the booster will be automatically suspended.
             </p>
@@ -102,21 +151,24 @@ export default function StrikeModal({
           {/* Form */}
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Strike Reason <span className="text-red-500">*</span>
+              <label htmlFor="strike-reason" className="block text-sm font-medium text-gray-300 mb-2">
+                Strike Reason <span className="text-red-500" aria-label="required">*</span>
               </label>
               <textarea
+                id="strike-reason"
+                ref={textareaRef}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Explain why this strike is being issued..."
                 rows={4}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-gray-500"
+                aria-invalid={!!error}
                 required
               />
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm">
+              <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm" role="alert" aria-live="polite">
                 {error}
               </div>
             )}
@@ -127,14 +179,14 @@ export default function StrikeModal({
                 type="button"
                 onClick={onClose}
                 disabled={submitting}
-                className="flex-1 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 disabled:opacity-50 transition"
+                className="flex-1 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 disabled:opacity-50 transition focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting || !reason.trim()}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition focus:outline-none focus:ring-2 focus:ring-red-500"
               >
                 {submitting ? 'Issuing Strike...' : 'Issue Strike'}
               </button>

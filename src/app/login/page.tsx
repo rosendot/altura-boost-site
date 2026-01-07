@@ -54,10 +54,11 @@ export default function LoginPage() {
       <div
         className="absolute inset-0 bg-cover bg-center opacity-60"
         style={{ backgroundImage: "url('/login_page_background.webp')" }}
+        aria-hidden="true"
       ></div>
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" aria-hidden="true"></div>
 
       {/* Login Form */}
       <div className="max-w-md w-full bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow relative z-10 max-h-[calc(100vh-2rem)] overflow-y-auto">
@@ -71,7 +72,9 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label htmlFor="email" className="block text-sm text-gray-400 mb-1">Email</label>
+            <label htmlFor="email" className="block text-sm text-gray-400 mb-1">
+              Email <span className="text-red-500" aria-label="required">*</span>
+            </label>
             <input
               id="email"
               type="email"
@@ -87,10 +90,12 @@ export default function LoginPage() {
 
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label htmlFor="password" className="block text-sm text-gray-400">Password</label>
+              <label htmlFor="password" className="block text-sm text-gray-400">
+                Password <span className="text-red-500" aria-label="required">*</span>
+              </label>
               <a
                 href="/forgot-password"
-                className="text-xs text-primary-400 hover:text-primary-300 transition"
+                className="text-xs text-primary-400 hover:text-primary-300 transition focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
               >
                 Forgot Password?
               </a>
@@ -111,7 +116,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 gradient-purple text-white rounded-lg hover:opacity-90 transition font-bold mt-4 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             {loading ? 'LOGGING IN...' : 'LOGIN'}
           </button>
@@ -120,13 +125,13 @@ export default function LoginPage() {
         <div className="mt-4 text-center text-sm space-y-2">
           <p className="text-gray-400">
             Don&apos;t have an account?{" "}
-            <a href="/signup/customer" className="text-primary-400 hover:text-primary-300 transition font-semibold">
+            <a href="/signup/customer" className="text-primary-400 hover:text-primary-300 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 rounded">
               Sign Up
             </a>
           </p>
           <p className="text-gray-400">
             Want to become a booster?{" "}
-            <a href="/signup/booster" className="text-primary-400 hover:text-primary-300 transition font-semibold">
+            <a href="/signup/booster" className="text-primary-400 hover:text-primary-300 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 rounded">
               Apply Here
             </a>
           </p>

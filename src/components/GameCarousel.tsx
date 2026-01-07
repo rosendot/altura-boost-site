@@ -60,7 +60,7 @@ export default function GameCarousel({ games, onGameClick }: GameCarouselProps) 
                 {onGameClick ? (
                   <button
                     onClick={() => onGameClick(game.id)}
-                    className="group block relative overflow-hidden rounded-xl border border-primary-700/50 hover:border-primary-500 transition-all duration-500 aspect-[2/3] w-full text-left"
+                    className="group block relative overflow-hidden rounded-xl border border-primary-700/50 hover:border-primary-500 transition-all duration-500 aspect-[2/3] w-full text-left focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                   {/* Game Cover Image */}
                   <div className="absolute inset-0">
@@ -79,7 +79,7 @@ export default function GameCarousel({ games, onGameClick }: GameCarouselProps) 
                   <div className="absolute inset-0 p-6 flex flex-col justify-end">
                     <div className="relative z-10">
                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-red-600 rounded-full text-xs font-bold mb-3">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" aria-hidden="true"></span>
                         AVAILABLE NOW
                       </div>
                       <h2 className="text-2xl font-bold text-white mb-2">
@@ -87,7 +87,7 @@ export default function GameCarousel({ games, onGameClick }: GameCarouselProps) 
                       </h2>
                       <div className="inline-flex items-center gap-1.5 text-primary-400 text-sm font-semibold group-hover:gap-2 transition-all">
                         View Services
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
                       </div>
@@ -102,7 +102,7 @@ export default function GameCarousel({ games, onGameClick }: GameCarouselProps) 
                 ) : (
                 <Link
                   href={`/games/${game.slug}`}
-                  className="group block relative overflow-hidden rounded-xl border border-primary-700/50 hover:border-primary-500 transition-all duration-500 aspect-[2/3]"
+                  className="group block relative overflow-hidden rounded-xl border border-primary-700/50 hover:border-primary-500 transition-all duration-500 aspect-[2/3] focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   {/* Game Cover Image */}
                   <div className="absolute inset-0">
@@ -121,7 +121,7 @@ export default function GameCarousel({ games, onGameClick }: GameCarouselProps) 
                   <div className="absolute inset-0 p-6 flex flex-col justify-end">
                     <div className="relative z-10">
                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-red-600 rounded-full text-xs font-bold mb-3">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" aria-hidden="true"></span>
                         AVAILABLE NOW
                       </div>
                       <h2 className="text-2xl font-bold text-white mb-2">
@@ -129,7 +129,7 @@ export default function GameCarousel({ games, onGameClick }: GameCarouselProps) 
                       </h2>
                       <div className="inline-flex items-center gap-1.5 text-primary-400 text-sm font-semibold group-hover:gap-2 transition-all">
                         View Services
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
                       </div>

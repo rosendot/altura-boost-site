@@ -135,12 +135,19 @@ export default function ReviewModal({
     required?: boolean;
   }) => {
     const ratingId = `rating-${label.toLowerCase().replace(/\s+/g, '-')}`;
+    const hasError = required && rating === 0;
     return (
       <div className="mb-4">
         <label id={`${ratingId}-label`} className="block text-sm font-medium text-gray-300 mb-2">
           {label} {required && <span className="text-red-500" aria-label="required">*</span>}
         </label>
-        <div className="flex gap-1" role="radiogroup" aria-labelledby={`${ratingId}-label`} aria-required={required}>
+        <div
+          className="flex gap-1"
+          role="radiogroup"
+          aria-labelledby={`${ratingId}-label`}
+          aria-required={required}
+          aria-invalid={hasError}
+        >
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
@@ -153,7 +160,7 @@ export default function ReviewModal({
                 star <= rating ? 'text-yellow-400' : 'text-gray-600'
               } hover:text-yellow-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded`}
             >
-              ★
+              <span aria-hidden="true">★</span>
             </button>
           ))}
         </div>
@@ -276,7 +283,7 @@ export default function ReviewModal({
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm" role="alert" aria-live="assertive">
+              <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm" role="alert" aria-live="polite">
                 {error}
               </div>
             )}

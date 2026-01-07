@@ -62,7 +62,7 @@ export default function Toast({ id, message, type, duration = 5000, onClose }: T
       <p className="flex-1 text-sm font-medium">{message}</p>
       <button
         onClick={() => onClose(id)}
-        aria-label="Close notification"
+        aria-label={`Close ${type} notification`}
         className="text-current hover:opacity-75 transition focus:outline-none focus:ring-2 focus:ring-current rounded"
       >
         <svg

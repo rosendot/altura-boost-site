@@ -43,9 +43,9 @@ export default function GameDetailClient({ game, services, features }: GameDetai
   return (
     <>
       {/* Services Section */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
+      <section className="max-w-7xl mx-auto px-4 py-16" aria-labelledby="services-heading">
         <div className="mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 id="services-heading" className="text-3xl md:text-4xl font-bold text-white mb-4">
             Available Services
           </h2>
           <p className="text-gray-400">
@@ -54,7 +54,7 @@ export default function GameDetailClient({ game, services, features }: GameDetai
         </div>
 
         {!services || services.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12" role="status">
             <p className="text-gray-400">No services available for this game at the moment.</p>
           </div>
         ) : (
@@ -75,14 +75,15 @@ export default function GameDetailClient({ game, services, features }: GameDetai
                   <div className="text-2xl font-bold text-white">
                     ${service.price.toFixed(2)}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500" aria-label={`Delivery time: ${Math.ceil(service.delivery_time_hours / 24)} days`}>
                     ⏱️ {Math.ceil(service.delivery_time_hours / 24)} days
                   </div>
                 </div>
 
                 <button
                   onClick={() => handleAddToCart(service)}
-                  className="w-full py-3 px-4 gradient-purple text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                  className="w-full py-3 px-4 gradient-purple text-white font-semibold rounded-lg hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  aria-label={`Order ${service.name} for $${service.price.toFixed(2)}`}
                 >
                   Order Now
                 </button>
@@ -93,16 +94,16 @@ export default function GameDetailClient({ game, services, features }: GameDetai
       </section>
 
       {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-4 pb-20">
+      <section className="max-w-7xl mx-auto px-4 pb-20" aria-labelledby="features-heading">
         <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 md:p-12">
-          <h2 className="text-3xl font-bold text-white mb-8">
+          <h2 id="features-heading" className="text-3xl font-bold text-white mb-8">
             Why Choose Our {game.name} Services?
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 list-none">
             {features.map((feature, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full gradient-purple flex items-center justify-center mt-1">
+              <li key={index} className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full gradient-purple flex items-center justify-center mt-1" aria-hidden="true">
                   <svg
                     className="w-4 h-4 text-white"
                     fill="none"
@@ -118,9 +119,9 @@ export default function GameDetailClient({ game, services, features }: GameDetai
                   </svg>
                 </div>
                 <span className="text-gray-300">{feature}</span>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
     </>
