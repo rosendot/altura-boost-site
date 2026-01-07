@@ -788,6 +788,43 @@ This document tracks the security improvements made to the Altura Boost API endp
 
 ---
 
+### `/api/user/update-password` (POST) - Update User Password
+
+**Date Completed:** 2026-01-07
+
+**Security Improvements Implemented:**
+- ✅ Rate limiting (10 requests/hour - sensitive security operation)
+- ✅ User authentication
+- ✅ Current password verification (prevents unauthorized password changes)
+- ✅ Input validation (password length 8-72 characters, type checking)
+- ✅ Audit logging (failed attempts, invalid input)
+- ✅ Generic error messages (no information disclosure)
+- ✅ Rate limit headers in responses
+
+**Endpoint Purpose:** Allows authenticated users to change their account password after verifying their current password.
+
+**Rate Limit:** 10 requests per user per hour (strict limit for sensitive security operation)
+
+**Authentication:** Authenticated user
+
+**Audit Events Logged:**
+- `auth_failure_update_password` - All failures (rate limit, missing fields, invalid input, incorrect current password, update failures)
+
+**Input Validation:**
+- `currentPassword`: Required, string type
+- `newPassword`: Required, string type, 8-72 characters
+- Verifies current password by attempting sign-in with provided credentials
+- Prevents password changes without knowing current password
+
+**Special Handling:**
+- **CRITICAL**: Verifies current password before allowing update (prevents unauthorized access)
+- Lower rate limit (10/hour) prevents brute force attacks on current password
+- Uses Supabase Auth `updateUser()` for secure password update
+- Password requirements: 8-72 characters (standard bcrypt limit)
+- Generic error messages don't reveal whether current password was correct
+
+---
+
 ### `/api/webhooks/stripe` (POST) - Stripe Webhook Handler
 
 **Date Completed:** 2026-01-06
@@ -843,12 +880,16 @@ This document tracks the security improvements made to the Altura Boost API endp
 - ✅ `/api/orders/my-orders` - Customer orders (COMPLETED)
 - ✅ `/api/reviews/my-reviews` - Booster reviews (COMPLETED)
 - ✅ `/api/user/me` - User profile (COMPLETED)
+- ✅ `/api/user/update-password` - Password update (COMPLETED)
 - ✅ `/api/webhooks/stripe` - Stripe webhooks (COMPLETED)
 
-### Priority 3: Auth Endpoints (Future)
-- [ ] Login endpoint - Add rate limiting, account lockout, 2FA
-- [ ] Signup endpoint - Add rate limiting, input validation
-- [ ] Password reset - Add rate limiting, token validation
+### Priority 3: Auth Endpoints (Handled by Supabase Auth)
+- ✅ Login - Handled by Supabase Auth client-side (`supabase.auth.signInWithPassword()`)
+- ✅ Signup - Handled by Supabase Auth client-side (`supabase.auth.signUp()`)
+- ✅ Password Update - Secured via `/api/user/update-password` endpoint (COMPLETED)
+- ⚠️ Password Reset/Forgot Password - Not yet implemented (can use Supabase Auth password recovery)
+
+**Note**: Authentication is managed by Supabase Auth, which already includes rate limiting, account lockout, and security best practices at the Supabase level. No custom API endpoints needed for login/signup.
 
 ---
 

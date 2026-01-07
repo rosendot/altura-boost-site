@@ -136,6 +136,12 @@ export default function AccountPage() {
   } | null>(null);
   const [connectLoading, setConnectLoading] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -417,6 +423,57 @@ export default function AccountPage() {
     fetchCompletedJobs();
   };
 
+  const handleUpdatePassword = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('All fields are required');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    setUpdatingPassword(true);
+
+    try {
+      const response = await fetch('/api/user/update-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      if (response.ok) {
+        setPasswordSuccess('Password updated successfully!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        const error = await response.json();
+        setPasswordError(error.error || 'Failed to update password');
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      setPasswordError('Failed to update password. Please try again.');
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -658,11 +715,27 @@ export default function AccountPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-4">Change Password</h3>
 
+                      {/* Error Message */}
+                      {passwordError && (
+                        <div className="mb-4 bg-red-900/30 border border-red-500 rounded-lg p-4">
+                          <p className="text-red-400 text-sm">{passwordError}</p>
+                        </div>
+                      )}
+
+                      {/* Success Message */}
+                      {passwordSuccess && (
+                        <div className="mb-4 bg-green-900/30 border border-green-500 rounded-lg p-4">
+                          <p className="text-green-400 text-sm">{passwordSuccess}</p>
+                        </div>
+                      )}
+
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm text-gray-400 mb-2">Current Password</label>
                           <input
                             type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
                             className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
                             placeholder="Enter current password"
                           />
@@ -672,8 +745,10 @@ export default function AccountPage() {
                           <label className="block text-sm text-gray-400 mb-2">New Password</label>
                           <input
                             type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
                             className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
-                            placeholder="Enter new password"
+                            placeholder="Enter new password (min 8 characters)"
                           />
                         </div>
 
@@ -681,13 +756,19 @@ export default function AccountPage() {
                           <label className="block text-sm text-gray-400 mb-2">Confirm New Password</label>
                           <input
                             type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
                             className="w-full px-4 py-3 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:border-primary-500 transition"
                             placeholder="Confirm new password"
                           />
                         </div>
 
-                        <button className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold">
-                          Update Password
+                        <button
+                          onClick={handleUpdatePassword}
+                          disabled={updatingPassword}
+                          className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {updatingPassword ? 'Updating...' : 'Update Password'}
                         </button>
                       </div>
                     </div>
