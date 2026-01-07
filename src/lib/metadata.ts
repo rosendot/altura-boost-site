@@ -28,17 +28,6 @@ export const baseMetadata: Metadata = {
     address: false,
     telephone: false,
   },
-  // Mobile web app configuration
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#8b5cf6' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
-  ],
   // Apple-specific meta tags
   appleWebApp: {
     capable: true,
