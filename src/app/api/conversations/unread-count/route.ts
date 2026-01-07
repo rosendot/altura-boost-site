@@ -11,16 +11,16 @@ export async function GET(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      await logAuthFailure(null, 'unread_count', 'No authenticated user', request);
+      // Don't log - this is normal behavior for non-logged-in visitors
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    // Rate limiting: 200 requests per hour (frequently polled endpoint)
+    // Rate limiting: 100 requests per hour
     const rateLimitResult = checkRateLimit(user.id, {
-      maxRequests: 200,
+      maxRequests: 100,
       windowMs: 60 * 60 * 1000, // 1 hour
       identifier: 'unread_count',
     });

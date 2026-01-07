@@ -62,7 +62,7 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch unread message count
+  // Fetch unread message count on mount only
   useEffect(() => {
     if (!user) return;
 
@@ -79,10 +79,6 @@ export default function Navbar() {
     };
 
     fetchUnreadCount();
-
-    // Poll every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
   }, [user]);
 
   // Close account menu when clicking outside
