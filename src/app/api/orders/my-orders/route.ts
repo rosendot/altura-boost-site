@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/security/rate-limit';
+import { logAuthFailure } from '@/lib/security/audit-logger';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
@@ -9,9 +11,28 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      await logAuthFailure(null, 'my_orders', 'No authenticated user', request);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Rate limiting: 100 requests per hour
+    const rateLimitResult = checkRateLimit(user.id, {
+      maxRequests: 100,
+      windowMs: 60 * 60 * 1000, // 1 hour
+      identifier: 'my_orders',
+    });
+
+    if (!rateLimitResult.allowed) {
+      await logAuthFailure(user.id, 'my_orders', 'Rate limit exceeded', request);
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
       );
     }
 
@@ -23,14 +44,23 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (ordersError) {
+      console.error('Database operation failed');
       return NextResponse.json(
         { error: 'Failed to fetch orders' },
-        { status: 500 }
+        {
+          status: 500,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
       );
     }
 
     if (!orders || orders.length === 0) {
-      return NextResponse.json({ orders: [], jobs: {} });
+      return NextResponse.json(
+        { orders: [], jobs: {} },
+        {
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     // Fetch all jobs for these orders
@@ -40,9 +70,13 @@ export async function GET() {
       .in('order_id', orders.map(o => o.id));
 
     if (jobsError) {
+      console.error('Database operation failed');
       return NextResponse.json(
         { error: 'Failed to fetch jobs' },
-        { status: 500 }
+        {
+          status: 500,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
       );
     }
 
@@ -84,12 +118,17 @@ export async function GET() {
       jobsByOrder[job.order_id].push(job);
     });
 
-    return NextResponse.json({
-      orders: orders || [],
-      jobs: jobsByOrder,
-    });
+    return NextResponse.json(
+      {
+        orders: orders || [],
+        jobs: jobsByOrder,
+      },
+      {
+        headers: getRateLimitHeaders(rateLimitResult),
+      }
+    );
   } catch (error) {
-    console.error('Error in /api/orders/my-orders:', error);
+    console.error('Unexpected error occurred');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

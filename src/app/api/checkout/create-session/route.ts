@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/security/rate-limit';
+import { logAuthFailure } from '@/lib/security/audit-logger';
+import { isValidUUID } from '@/lib/security/validation';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-11-17.clover' as any,
@@ -17,26 +20,109 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
+      await logAuthFailure(null, 'checkout_create_session', 'No authenticated user', request);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limiting: 20 requests per hour (prevent checkout spam)
+    const rateLimitResult = checkRateLimit(user.id, {
+      maxRequests: 20,
+      windowMs: 60 * 60 * 1000, // 1 hour
+      identifier: 'checkout_create_session',
+    });
+
+    if (!rateLimitResult.allowed) {
+      await logAuthFailure(user.id, 'checkout_create_session', 'Rate limit exceeded', request);
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     // Get user data
     const { data: userData, error: userDataError } = await supabase
       .from('users')
-      .select('email, full_name, stripe_customer_id')
+      .select('email, full_name, stripe_customer_id, is_suspended')
       .eq('id', user.id)
       .single();
 
     if (userDataError || !userData) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      console.error('Database operation failed');
+      return NextResponse.json(
+        { error: 'User not found' },
+        {
+          status: 404,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
+    // Check if user is suspended
+    if (userData.is_suspended) {
+      await logAuthFailure(user.id, 'checkout_create_session', 'User is suspended', request);
+      return NextResponse.json(
+        { error: 'Account suspended. Cannot create checkout session.' },
+        {
+          status: 403,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     // Get cart items from request body
     const body = await request.json();
     const { cartItems } = body;
 
-    if (!cartItems || cartItems.length === 0) {
-      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
+    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+      await logAuthFailure(user.id, 'checkout_create_session', 'Invalid cart items', request);
+      return NextResponse.json(
+        { error: 'Cart is empty' },
+        {
+          status: 400,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
+    // Validate cart items structure and limits
+    if (cartItems.length > 50) {
+      await logAuthFailure(user.id, 'checkout_create_session', 'Too many cart items', request);
+      return NextResponse.json(
+        { error: 'Cart cannot contain more than 50 items' },
+        {
+          status: 400,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
+    // Validate each cart item
+    for (const item of cartItems) {
+      if (!item.serviceId || !isValidUUID(item.serviceId)) {
+        await logAuthFailure(user.id, 'checkout_create_session', 'Invalid service ID in cart', request);
+        return NextResponse.json(
+          { error: 'Invalid service ID' },
+          {
+            status: 400,
+            headers: getRateLimitHeaders(rateLimitResult),
+          }
+        );
+      }
+
+      const quantity = item.quantity || 1;
+      if (typeof quantity !== 'number' || quantity < 1 || quantity > 100) {
+        await logAuthFailure(user.id, 'checkout_create_session', 'Invalid quantity', request);
+        return NextResponse.json(
+          { error: 'Quantity must be between 1 and 100' },
+          {
+            status: 400,
+            headers: getRateLimitHeaders(rateLimitResult),
+          }
+        );
+      }
     }
 
     // Fetch service details from database to ensure prices are current
@@ -49,14 +135,33 @@ export async function POST(request: Request) {
       .eq('active', true);
 
     if (servicesError || !services) {
-      return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500 });
+      console.error('Database operation failed');
+      return NextResponse.json(
+        { error: 'Failed to fetch services' },
+        {
+          status: 500,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
+    // Verify all services exist and are active
+    if (services.length !== serviceIds.length) {
+      await logAuthFailure(user.id, 'checkout_create_session', 'Some services not found or inactive', request);
+      return NextResponse.json(
+        { error: 'Some services are not available' },
+        {
+          status: 400,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     // Build line items for Stripe Checkout
     const lineItems = cartItems.map((cartItem: any) => {
       const service = services.find((s) => s.id === cartItem.serviceId);
       if (!service) {
-        throw new Error(`Service ${cartItem.serviceId} not found or inactive`);
+        throw new Error('Service not found');
       }
 
       return {
@@ -107,11 +212,16 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ url: session.url, sessionId: session.id });
-  } catch (error: any) {
-    console.error('Checkout error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create checkout session' },
+      { url: session.url, sessionId: session.id },
+      {
+        headers: getRateLimitHeaders(rateLimitResult),
+      }
+    );
+  } catch (error: any) {
+    console.error('Unexpected error occurred');
+    return NextResponse.json(
+      { error: 'Failed to create checkout session' },
       { status: 500 }
     );
   }

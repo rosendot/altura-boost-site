@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/security/rate-limit';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-11-17.clover' as any,
@@ -16,16 +17,45 @@ export async function POST(request: Request) {
     const signature = headersList.get('stripe-signature');
 
     if (!signature) {
+      console.error('Webhook missing signature');
       return NextResponse.json({ error: 'No signature' }, { status: 400 });
     }
 
-    // Verify webhook signature
+    // Rate limiting for webhooks: 500 requests per hour (high limit for webhook traffic)
+    // Use IP-based rate limiting since webhooks don't have user context
+    const forwardedFor = headersList.get('x-forwarded-for');
+    const ip = forwardedFor?.split(',')[0] || 'unknown';
+
+    const rateLimitResult = checkRateLimit(ip, {
+      maxRequests: 500,
+      windowMs: 60 * 60 * 1000, // 1 hour
+      identifier: 'stripe_webhook',
+    });
+
+    if (!rateLimitResult.allowed) {
+      console.error('Webhook rate limit exceeded');
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
+    // Verify webhook signature (critical security check for webhooks)
     let event: Stripe.Event;
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message);
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+      console.error('Webhook signature verification failed');
+      return NextResponse.json(
+        { error: 'Invalid signature' },
+        {
+          status: 400,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     // Handle the event
@@ -42,11 +72,16 @@ export async function POST(request: Request) {
         break;
     }
 
-    return NextResponse.json({ received: true });
-  } catch (error: any) {
-    console.error('Webhook error:', error);
     return NextResponse.json(
-      { error: error.message || 'Webhook handler failed' },
+      { received: true },
+      {
+        headers: getRateLimitHeaders(rateLimitResult),
+      }
+    );
+  } catch (error: any) {
+    console.error('Unexpected error occurred');
+    return NextResponse.json(
+      { error: 'Webhook handler failed' },
       { status: 500 }
     );
   }

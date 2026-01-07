@@ -27,7 +27,7 @@ export function getGenericErrorMessage(errorType: string): string {
  * Logs ONLY generic message - no IDs, timestamps, or context
  */
 export function logSecureError(message: string): void {
-  console.error(`[SECURE] ${message}`);
+  console.error(message);
 }
 
 /**
@@ -105,7 +105,7 @@ export const SecureErrorPatterns = {
  * - ANY contextual information
  *
  * EXAMPLES:
- * ✅ console.error('[SECURE] Database operation failed');
- * ✅ console.error('[SECURE] User update operation failed');
- * ❌ console.error('[SECURE] Failed:', { userId, timestamp });
+ * ✅ console.error('Database operation failed');
+ * ✅ console.error('User update operation failed');
+ * ❌ console.error('Failed:', { userId, timestamp });
  */

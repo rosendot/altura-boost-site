@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/security/rate-limit';
+import { logAuthFailure } from '@/lib/security/audit-logger';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
@@ -9,9 +11,28 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      await logAuthFailure(null, 'completed_jobs', 'No authenticated user', request);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Rate limiting: 100 requests per hour
+    const rateLimitResult = checkRateLimit(user.id, {
+      maxRequests: 100,
+      windowMs: 60 * 60 * 1000, // 1 hour
+      identifier: 'completed_jobs',
+    });
+
+    if (!rateLimitResult.allowed) {
+      await logAuthFailure(user.id, 'completed_jobs', 'Rate limit exceeded', request);
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
       );
     }
 
@@ -51,7 +72,7 @@ export async function GET() {
       .order('completed_at', { ascending: false });
 
     if (jobsError) {
-      console.error('Error fetching completed jobs:', jobsError);
+      console.error('Database operation failed');
       return NextResponse.json(
         { error: 'Failed to fetch completed jobs' },
         { status: 500 }
@@ -72,9 +93,14 @@ export async function GET() {
       review: job.job_reviews && job.job_reviews.length > 0 ? job.job_reviews[0] : null,
     }));
 
-    return NextResponse.json({ jobs: formattedJobs });
+    return NextResponse.json(
+      { jobs: formattedJobs },
+      {
+        headers: getRateLimitHeaders(rateLimitResult),
+      }
+    );
   } catch (error) {
-    console.error('Error in /api/jobs/completed:', error);
+    console.error('Unexpected error occurred');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

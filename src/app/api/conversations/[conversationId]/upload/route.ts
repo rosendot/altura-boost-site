@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/security/rate-limit';
+import { sanitizeString, isValidUUID } from '@/lib/security/validation';
+import { logAuthFailure } from '@/lib/security/audit-logger';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -15,13 +18,40 @@ export async function POST(
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      await logAuthFailure(null, 'file_upload', 'No authenticated user', request);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    // Rate limiting: 20 file uploads per hour (prevent abuse)
+    const rateLimitResult = checkRateLimit(user.id, {
+      maxRequests: 20,
+      windowMs: 60 * 60 * 1000, // 1 hour
+      identifier: 'file_upload',
+    });
+
+    if (!rateLimitResult.allowed) {
+      await logAuthFailure(user.id, 'file_upload', 'Rate limit exceeded', request);
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
     const { conversationId } = await params;
+
+    // Validate conversationId format
+    if (!isValidUUID(conversationId)) {
+      return NextResponse.json(
+        { error: 'Invalid conversation ID format' },
+        { status: 400 }
+      );
+    }
 
     // Verify user is part of this conversation
     const { data: conversation, error: convError } = await supabase
@@ -31,6 +61,7 @@ export async function POST(
       .single();
 
     if (convError || !conversation) {
+      await logAuthFailure(user.id, 'file_upload', 'Conversation not found', request);
       return NextResponse.json(
         { error: 'Conversation not found' },
         { status: 404 }
@@ -38,6 +69,7 @@ export async function POST(
     }
 
     if (conversation.customer_id !== user.id && conversation.booster_id !== user.id) {
+      await logAuthFailure(user.id, 'file_upload', 'User not part of conversation', request);
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -48,6 +80,9 @@ export async function POST(
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const messageText = formData.get('text') as string;
+
+    // Sanitize optional message text if provided
+    const sanitizedText = messageText ? sanitizeString(messageText.trim()) : null;
 
     if (!file) {
       return NextResponse.json(
@@ -86,7 +121,7 @@ export async function POST(
       });
 
     if (uploadError) {
-      console.error('Error uploading file:', uploadError);
+      console.error('File upload operation failed');
       return NextResponse.json(
         { error: 'Failed to upload file' },
         { status: 500 }
@@ -104,7 +139,7 @@ export async function POST(
       .insert({
         conversation_id: conversationId,
         sender_id: user.id,
-        message_text: messageText || null,
+        message_text: sanitizedText,
         is_system_message: false,
       })
       .select()
@@ -116,7 +151,7 @@ export async function POST(
         .from('message-attachments')
         .remove([filePath]);
 
-      console.error('Error creating message:', messageError);
+      console.error('Database operation failed');
       return NextResponse.json(
         { error: 'Failed to create message' },
         { status: 500 }
@@ -137,19 +172,24 @@ export async function POST(
       .single();
 
     if (attachmentError) {
-      console.error('Error creating attachment record:', attachmentError);
+      console.error('Database operation failed');
       // Don't fail the request if attachment record creation fails
       // The file is uploaded and message is created
     }
 
-    return NextResponse.json({
-      message: {
-        ...message,
-        message_attachments: attachment ? [attachment] : [],
+    return NextResponse.json(
+      {
+        message: {
+          ...message,
+          message_attachments: attachment ? [attachment] : [],
+        },
       },
-    });
+      {
+        headers: getRateLimitHeaders(rateLimitResult),
+      }
+    );
   } catch (error) {
-    console.error('Error in /api/conversations/[conversationId]/upload:', error);
+    console.error('Unexpected error occurred');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
