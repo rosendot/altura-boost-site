@@ -1,0 +1,28 @@
+{
+  "name": "Altura Boost - Professional Game Boosting Services",
+  "short_name": "Altura Boost",
+  "description": "Professional game boosting services for popular titles. Fast, secure, and reliable rank boosting, coaching, and account services.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/altura_logo.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/altura_logo.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment", "lifestyle"],
+  "scope": "/",
+  "lang": "en-US",
+  "dir": "ltr"
+}

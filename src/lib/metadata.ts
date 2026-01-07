@@ -20,11 +20,33 @@ export const baseMetadata: Metadata = {
   authors: [{ name: 'Altura Boost' }],
   creator: 'Altura Boost',
   publisher: 'Altura Boost',
+  applicationName: 'Altura Boost',
+  category: 'Gaming Services',
+  classification: 'Professional Gaming Services',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
+  // Mobile web app configuration
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#8b5cf6' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
+  // Apple-specific meta tags
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Altura Boost',
+  },
+  // Additional manifest configuration
+  manifest: '/manifest.json',
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -46,6 +68,8 @@ export const baseMetadata: Metadata = {
     title: 'Altura Boost - Professional Game Boosting Services',
     description: 'Professional game boosting services for popular titles. Fast, secure, and reliable rank boosting, coaching, and account services.',
     images: ['/altura_logo.webp'],
+    creator: '@alturaboost', // Add your Twitter handle when available
+    site: '@alturaboost', // Add your Twitter handle when available
   },
   robots: {
     index: true,
