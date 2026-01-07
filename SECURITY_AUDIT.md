@@ -887,9 +887,21 @@ This document tracks the security improvements made to the Altura Boost API endp
 - ✅ Login - Handled by Supabase Auth client-side (`supabase.auth.signInWithPassword()`)
 - ✅ Signup - Handled by Supabase Auth client-side (`supabase.auth.signUp()`)
 - ✅ Password Update - Secured via `/api/user/update-password` endpoint (COMPLETED)
-- ⚠️ Password Reset/Forgot Password - Not yet implemented (can use Supabase Auth password recovery)
+- ✅ Password Reset/Forgot Password - Implemented using Supabase Auth password recovery (COMPLETED)
+  - Forgot Password page: `/forgot-password`
+  - Reset Password page: `/reset-password`
+  - Uses `supabase.auth.resetPasswordForEmail()` with secure email links
+  - Configuration required in Supabase Dashboard (see `SUPABASE_PASSWORD_RESET_SETUP.md`)
 
 **Note**: Authentication is managed by Supabase Auth, which already includes rate limiting, account lockout, and security best practices at the Supabase level. No custom API endpoints needed for login/signup.
+
+**Password Reset Security:**
+- Email-based password reset with secure tokens
+- Reset links expire after 24 hours
+- Tokens are single-use (cannot be reused)
+- Redirect URLs must be whitelisted in Supabase
+- Client-side validation (min 8 characters, password confirmation)
+- No custom API needed - handled by Supabase Auth
 
 ---
 
