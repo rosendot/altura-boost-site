@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      await logAuthFailure(null, 'user_profile', 'No authenticated user', request);
+      // Don't log - this is normal behavior for non-logged-in visitors
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
