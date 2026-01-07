@@ -2,6 +2,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { getGameImageUrl } from "@/lib/supabase/storage";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Our Games',
+  description: 'Browse our premium game boosting services. Professional boosting for Call of Duty, rank advancement, coaching, and more. Choose your game and unlock your potential.',
+  openGraph: {
+    title: 'Our Games - Altura Boost',
+    description: 'Browse our premium game boosting services. Professional boosting for Call of Duty, rank advancement, coaching, and more.',
+  },
+  twitter: {
+    title: 'Our Games - Altura Boost',
+    description: 'Browse our premium game boosting services. Professional boosting for Call of Duty, rank advancement, coaching, and more.',
+  },
+};
 
 export default async function GamesPage() {
   const supabase = await createClient();

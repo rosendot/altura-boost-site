@@ -1,12 +1,10 @@
-'use client';
-
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { getGameImageUrl } from "@/lib/supabase/storage";
-import { useCart } from "@/contexts/CartContext";
+import type { Metadata } from "next";
+import GameDetailClient from "./GameDetailClient";
 
 interface Service {
   id: string;
@@ -25,75 +23,87 @@ interface Game {
   active: boolean;
 }
 
-export default function GameDetailPage({
+// Generate metadata for SEO
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ gameId: string }>;
+}): Promise<Metadata> {
+  const { gameId } = await params;
+  const supabase = await createClient();
+
+  const { data: game } = await supabase
+    .from('games')
+    .select('*')
+    .eq('slug', gameId)
+    .eq('active', true)
+    .single();
+
+  if (!game) {
+    return {
+      title: 'Game Not Found',
+    };
+  }
+
+  const imageUrl = getGameImageUrl(game.image_url);
+
+  return {
+    title: `${game.name} Boosting Services`,
+    description: `Premium ${game.name} boosting services. Professional rank boosting, coaching, and account services. 100% hand-played, VPN protection, 24/7 updates, and money-back guarantee.`,
+    openGraph: {
+      title: `${game.name} Boosting Services - Altura Boost`,
+      description: `Premium ${game.name} boosting services. Professional rank boosting, coaching, and account services with guaranteed results.`,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${game.name} Boosting Services`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${game.name} Boosting Services - Altura Boost`,
+      description: `Premium ${game.name} boosting services. Professional rank boosting, coaching, and account services with guaranteed results.`,
+      images: [imageUrl],
+    },
+  };
+}
+
+export default async function GameDetailPage({
   params,
 }: {
   params: Promise<{ gameId: string }>;
 }) {
-  const [gameId, setGameId] = useState<string>('');
-  const [game, setGame] = useState<Game | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { addToCart } = useCart();
+  const { gameId } = await params;
+  const supabase = await createClient();
 
-  useEffect(() => {
-    params.then(({ gameId }) => {
-      setGameId(gameId);
-    });
-  }, [params]);
+  // Fetch game by slug
+  const { data: game, error: gameError } = await supabase
+    .from('games')
+    .select('*')
+    .eq('slug', gameId)
+    .eq('active', true)
+    .single();
 
-  useEffect(() => {
-    if (!gameId) return;
+  if (gameError || !game) {
+    notFound();
+  }
 
-    const fetchData = async () => {
-      const supabase = createClient();
+  // Fetch services for this game
+  const { data: services, error: servicesError } = await supabase
+    .from('services')
+    .select('*')
+    .eq('game_id', game.id)
+    .eq('active', true)
+    .order('price', { ascending: true });
 
-      // Fetch game by slug
-      const { data: gameData, error: gameError } = await supabase
-        .from('games')
-        .select('*')
-        .eq('slug', gameId)
-        .eq('active', true)
-        .single();
+  if (servicesError) {
+    console.error('Error fetching services:', servicesError);
+  }
 
-      if (gameError || !gameData) {
-        notFound();
-      }
-
-      setGame(gameData as Game);
-
-      // Fetch services for this game
-      const { data: servicesData, error: servicesError } = await supabase
-        .from('services')
-        .select('*')
-        .eq('game_id', gameData.id)
-        .eq('active', true)
-        .order('price', { ascending: true });
-
-      if (servicesError) {
-        console.error('Error fetching services:', servicesError);
-      }
-
-      setServices(servicesData as Service[] || []);
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [gameId]);
-
-  const handleAddToCart = (service: Service) => {
-    if (!game) return;
-
-    addToCart({
-      id: `${game.id}-${service.id}`,
-      serviceId: service.id, // Real service UUID for checkout
-      gameId: game.id,
-      gameName: game.name,
-      serviceName: service.name,
-      price: service.price,
-      deliveryTime: `${Math.ceil(service.delivery_time_hours / 24)} days`,
-    });
-  };
+  const imageUrl = getGameImageUrl(game.image_url);
 
   // Hardcoded features for now (can be added to database later)
   const features = [
@@ -103,20 +113,6 @@ export default function GameDetailPage({
     "Account security guaranteed",
     "Money-back guarantee",
   ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!game) {
-    return null;
-  }
-
-  const imageUrl = getGameImageUrl(game.image_url);
 
   return (
     <main className="min-h-screen bg-black">
@@ -180,87 +176,12 @@ export default function GameDetailPage({
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <div className="mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Available Services
-          </h2>
-          <p className="text-gray-400">
-            Choose from our range of professional boosting services
-          </p>
-        </div>
-
-        {!services || services.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-400">No services available for this game at the moment.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => (
-              <div
-                key={service.id}
-                className="group bg-gray-900/50 border border-gray-800 rounded-xl p-6 hover:border-primary-500 transition-all duration-300 hover:transform hover:scale-105"
-              >
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary-400 transition-colors">
-                  {service.name}
-                </h3>
-                <p className="text-gray-400 text-sm mb-4">
-                  {service.description || 'Professional boosting service'}
-                </p>
-
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-2xl font-bold text-white">
-                    ${service.price.toFixed(2)}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    ⏱️ {Math.ceil(service.delivery_time_hours / 24)} days
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleAddToCart(service)}
-                  className="w-full py-3 px-4 gradient-purple text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                >
-                  Order Now
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-4 pb-20">
-        <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 md:p-12">
-          <h2 className="text-3xl font-bold text-white mb-8">
-            Why Choose Our {game.name} Services?
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {features.map((feature, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full gradient-purple flex items-center justify-center mt-1">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <span className="text-gray-300">{feature}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Services Section - Client Component for Cart Functionality */}
+      <GameDetailClient
+        game={game as Game}
+        services={services as Service[] || []}
+        features={features}
+      />
     </main>
   );
 }

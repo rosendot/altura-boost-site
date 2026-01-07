@@ -1,3 +1,18 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description: 'Terms of Service for Altura Boost. Read our terms regarding gaming services, account security, payment terms, booster requirements, prohibited activities, and liability.',
+  openGraph: {
+    title: 'Terms of Service - Altura Boost',
+    description: 'Read our Terms of Service for game boosting services, account security, payments, and user agreements.',
+  },
+  twitter: {
+    title: 'Terms of Service - Altura Boost',
+    description: 'Read our Terms of Service for game boosting services, account security, payments, and user agreements.',
+  },
+};
+
 export default function TermsOfService() {
   return (
     <main className="min-h-screen bg-black max-w-4xl mx-auto px-4 py-8">

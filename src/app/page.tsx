@@ -1,6 +1,20 @@
 import Link from "next/link";
 import GameCarousel from "@/components/GameCarousel";
 import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Home',
+  description: 'Elevate your game with Altura Boost. Premium boosting services for Call of Duty and other popular games. 100% secure, fast delivery, and satisfaction guaranteed.',
+  openGraph: {
+    title: 'Altura Boost - Elevate Your Game, Unlock Your Potential',
+    description: 'Premium boosting services for Call of Duty Black Ops 7 and more. 100% secure, fast delivery, and satisfaction guaranteed.',
+  },
+  twitter: {
+    title: 'Altura Boost - Elevate Your Game, Unlock Your Potential',
+    description: 'Premium boosting services for Call of Duty Black Ops 7 and more. 100% secure, fast delivery, and satisfaction guaranteed.',
+  },
+};
 
 export default async function Home() {
   const supabase = await createClient();

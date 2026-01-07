@@ -1,28 +1,15 @@
-'use client';
-
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { CartProvider } from "@/contexts/CartContext";
-import { usePathname } from "next/navigation";
+import LayoutWrapper from "@/components/LayoutWrapper";
+import { baseMetadata } from "@/lib/metadata";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = baseMetadata;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname?.startsWith('/signup');
-
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" type="image/webp" href="/altura_logo.webp" />
-      </head>
       <body>
-        <CartProvider>
-          {!isAuthPage && <Navbar />}
-          <div className={!isAuthPage ? "pt-20" : ""}>
-            {children}
-          </div>
-          {!isAuthPage && <Footer />}
-        </CartProvider>
+        <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
   );

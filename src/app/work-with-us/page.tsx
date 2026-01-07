@@ -1,4 +1,18 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Work With Us',
+  description: 'Join our team of professional game boosters. Earn competitive pay with a flexible schedule. Requirements: high skill level, reliable internet, professional communication. Apply to become a booster today.',
+  openGraph: {
+    title: 'Work With Us - Altura Boost',
+    description: 'Join our team of professional game boosters. Flexible schedule, competitive pay, and regular payouts. Apply today!',
+  },
+  twitter: {
+    title: 'Work With Us - Altura Boost',
+    description: 'Join our team of professional game boosters. Flexible schedule, competitive pay, and regular payouts. Apply today!',
+  },
+};
 
 export default function WorkWithUs() {
   return (
