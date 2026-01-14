@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     // Get user data
     const { data: userData, error: userDataError } = await supabase
       .from('users')
-      .select('email, role, booster_approval_status, stripe_connect_id')
+      .select('email, role, booster_approval_status, stripe_connect_id, identity_verification_status')
       .eq('id', user.id)
       .single();
 
@@ -64,6 +64,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Only approved boosters can connect bank accounts' },
         { status: 403 }
+      );
+    }
+
+    // Check if identity verification is complete (required before bank connection)
+    if (userData.identity_verification_status !== 'verified') {
+      await logAuthFailure(user.id, 'stripe_onboarding', 'Identity not verified', request);
+      return NextResponse.json(
+        { error: 'Please complete identity verification before connecting your bank account' },
+        { status: 400 }
       );
     }
 

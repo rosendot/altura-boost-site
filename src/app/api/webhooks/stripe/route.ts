@@ -68,6 +68,14 @@ export async function POST(request: Request) {
         await handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
         break;
 
+      case 'identity.verification_session.verified':
+        await handleIdentityVerified(event.data.object as Stripe.Identity.VerificationSession);
+        break;
+
+      case 'identity.verification_session.requires_input':
+        await handleIdentityFailed(event.data.object as Stripe.Identity.VerificationSession);
+        break;
+
       default:
         break;
     }
@@ -161,4 +169,60 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   // Future: Add logic to notify customer via email
   // Future: Log failure for analytics
   // Future: Update pending orders
+}
+
+async function handleIdentityVerified(session: Stripe.Identity.VerificationSession) {
+  const supabase = createServiceRoleClient();
+
+  try {
+    const userId = session.metadata?.user_id;
+
+    if (!userId) {
+      console.error('No user_id in identity verification session metadata');
+      return;
+    }
+
+    // Update user's identity verification status
+    const { error } = await supabase
+      .from('users')
+      .update({ identity_verification_status: 'verified' })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error updating identity verification status:', error);
+      return;
+    }
+
+    console.log(`Identity verified for user: ${userId}`);
+  } catch (error) {
+    console.error('Error in handleIdentityVerified:', error);
+  }
+}
+
+async function handleIdentityFailed(session: Stripe.Identity.VerificationSession) {
+  const supabase = createServiceRoleClient();
+
+  try {
+    const userId = session.metadata?.user_id;
+
+    if (!userId) {
+      console.error('No user_id in identity verification session metadata');
+      return;
+    }
+
+    // Update user's identity verification status to failed
+    const { error } = await supabase
+      .from('users')
+      .update({ identity_verification_status: 'failed' })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error updating identity verification status:', error);
+      return;
+    }
+
+    console.log(`Identity verification failed for user: ${userId}`);
+  } catch (error) {
+    console.error('Error in handleIdentityFailed:', error);
+  }
 }
