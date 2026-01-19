@@ -52,6 +52,7 @@ export default function BoosterHub() {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [suspended, setSuspended] = useState(false);
   const [suspensionReason, setSuspensionReason] = useState<string | null>(null);
+  const [contractRequired, setContractRequired] = useState(false);
   const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(30);
   const [stripeNotConnected, setStripeNotConnected] = useState(false);
   const [stripeNotVerified, setStripeNotVerified] = useState(false);
@@ -198,6 +199,9 @@ export default function BoosterHub() {
           setSuspended(true);
           setSuspensionReason(data.suspension_reason || null);
           setJobs([]);
+        } else if (data.contract_required) {
+          setContractRequired(true);
+          setJobs([]);
         }
       } else {
         console.error('Failed to fetch jobs');
@@ -317,6 +321,37 @@ export default function BoosterHub() {
                 className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 Go to Account Page
+              </a>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (contractRequired) {
+    return (
+      <main className="min-h-screen bg-black pt-24 pb-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-yellow-900/20 border-2 border-yellow-500 rounded-lg p-8 text-center" role="status" aria-live="polite">
+              <div className="mb-4">
+                <svg className="w-16 h-16 text-yellow-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold text-yellow-400 mb-4">Contract Signature Required</h1>
+              <p className="text-gray-300 mb-6">
+                You must sign the Independent Contractor Agreement before you can accept jobs.
+              </p>
+              <p className="text-gray-400 mb-6">
+                Please review and sign the contractor agreement to continue. This is a one-time requirement.
+              </p>
+              <a
+                href="/booster-agreement"
+                className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                Review &amp; Sign Agreement
               </a>
             </div>
           </div>

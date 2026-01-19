@@ -20,51 +20,64 @@ export const metadata: Metadata = {
 };
 
 export default function FAQ() {
-  const faqs = [
+  const faqCategories = [
     {
-      question: "How does Altura Boost work?",
-      answer:
-        "Altura Boost connects skilled gamers (boosters) with customers who need gaming services. Customers select the service they need, place an order, and our verified boosters complete the work professionally and securely.",
+      category: "Customers",
+      faqs: [
+        {
+          question: "How long does an order take?",
+          answer:
+            "Order completion time varies based on the service requested. Different services require different amounts of time depending on factors like type of service (camos, levels, ranks, challenges, etc.), difficulty and grind length, current order volume, and game updates or playlist availability. Once your order is accepted and in progress, it is worked on as efficiently as possible while maintaining consistency and account safety. You'll be able to track progress inside your orders page, so you're never left guessing where your order stands.",
+        },
+        {
+          question: "Can I play on the account during the order?",
+          answer:
+            "No. The account cannot be used while an order is in progress. To avoid conflicts, delays, or progress issues, the account must remain unused during active work. You'll be able to schedule approved time windows in the intake form we send you, letting us know when you do not want the account accessed. Outside of those scheduled windows, the account should remain untouched until the order is completed. The less time you want the account logged in, the longer an order will take.",
+        },
+        {
+          question: "What platforms do you support?",
+          answer:
+            "We support all major platforms, including PlayStation, Xbox, and PC. If the game or service is available on your platform, we can support it.",
+        },
+        {
+          question: "What happens if it takes longer than expected?",
+          answer:
+            "If an order takes longer than expected, it is reviewed internally and may be assigned to one of our top-performing pros to ensure quality and completion standards are met. This allows us to maintain consistent results, protect account safety, and ensure the service is completed correctly, not rushed. While this may slightly extend completion time, it ensures the final result meets our standards. As always, you can request a refund to be processed if you are not satisfied.",
+        },
+      ],
     },
     {
-      question: "Is my account safe?",
-      answer:
-        "Yes! We take account security very seriously. All boosters are verified professionals who sign NDAs. We use encrypted password management and never store your credentials in plain text. Your account information is protected at all times.",
-    },
-    {
-      question: "How long does an order take?",
-      answer:
-        "Completion time varies based on the service. Each service listing shows an estimated completion time. Once your order is accepted by a booster, you can track progress in real-time through your orders page.",
-    },
-    {
-      question: "How do I track my order?",
-      answer:
-        "After placing an order, you can visit the 'Orders' page from your account menu. You'll see all active orders with a progress bar showing completion status, updated by the booster as they work.",
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer:
-        "We accept all major credit cards, debit cards, and PayPal through our secure Stripe payment system. All transactions are encrypted and secure.",
-    },
-    {
-      question: "Can I become a booster?",
-      answer:
-        "Yes! We're always looking for skilled gamers. Visit our 'Work with Us' page to learn about requirements and start your application. You'll need to pass verification and skill assessments.",
-    },
-    {
-      question: "What if I'm not satisfied with my order?",
-      answer:
-        "Customer satisfaction is our priority. If there's an issue with your order, contact our support team immediately. We'll work to resolve the issue or provide a refund according to our terms of service.",
-    },
-    {
-      question: "How do boosters get paid?",
-      answer:
-        "Boosters are paid per completed job. Earnings are tracked in the Jobs page and payouts are processed on a regular schedule. All payment details are handled securely through Stripe.",
+      category: "Boosters",
+      faqs: [
+        {
+          question: "How do I become a booster?",
+          answer:
+            'To become a booster, click the "Work With Us" button and complete the application form. Once submitted, your information is securely sent to Stripe for identity verification. After verification, your application is manually reviewed and approved by our admin team. Approval is not automatic. This process ensures quality, accountability, and consistency across our platform.',
+        },
+        {
+          question: "How are orders accepted?",
+          answer:
+            "Once approved, boosters gain access to the Booster Hub from their home screen. Inside the Booster Hub, boosters can view a list of available active orders, review the necessary order details, and accept an order they want to work on. After accepting an order, the booster logs into the account only during the designated time frames provided by the client and begins work.",
+        },
+        {
+          question: "Why do some orders pay more than others?",
+          answer:
+            "Order payouts vary based on the time, difficulty, and complexity of the service requested. Factors that influence payout include type of service being completed, estimated completion time, difficulty or grind intensity, and risk or precision required. Higher-effort or more demanding orders are priced accordingly to ensure quality, consistency, and fair compensation.",
+        },
+        {
+          question: "What if I can't finish an order I accepted?",
+          answer:
+            "If you're unable to complete an order you've accepted, you can unassign yourself from the order. You will be paid for the portion of work completed, based on the number of weapons finished at the time of unassignment. Once unassigned, the order is reviewed and reassigned to another booster to ensure completion and quality standards are met.",
+        },
+      ],
     },
   ];
 
+  // Flatten FAQs for structured data schema
+  const flatFaqs = faqCategories.flatMap((category) => category.faqs);
+
   // Generate FAQ structured data
-  const faqSchema = getFAQPageSchema(faqs);
+  const faqSchema = getFAQPageSchema(flatFaqs);
 
   return (
     <main className="min-h-screen bg-black max-w-4xl mx-auto px-4 py-8">
@@ -74,7 +87,7 @@ export default function FAQ() {
         Find answers to common questions about our services
       </p>
 
-      <FAQClient faqs={faqs} />
+      <FAQClient faqCategories={faqCategories} />
 
       <div className="mt-12 bg-gradient-to-r from-primary-900/50 to-primary-800/50 border border-primary-700 rounded-lg p-6" aria-labelledby="contact-heading">
         <h2 id="contact-heading" className="text-2xl font-semibold mb-2 text-white">Still have questions?</h2>

@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/security/rate-limit';
 import { logAuthFailure } from '@/lib/security/audit-logger';
 import { isValidUUID } from '@/lib/security/validation';
+import { calculateTieredPrice, type PricingTier } from '@/lib/pricing/calculateTieredPrice';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-11-17.clover' as any,
@@ -130,7 +131,11 @@ export async function POST(request: Request) {
 
     const { data: services, error: servicesError } = await supabase
       .from('services')
-      .select('id, name, price, game_id, games!inner(name)')
+      .select(`
+        id, name, price, game_id, pricing_type, unit_name, max_quantity, batch_size,
+        games!inner(name),
+        pricing_tiers:service_pricing_tiers(*)
+      `)
       .in('id', serviceIds)
       .eq('active', true);
 
@@ -157,11 +162,70 @@ export async function POST(request: Request) {
       );
     }
 
-    // Build line items for Stripe Checkout
+    // Build line items for Stripe Checkout and prepare order metadata
+    interface OrderItemData {
+      serviceId: string;
+      quantity: number;
+      pricingType: string;
+      unitCount?: number;
+      calculatedPrice: number;
+      calculatedPayout: number;
+    }
+    const orderItemsData: OrderItemData[] = [];
+
     const lineItems = cartItems.map((cartItem: any) => {
       const service = services.find((s) => s.id === cartItem.serviceId);
       if (!service) {
         throw new Error('Service not found');
+      }
+
+      let unitAmount: number;
+      let quantity: number;
+      let calculatedPrice: number;
+      let calculatedPayout: number;
+      let lineItemDescription: string = (service.games as any)?.name || 'Gaming Service';
+
+      if (service.pricing_type === 'tiered' && cartItem.unitCount) {
+        // Tiered pricing - calculate from tiers
+        const tiers: PricingTier[] = (service.pricing_tiers || []).map((t: any) => ({
+          min_quantity: t.min_quantity,
+          max_quantity: t.max_quantity,
+          price_per_unit: Number(t.price_per_unit),
+          booster_payout_per_unit: Number(t.booster_payout_per_unit),
+        }));
+
+        // Validate unit count against max
+        const unitCount = Math.min(cartItem.unitCount, service.max_quantity || 30);
+        const priceCalc = calculateTieredPrice(unitCount, tiers);
+
+        calculatedPrice = priceCalc.totalPrice;
+        calculatedPayout = priceCalc.totalPayout;
+        unitAmount = Math.round(calculatedPrice * 100); // Total in cents
+        quantity = 1; // Single line item for the whole order
+        lineItemDescription = `${unitCount} ${service.unit_name || 'unit'}${unitCount > 1 ? 's' : ''} - ${(service.games as any)?.name || 'Gaming Service'}`;
+
+        orderItemsData.push({
+          serviceId: service.id,
+          quantity: 1,
+          pricingType: 'tiered',
+          unitCount: unitCount,
+          calculatedPrice,
+          calculatedPayout,
+        });
+      } else {
+        // Fixed pricing
+        calculatedPrice = service.price * (cartItem.quantity || 1);
+        calculatedPayout = 0; // Will be fetched from service in webhook
+        unitAmount = Math.round(service.price * 100);
+        quantity = cartItem.quantity || 1;
+
+        orderItemsData.push({
+          serviceId: service.id,
+          quantity: cartItem.quantity || 1,
+          pricingType: 'fixed',
+          calculatedPrice,
+          calculatedPayout,
+        });
       }
 
       return {
@@ -169,11 +233,11 @@ export async function POST(request: Request) {
           currency: 'usd',
           product_data: {
             name: service.name,
-            description: (service.games as any)?.name || 'Gaming Service',
+            description: lineItemDescription,
           },
-          unit_amount: Math.round(service.price * 100), // Convert to cents
+          unit_amount: unitAmount,
         },
-        quantity: cartItem.quantity || 1,
+        quantity,
       };
     });
 
@@ -209,6 +273,7 @@ export async function POST(request: Request) {
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
       metadata: {
         customer_id: user.id,
+        order_items: JSON.stringify(orderItemsData),
       },
     });
 

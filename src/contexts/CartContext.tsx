@@ -8,8 +8,12 @@ export interface CartItem {
   gameId: string;
   gameName: string;
   serviceName: string;
-  price: number;
+  price: number; // For fixed pricing: total price. For tiered: calculated from tiers
   quantity: number;
+  // Tiered pricing fields
+  pricingType: 'fixed' | 'tiered';
+  unitCount?: number; // For tiered services: number of units (e.g., weapons)
+  unitName?: string; // e.g., 'weapon', 'item'
 }
 
 interface CartContextType {
@@ -68,9 +72,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       const existingItemIndex = prevItems.findIndex((item) => item.id === newItem.id);
 
       if (existingItemIndex !== -1) {
-        // Update quantity if item exists
         const updatedItems = [...prevItems];
-        updatedItems[existingItemIndex].quantity += 1;
+        if (newItem.pricingType === 'tiered') {
+          // For tiered services, replace with new selection (different unit count/price)
+          updatedItems[existingItemIndex] = { ...newItem, quantity: 1 };
+        } else {
+          // For fixed pricing, increment quantity
+          updatedItems[existingItemIndex].quantity += 1;
+        }
         return updatedItems;
       } else {
         // Add new item with quantity 1
@@ -105,7 +114,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
   const getSubtotal = () => {
-    return items.reduce((total, item) => total + item.price * item.quantity, 0);
+    return items.reduce((total, item) => {
+      if (item.pricingType === 'tiered') {
+        // For tiered services, price is already the calculated total
+        return total + item.price;
+      }
+      // For fixed pricing, multiply by quantity
+      return total + item.price * item.quantity;
+    }, 0);
   };
 
   const getTax = () => {

@@ -15,6 +15,8 @@ export default function CartPage() {
       const cartItems = items.map((item) => ({
         serviceId: item.serviceId,
         quantity: item.quantity,
+        pricingType: item.pricingType,
+        unitCount: item.unitCount,
       }));
 
       const response = await fetch('/api/checkout/create-session', {
@@ -90,38 +92,52 @@ export default function CartPage() {
                       </h3>
                       <p className="text-gray-400 mb-2 font-medium">{item.serviceName}</p>
 
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-3 mt-4">
-                        <span id={`quantity-label-${item.id}`} className="text-gray-400 text-sm">Quantity:</span>
-                        <div className="flex items-center gap-2" role="group" aria-labelledby={`quantity-label-${item.id}`}>
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            aria-label={`Decrease quantity of ${item.serviceName}`}
-                            disabled={item.quantity <= 1}
-                            className="w-8 h-8 bg-gray-800 hover:bg-gray-700 text-white rounded flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          >
-                            -
-                          </button>
-                          <span className="w-12 text-center font-semibold text-white" aria-live="polite" aria-atomic="true">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            aria-label={`Increase quantity of ${item.serviceName}`}
-                            className="w-8 h-8 bg-gray-800 hover:bg-gray-700 text-white rounded flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          >
-                            +
-                          </button>
+                      {/* Show unit count for tiered services */}
+                      {item.pricingType === 'tiered' && item.unitCount && (
+                        <p className="text-primary-400 text-sm mb-2">
+                          {item.unitCount} {item.unitName || 'unit'}{item.unitCount > 1 ? 's' : ''}
+                        </p>
+                      )}
+
+                      {/* Quantity Controls - only for fixed pricing services */}
+                      {item.pricingType === 'fixed' && (
+                        <div className="flex items-center gap-3 mt-4">
+                          <span id={`quantity-label-${item.id}`} className="text-gray-400 text-sm">Quantity:</span>
+                          <div className="flex items-center gap-2" role="group" aria-labelledby={`quantity-label-${item.id}`}>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              aria-label={`Decrease quantity of ${item.serviceName}`}
+                              disabled={item.quantity <= 1}
+                              className="w-8 h-8 bg-gray-800 hover:bg-gray-700 text-white rounded flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            >
+                              -
+                            </button>
+                            <span className="w-12 text-center font-semibold text-white" aria-live="polite" aria-atomic="true">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              aria-label={`Increase quantity of ${item.serviceName}`}
+                              className="w-8 h-8 bg-gray-800 hover:bg-gray-700 text-white rounded flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            >
+                              +
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold mb-2 text-primary-400">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ${(item.pricingType === 'tiered' ? item.price : item.price * item.quantity).toFixed(2)}
                       </p>
-                      {item.quantity > 1 && (
+                      {item.pricingType === 'fixed' && item.quantity > 1 && (
                         <p className="text-sm text-gray-500 mb-2">
                           ${item.price.toFixed(2)} each
+                        </p>
+                      )}
+                      {item.pricingType === 'tiered' && item.unitCount && item.unitCount > 1 && (
+                        <p className="text-sm text-gray-500 mb-2">
+                          ${(item.price / item.unitCount).toFixed(2)} avg per {item.unitName || 'unit'}
                         </p>
                       )}
                       <button

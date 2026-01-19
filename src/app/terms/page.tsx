@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description: 'Terms of Service for Altura Boost. Read our terms regarding gaming services, account security, payment terms, booster requirements, prohibited activities, and liability.',
+  title: 'Terms of Service & Refund Policy',
+  description: 'Terms of Service and Refund Policy for Altura Boost. Read our terms regarding gaming services, account security, payment terms, refunds, booster requirements, prohibited activities, and liability.',
   alternates: {
     canonical: '/terms',
   },
   openGraph: {
-    title: 'Terms of Service - Altura Boost',
-    description: 'Read our Terms of Service for game boosting services, account security, payments, and user agreements.',
+    title: 'Terms of Service & Refund Policy - Altura Boost',
+    description: 'Read our Terms of Service and Refund Policy for game boosting services, account security, payments, and user agreements.',
     url: '/terms',
   },
   twitter: {
-    title: 'Terms of Service - Altura Boost',
-    description: 'Read our Terms of Service for game boosting services, account security, payments, and user agreements.',
+    title: 'Terms of Service & Refund Policy - Altura Boost',
+    description: 'Read our Terms of Service and Refund Policy for game boosting services, account security, payments, and user agreements.',
   },
 };
 
@@ -82,7 +82,7 @@ export default function TermsOfService() {
           <ul className="list-disc list-inside space-y-2 text-gray-300">
             <li>You agree to pay all fees associated with your order</li>
             <li>Prices are subject to change but locked at time of purchase</li>
-            <li>Refunds are handled on a case-by-case basis per our refund policy</li>
+            <li>Refunds are subject to our Refund Policy (see Sections 12-19 below)</li>
             <li>Failed payments may result in order cancellation</li>
           </ul>
         </section>
@@ -141,6 +141,127 @@ export default function TermsOfService() {
           <p className="text-gray-300">
             For questions about these Terms of Service, please contact us through our support channels.
           </p>
+        </section>
+
+        {/* Refund Policy Sections */}
+        <div className="mt-12 pt-8 border-t border-primary-700">
+          <h2 className="text-3xl font-bold mb-8 text-white">Refund Policy</h2>
+        </div>
+
+        <section aria-labelledby="section-12">
+          <h2 id="section-12" className="text-2xl font-semibold mb-4 text-primary-400">12. All Sales Are Final Once Work Begins</h2>
+          <p className="text-gray-300 mb-4">
+            Due to the nature of digital services and time-based labor, all boosting services are non-refundable once work has started on an order.
+          </p>
+          <p className="text-gray-300 mb-4">
+            Once a booster logs into an account, begins progress, or allocates time to the order, the service is considered in progress and <strong className="text-white">cannot be reversed</strong>.
+          </p>
+        </section>
+
+        <section aria-labelledby="section-13">
+          <h2 id="section-13" className="text-2xl font-semibold mb-4 text-primary-400">13. Partial Refunds (Unstarted Work Only)</h2>
+          <p className="text-gray-300 mb-4">
+            A <strong className="text-white">partial or full refund</strong> may be issued only if:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-300 mb-4">
+            <li>The order has <strong className="text-white">not yet been started</strong></li>
+            <li>No progress has been made</li>
+            <li>No booster has logged into the account</li>
+          </ul>
+          <p className="text-gray-300">
+            Once progress begins, refunds are no longer available.
+          </p>
+        </section>
+
+        <section aria-labelledby="section-14">
+          <h2 id="section-14" className="text-2xl font-semibold mb-4 text-primary-400">14. Progress-Based Credit (Not Cash Refunds)</h2>
+          <p className="text-gray-300 mb-4">
+            If an order is <strong className="text-white">unable to be completed</strong> due to internal issues (booster availability, system errors, etc.), you may receive:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-300 mb-4">
+            <li>A <strong className="text-white">store credit</strong> for the remaining, unfinished portion of the order</li>
+            <li>Or reassignment to a top-performing booster to complete the job</li>
+          </ul>
+          <p className="text-gray-300">
+            Credits are non-transferable and non-redeemable for cash.
+          </p>
+        </section>
+
+        <section aria-labelledby="section-15">
+          <h2 id="section-15" className="text-2xl font-semibold mb-4 text-primary-400">15. No Refunds for Delays</h2>
+          <p className="text-gray-300 mb-4">
+            Estimated completion times are <strong className="text-white">not guaranteed</strong>. Refunds will not be issued for:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-300">
+            <li>Delays caused by high demand</li>
+            <li>Game updates, patches, or server outages</li>
+            <li>Skill-based difficulty variations</li>
+            <li>Platform or matchmaking inconsistencies</li>
+          </ul>
+        </section>
+
+        <section aria-labelledby="section-16">
+          <h2 id="section-16" className="text-2xl font-semibold mb-4 text-primary-400">16. Customer-Caused Issues Void Refunds</h2>
+          <p className="text-gray-300 mb-4">
+            Refunds will not be granted if issues arise due to:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-300 mb-4">
+            <li>Incorrect or incomplete login information</li>
+            <li>Customer logging into the account during the service window</li>
+            <li>Account bans, restrictions, or penalties unrelated to our actions</li>
+            <li>Failure to follow scheduling or availability guidelines</li>
+          </ul>
+          <p className="text-gray-300">
+            If a customer interferes with the service, the order may be <strong className="text-white">paused or canceled without a refund</strong>.
+          </p>
+        </section>
+
+        <section aria-labelledby="section-17">
+          <h2 id="section-17" className="text-2xl font-semibold mb-4 text-primary-400">17. Account Bans &amp; Risk Disclaimer</h2>
+          <p className="text-gray-300 mb-4">
+            By purchasing, you acknowledge:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-300 mb-4">
+            <li>Boosting carries <strong className="text-white">inherent risk</strong></li>
+            <li>We are <strong className="text-white">not responsible</strong> for bans, warnings, or penalties caused by:
+              <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
+                <li>Prior account history</li>
+                <li>Third-party software</li>
+                <li>Actions outside our control</li>
+              </ul>
+            </li>
+          </ul>
+          <p className="text-gray-300">
+            Refunds will <strong className="text-white">not</strong> be issued for bans unless proven to be caused directly by our service and verified internally.
+          </p>
+        </section>
+
+        <section aria-labelledby="section-18">
+          <h2 id="section-18" className="text-2xl font-semibold mb-4 text-primary-400">18. Chargebacks &amp; Payment Disputes</h2>
+          <p className="text-gray-300 mb-4">
+            Unauthorized chargebacks or disputes will result in:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-300 mb-4">
+            <li>Immediate service termination</li>
+            <li>Permanent account ban from our platform</li>
+            <li>Loss of any remaining progress or credits</li>
+          </ul>
+          <p className="text-gray-300">
+            We strongly encourage contacting support before disputing a charge.
+          </p>
+        </section>
+
+        <section aria-labelledby="section-19">
+          <h2 id="section-19" className="text-2xl font-semibold mb-4 text-primary-400">19. Refund Decision Authority</h2>
+          <p className="text-gray-300 mb-4">
+            All refund and credit decisions are made at <strong className="text-white">our sole discretion</strong> after internal review of:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-300">
+            <li>Order progress</li>
+            <li>Booster logs</li>
+            <li>System timestamps</li>
+            <li>Account activity</li>
+          </ul>
         </section>
       </div>
 

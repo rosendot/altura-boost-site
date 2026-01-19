@@ -55,10 +55,10 @@ export async function POST(
       );
     }
 
-    // Get user data to check Stripe Connect status
+    // Get user data to check Stripe Connect status and contract signature
     const { data: userData, error: userDataError } = await supabase
       .from('users')
-      .select('email, stripe_connect_id')
+      .select('email, role, stripe_connect_id, contract_signed_at')
       .eq('id', user.id)
       .single();
 
@@ -67,6 +67,18 @@ export async function POST(
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
+      );
+    }
+
+    // Check if booster has signed contract
+    if (userData.role === 'booster' && !userData.contract_signed_at) {
+      await logAuthFailure(user.id, 'job_accept', 'Contract not signed', request);
+      return NextResponse.json(
+        {
+          error: 'You must sign the contractor agreement before accepting jobs',
+          contract_required: true
+        },
+        { status: 403 }
       );
     }
 

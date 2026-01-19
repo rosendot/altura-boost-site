@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/security/rate-limit';
+import { calculateBatches, calculateBatchPayout, type PricingTier } from '@/lib/pricing/calculateTieredPrice';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-11-17.clover' as any,
@@ -95,18 +96,38 @@ export async function POST(request: Request) {
   }
 }
 
+interface OrderItemData {
+  serviceId: string;
+  quantity: number;
+  pricingType: string;
+  unitCount?: number;
+  calculatedPrice: number;
+  calculatedPayout: number;
+}
+
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const supabase = createServiceRoleClient();
 
   try {
     const customerId = session.metadata?.customer_id;
+    const orderItemsJson = session.metadata?.order_items;
 
     if (!customerId) {
       console.error('No customer_id in session metadata');
       return;
     }
 
-    // Retrieve full session with line items
+    // Parse order items from metadata
+    let orderItemsData: OrderItemData[] = [];
+    if (orderItemsJson) {
+      try {
+        orderItemsData = JSON.parse(orderItemsJson);
+      } catch (e) {
+        console.error('Failed to parse order_items metadata:', e);
+      }
+    }
+
+    // Retrieve full session with line items for fallback info
     const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
       expand: ['line_items.data.price.product'],
     });
@@ -138,26 +159,118 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       return;
     }
 
-    // Create order items
-    for (const item of lineItems) {
+    // Create order items and jobs
+    for (let i = 0; i < lineItems.length; i++) {
+      const item = lineItems[i];
+      const orderItemData = orderItemsData[i];
+
       const product = item.price?.product;
       const productName = typeof product === 'object' && 'name' in product
         ? product.name
         : 'Unknown Product';
+      const gameName = typeof product === 'object' && 'description' in product
+        ? product.description || 'Gaming Service'
+        : 'Gaming Service';
 
       const pricePerUnit = item.price?.unit_amount ? item.price.unit_amount / 100 : 0;
       const quantity = item.quantity || 1;
 
-      await supabase.from('order_items').insert({
-        order_id: order.id,
-        service_name: productName,
-        game_name: typeof product === 'object' && 'description' in product
-          ? product.description || 'Gaming Service'
-          : 'Gaming Service',
-        quantity: quantity,
-        price_per_unit: pricePerUnit,
-        total_price: pricePerUnit * quantity,
-      });
+      // Determine if this is a tiered service
+      const isTiered = orderItemData?.pricingType === 'tiered';
+      const unitCount = orderItemData?.unitCount;
+      const calculatedPrice = orderItemData?.calculatedPrice || pricePerUnit * quantity;
+      const calculatedPayout = orderItemData?.calculatedPayout || 0;
+
+      // Create order item
+      const { data: orderItem, error: orderItemError } = await supabase
+        .from('order_items')
+        .insert({
+          order_id: order.id,
+          service_id: orderItemData?.serviceId || null,
+          service_name: productName,
+          game_name: gameName,
+          quantity: quantity,
+          price_per_unit: isTiered ? calculatedPrice : pricePerUnit,
+          total_price: calculatedPrice,
+          unit_count: unitCount || null,
+          calculated_price: calculatedPrice,
+          calculated_payout: calculatedPayout,
+        })
+        .select()
+        .single();
+
+      if (orderItemError || !orderItem) {
+        console.error('Error creating order item:', orderItemError);
+        continue;
+      }
+
+      // Create jobs for this order item
+      if (isTiered && unitCount && orderItemData?.serviceId) {
+        // Fetch service details for batch size and pricing tiers
+        const { data: service, error: serviceError } = await supabase
+          .from('services')
+          .select(`
+            batch_size, unit_name,
+            pricing_tiers:service_pricing_tiers(*)
+          `)
+          .eq('id', orderItemData.serviceId)
+          .single();
+
+        if (serviceError || !service) {
+          console.error('Error fetching service for job creation:', serviceError);
+          continue;
+        }
+
+        const batchSize = service.batch_size || 10;
+        const tiers: PricingTier[] = (service.pricing_tiers || []).map((t: any) => ({
+          min_quantity: t.min_quantity,
+          max_quantity: t.max_quantity,
+          price_per_unit: Number(t.price_per_unit),
+          booster_payout_per_unit: Number(t.booster_payout_per_unit),
+        }));
+
+        // Calculate batches
+        const batches = calculateBatches(unitCount, batchSize, tiers);
+        const totalBatches = batches.length;
+
+        // Create a job for each batch
+        for (const batch of batches) {
+          const jobStatus = batch.batchNumber === 1 ? 'available' : 'queued';
+
+          await supabase.from('jobs').insert({
+            order_id: order.id,
+            order_item_id: orderItem.id,
+            service_id: orderItemData.serviceId,
+            status: jobStatus,
+            booster_payout: batch.payout,
+            batch_sequence: batch.batchNumber,
+            total_batches: totalBatches,
+            unit_count: batch.unitCount,
+          });
+        }
+      } else if (orderItemData?.serviceId) {
+        // Fixed pricing - create single job per quantity
+        const { data: service } = await supabase
+          .from('services')
+          .select('booster_payout')
+          .eq('id', orderItemData.serviceId)
+          .single();
+
+        const payout = service?.booster_payout || 0;
+
+        for (let q = 0; q < quantity; q++) {
+          await supabase.from('jobs').insert({
+            order_id: order.id,
+            order_item_id: orderItem.id,
+            service_id: orderItemData.serviceId,
+            status: 'available',
+            booster_payout: payout,
+            batch_sequence: q + 1,
+            total_batches: quantity,
+            unit_count: 1,
+          });
+        }
+      }
     }
 
   } catch (error) {

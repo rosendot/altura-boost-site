@@ -36,10 +36,10 @@ export async function GET(request: Request) {
       );
     }
 
-    // Check if user is suspended
+    // Check if user is suspended and has signed contract
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('is_suspended, suspension_reason')
+      .select('role, is_suspended, suspension_reason, contract_signed_at')
       .eq('id', user.id)
       .single();
 
@@ -58,6 +58,18 @@ export async function GET(request: Request) {
           error: 'Account suspended',
           suspended: true,
           suspension_reason: userData.suspension_reason
+        },
+        { status: 403 }
+      );
+    }
+
+    // Check if booster has signed contract
+    if (userData?.role === 'booster' && !userData?.contract_signed_at) {
+      await logAuthFailure(user.id, 'available_jobs', 'Contract not signed', request);
+      return NextResponse.json(
+        {
+          error: 'Contract not signed',
+          contract_required: true
         },
         { status: 403 }
       );

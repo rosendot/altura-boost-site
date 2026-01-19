@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     // Fetch user data from public.users table
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, email, full_name, role, phone, created_at, total_earnings, booster_approval_status, is_suspended, suspended_at, suspension_reason, can_appeal, appeal_status, strike_count')
+      .select('id, email, full_name, role, phone, created_at, total_earnings, booster_approval_status, is_suspended, suspended_at, suspension_reason, can_appeal, appeal_status, strike_count, contract_signed_at')
       .eq('id', user.id)
       .single();
 

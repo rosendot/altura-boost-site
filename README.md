@@ -40,6 +40,10 @@ The platform features secure payment processing via Stripe, automatic job update
 - [Job Updates](#job-updates)
   - [How It Works](#how-it-works)
   - [Race Condition Protection](#race-condition-protection)
+- [Tiered Pricing & Job Batching](#tiered-pricing--job-batching)
+  - [Flat Rate Pricing](#flat-rate-pricing)
+  - [Job Batching](#job-batching)
+  - [Pricing Utility](#pricing-utility)
 - [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
 - [Security Notes](#security-notes)
@@ -78,7 +82,9 @@ src/
 │   └── CartContext.tsx             # Global cart state with localStorage persistence
 ├── lib/
 │   ├── stripe.ts                   # Stripe config
-│   └── supabase/                   # Supabase config (client, server, middleware)
+│   ├── supabase/                   # Supabase config (client, server, middleware)
+│   └── pricing/
+│       └── calculateTieredPrice.ts # Tiered pricing calculations
 ├── utils/
 │   └── timeAgo.ts                  # Time formatting utilities
 └── server.js                       # Custom Node.js server
@@ -517,6 +523,91 @@ The current polling approach works well for **up to 200+ concurrent users**. Whe
 
 The atomic update protection will work with any of these approaches.
 
+## Tiered Pricing & Job Batching
+
+The platform supports tiered pricing for per-unit services (like weapon camos) with automatic job batching for large orders.
+
+### Flat Rate Pricing
+
+Tiered pricing uses **flat rate logic**: the total quantity determines which tier's rate applies to ALL units.
+
+**Example: Shattered Gold Camo**
+| Quantity | Price per Weapon |
+|----------|-----------------|
+| 1-5      | $9.00           |
+| 6-10     | $8.00           |
+| 11-20    | $7.00           |
+| 21-29    | $6.50           |
+| 30       | $6.00           |
+
+**Calculation Examples:**
+- 5 weapons → 5 × $9.00 = $45.00 (tier 1-5)
+- 15 weapons → 15 × $7.00 = $105.00 (tier 11-20)
+- 30 weapons → 30 × $6.00 = $180.00 (tier 30)
+
+### Job Batching
+
+Large orders are automatically split into batches (default: 10 weapons per batch):
+
+```
+Order: 25 weapons
+  → Batch 1: 10 weapons (status: 'available')
+  → Batch 2: 10 weapons (status: 'queued')
+  → Batch 3: 5 weapons (status: 'queued')
+```
+
+**Sequential Release:**
+1. Only the first batch is available for boosters to accept
+2. When Batch 1 completes → Batch 2 becomes available
+3. When Batch 2 completes → Batch 3 becomes available
+4. When all batches complete → Order marked complete
+
+This is handled automatically by a database trigger.
+
+### Database Schema
+
+**`service_pricing_tiers` table:**
+```sql
+CREATE TABLE service_pricing_tiers (
+  id uuid PRIMARY KEY,
+  service_id uuid REFERENCES services(id),
+  min_quantity integer NOT NULL,
+  max_quantity integer NOT NULL,
+  price_per_unit numeric NOT NULL,
+  booster_payout_per_unit numeric NOT NULL
+);
+```
+
+**`services` table additions:**
+- `pricing_type`: 'fixed' or 'tiered'
+- `unit_name`: e.g., 'weapon' (for display)
+- `max_quantity`: e.g., 30 (maximum orderable)
+- `batch_size`: e.g., 10 (weapons per job)
+
+**`jobs` table additions:**
+- `batch_sequence`: 1, 2, 3... (order within batched jobs)
+- `total_batches`: Total number of batches in order
+- `unit_count`: Weapons in this specific batch
+- `status`: Includes 'queued' state for unreleased batches
+
+### Pricing Utility
+
+Located at `src/lib/pricing/calculateTieredPrice.ts`:
+
+```typescript
+// Calculate price for a quantity
+const result = calculateTieredPrice(30, tiers);
+// → { totalPrice: 180, totalPayout: 120, breakdown: [...] }
+
+// Get batches with payouts
+const batches = calculateBatches(25, 10, tiers);
+// → [
+//   { batchNumber: 1, unitCount: 10, payout: 40 },
+//   { batchNumber: 2, unitCount: 10, payout: 40 },
+//   { batchNumber: 3, unitCount: 5, payout: 20 }
+// ]
+```
+
 ## Stripe Integration
 
 The platform uses Stripe for both customer payments and booster payouts. This is a marketplace model where customers pay Altura Boost, and then Altura Boost pays boosters after job completion.
@@ -908,7 +999,24 @@ The app is fully Vercel-ready with no special configuration needed:
 - Service ID handling to prevent UUID errors
 - Price validation from database (prevents client-side price manipulation)
 
-### 📋 Phase 10: Production & Enhancement (Planned)
+### ✅ Phase 10: Tiered Pricing & Job Batching (Complete)
+- Flat rate tiered pricing system for per-unit services (camos)
+- Price tiers based on total quantity (e.g., 30 weapons × $6 = $180)
+- Automatic job batching (splits orders into 10-weapon batches)
+- Sequential job release (next batch available when previous completes)
+- Database trigger for automatic job progression
+- Pricing calculation utility with batch payout support
+- Dynamic quantity selector on service pages
+- Server-side price validation in checkout
+
+### ✅ Phase 11: Refund Policy & Booster Contract (Complete)
+- Comprehensive refund policy added to Terms of Service (Sections 12-19)
+- Independent Contractor Agreement page for boosters (`/booster-agreement`)
+- Contract signature tracking in database (timestamp, version, IP address)
+- Contract enforcement: boosters must sign before viewing/accepting jobs
+- Hub page shows contract required message with link to sign
+
+### 📋 Phase 12: Production & Enhancement (Planned)
 - Analytics and reporting dashboard
 - Email notification system
 - Performance optimization and caching

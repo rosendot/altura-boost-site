@@ -7,12 +7,26 @@ import type { Metadata } from "next";
 import GameDetailClient from "./GameDetailClient";
 import { getProductSchema, getBreadcrumbSchema, StructuredData } from "@/lib/structuredData";
 
+interface PricingTier {
+  id: string;
+  service_id: string;
+  min_quantity: number;
+  max_quantity: number;
+  price_per_unit: number;
+  booster_payout_per_unit: number;
+}
+
 interface Service {
   id: string;
   name: string;
   description: string | null;
   price: number;
   game_id: string;
+  pricing_type: 'fixed' | 'tiered';
+  unit_name: string | null;
+  max_quantity: number | null;
+  batch_size: number | null;
+  pricing_tiers?: PricingTier[];
 }
 
 interface Game {
@@ -95,10 +109,13 @@ export default async function GameDetailPage({
     notFound();
   }
 
-  // Fetch services for this game
+  // Fetch services for this game with pricing tiers
   const { data: services, error: servicesError } = await supabase
     .from('services')
-    .select('*')
+    .select(`
+      *,
+      pricing_tiers:service_pricing_tiers(*)
+    `)
     .eq('game_id', game.id)
     .eq('active', true)
     .order('price', { ascending: true });
@@ -106,6 +123,12 @@ export default async function GameDetailPage({
   if (servicesError) {
     console.error('Error fetching services:', servicesError);
   }
+
+  // Map services to include properly typed pricing_tiers
+  const servicesWithTiers: Service[] = (services || []).map((service) => ({
+    ...service,
+    pricing_tiers: service.pricing_tiers || [],
+  }));
 
   const imageUrl = getGameImageUrl(game.image_url);
 
@@ -204,7 +227,7 @@ export default async function GameDetailPage({
       {/* Services Section - Client Component for Cart Functionality */}
       <GameDetailClient
         game={game as Game}
-        services={services as Service[] || []}
+        services={servicesWithTiers}
         features={features}
       />
     </main>
