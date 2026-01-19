@@ -132,15 +132,6 @@ export default async function GameDetailPage({
 
   const imageUrl = getGameImageUrl(game.image_url);
 
-  // Hardcoded features for now (can be added to database later)
-  const features = [
-    "100% Hand-played by professionals",
-    "VPN Protection included",
-    "24/7 progress updates",
-    "Account security guaranteed",
-    "Money-back guarantee",
-  ];
-
   // Generate structured data schemas
   const breadcrumbSchema = getBreadcrumbSchema([
     { name: 'Home', url: '/' },
@@ -228,7 +219,6 @@ export default async function GameDetailPage({
       <GameDetailClient
         game={game as Game}
         services={servicesWithTiers}
-        features={features}
       />
     </main>
   );
