@@ -9,7 +9,6 @@ export interface CartItem {
   gameName: string;
   serviceName: string;
   price: number;
-  deliveryTime: string;
   quantity: number;
 }
 

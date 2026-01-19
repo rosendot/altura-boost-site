@@ -92,7 +92,6 @@ interface Service {
   name: string;
   description: string | null;
   price: number;
-  delivery_time_hours: number;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -1250,9 +1249,6 @@ export default function AdminPage() {
                                     Price
                                   </th>
                                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                                    Delivery Time
-                                  </th>
-                                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
                                     Status
                                   </th>
                                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
@@ -1283,11 +1279,6 @@ export default function AdminPage() {
                                       <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm text-green-400 font-semibold">
                                           ${service.price.toFixed(2)}
-                                        </div>
-                                      </td>
-                                      <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-300">
-                                          {service.delivery_time_hours}h
                                         </div>
                                       </td>
                                       <td className="px-6 py-4 whitespace-nowrap">

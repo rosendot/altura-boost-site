@@ -12,7 +12,6 @@ interface Service {
   name: string;
   description: string | null;
   price: number;
-  delivery_time_hours: number;
   game_id: string;
 }
 

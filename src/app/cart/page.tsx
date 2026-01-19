@@ -89,9 +89,6 @@ export default function CartPage() {
                         {item.gameName}
                       </h3>
                       <p className="text-gray-400 mb-2 font-medium">{item.serviceName}</p>
-                      <p className="text-sm text-gray-500">
-                        Estimated completion: {item.deliveryTime}
-                      </p>
 
                       {/* Quantity Controls */}
                       <div className="flex items-center gap-3 mt-4">
