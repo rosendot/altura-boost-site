@@ -7,7 +7,6 @@ interface Service {
   name: string;
   description: string | null;
   price: number;
-  delivery_time_hours: number;
   game_id: string;
 }
 
@@ -36,7 +35,6 @@ export default function GameDetailClient({ game, services, features }: GameDetai
       gameName: game.name,
       serviceName: service.name,
       price: service.price,
-      deliveryTime: `${Math.ceil(service.delivery_time_hours / 24)} days`,
     });
   };
 
@@ -74,9 +72,6 @@ export default function GameDetailClient({ game, services, features }: GameDetai
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-2xl font-bold text-white">
                     ${service.price.toFixed(2)}
-                  </div>
-                  <div className="text-sm text-gray-500" aria-label={`Delivery time: ${Math.ceil(service.delivery_time_hours / 24)} days`}>
-                    ⏱️ {Math.ceil(service.delivery_time_hours / 24)} days
                   </div>
                 </div>
 
