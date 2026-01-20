@@ -58,12 +58,28 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Verify user is a booster
-    if (userData.role !== 'booster') {
-      await logAuthFailure(user.id, 'stripe_status', 'User is not a booster', request);
+    // Verify user is a booster or admin
+    if (userData.role !== 'booster' && userData.role !== 'admin') {
+      await logAuthFailure(user.id, 'stripe_status', 'User is not a booster or admin', request);
       return NextResponse.json(
         { error: 'Only boosters can check Connect status' },
         { status: 403 }
+      );
+    }
+
+    // Admins don't need Stripe verification - return as fully verified
+    if (userData.role === 'admin') {
+      return NextResponse.json(
+        {
+          connected: true,
+          verified: true,
+          details_submitted: true,
+          charges_enabled: true,
+          is_admin: true,
+        },
+        {
+          headers: getRateLimitHeaders(rateLimitResult),
+        }
       );
     }
 
