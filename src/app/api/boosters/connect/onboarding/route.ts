@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     // Get user data
     const { data: userData, error: userDataError } = await supabase
       .from('users')
-      .select('email, role, booster_approval_status, stripe_connect_id, identity_verification_status')
+      .select('email, full_name, role, booster_approval_status, stripe_connect_id, identity_verification_status')
       .eq('id', user.id)
       .single();
 
@@ -80,6 +80,11 @@ export async function POST(request: Request) {
 
     // If no Connect account exists, create one
     if (!accountId) {
+      // Parse name into first/last if available
+      const nameParts = userData.full_name?.trim().split(' ') || [];
+      const firstName = nameParts[0] || undefined;
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined;
+
       const account = await stripe.accounts.create({
         type: 'express',
         email: userData.email,
@@ -87,6 +92,19 @@ export async function POST(request: Request) {
           transfers: { requested: true },
         },
         business_type: 'individual',
+        business_profile: {
+          url: 'https://alturaboost.com',
+          mcc: '7994', // Video game arcades/gaming
+          product_description: 'Gaming boost services contractor for Altura Boost',
+        },
+        individual: {
+          email: userData.email,
+          ...(firstName && { first_name: firstName }),
+          ...(lastName && { last_name: lastName }),
+        },
+        tos_acceptance: {
+          service_agreement: 'recipient',
+        },
       });
 
       accountId = account.id;
