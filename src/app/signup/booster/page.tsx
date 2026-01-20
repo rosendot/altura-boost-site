@@ -7,9 +7,12 @@ import { createClient } from '@/lib/supabase/client';
 interface SurveyQuestion {
   id: string;
   question: string;
-  type: 'text' | 'textarea' | 'select' | 'radio' | 'checkbox';
+  type: 'text' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'file';
   options?: string[];
   required?: boolean;
+  placeholder?: string;
+  accept?: string;
+  multiple?: boolean;
 }
 
 export default function BoosterSignUpPage() {
@@ -21,44 +24,129 @@ export default function BoosterSignUpPage() {
     username: '',
   });
   const [surveyAnswers, setSurveyAnswers] = useState<Record<string, string | string[]>>({});
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Generic survey questions - your client can update these later
   const surveyQuestions: SurveyQuestion[] = [
     {
-      id: 'experience',
-      question: 'How many years of gaming experience do you have?',
+      id: 'legalName',
+      question: 'Legal full name',
+      type: 'text',
+      required: true,
+      placeholder: 'Enter your full legal name',
+    },
+    {
+      id: 'displayName',
+      question: 'Display name / Username (in-game)',
+      type: 'text',
+      required: true,
+      placeholder: 'Your in-game display name',
+    },
+    {
+      id: 'age',
+      question: 'Age (must be 18+)',
       type: 'select',
-      options: ['Less than 1 year', '1-3 years', '3-5 years', '5+ years'],
+      options: ['18', '19', '20', '21', '22-25', '26-30', '31-40', '40+'],
+      required: true,
+    },
+    {
+      id: 'country',
+      question: 'Country',
+      type: 'text',
+      required: true,
+      placeholder: 'Enter your country',
+    },
+    {
+      id: 'timezone',
+      question: 'Time zone',
+      type: 'select',
+      options: [
+        'PST (Pacific)',
+        'MST (Mountain)',
+        'CST (Central)',
+        'EST (Eastern)',
+        'GMT (UK)',
+        'CET (Central Europe)',
+        'EET (Eastern Europe)',
+        'IST (India)',
+        'JST (Japan)',
+        'AEST (Australia)',
+        'Other',
+      ],
+      required: true,
+    },
+    {
+      id: 'platforms',
+      question: 'Preferred platform(s)',
+      type: 'checkbox',
+      options: ['PC', 'PlayStation', 'Xbox'],
       required: true,
     },
     {
       id: 'games',
-      question: 'Which games are you proficient in?',
+      question: 'Game(s)',
       type: 'checkbox',
-      options: ['League of Legends', 'Valorant', 'CS2', 'Dota 2', 'Overwatch', 'Other'],
+      options: ['Warzone', 'Multiplayer', 'Zombies'],
       required: true,
+    },
+    {
+      id: 'services',
+      question: 'Which services are you applying for?',
+      type: 'checkbox',
+      options: ['Camo Boost', 'Rank Boost', 'Challenges / Unlocks', 'Coaching (Coming Soon)', 'Other'],
+      required: true,
+    },
+    {
+      id: 'otherServices',
+      question: 'If you selected "Other" above, please explain',
+      type: 'textarea',
+      required: false,
+      placeholder: 'Describe the other services you can provide...',
+    },
+    {
+      id: 'kd',
+      question: 'K/D ratio (if applying for multiplayer)',
+      type: 'text',
+      required: false,
+      placeholder: 'e.g. 2.5',
+    },
+    {
+      id: 'highestRank',
+      question: 'Highest rank completed',
+      type: 'text',
+      required: false,
+      placeholder: 'e.g. Iridescent, Top 250, Crimson',
+    },
+    {
+      id: 'proofScreenshots',
+      question: 'Screenshot proof of K/D and highest rank',
+      type: 'file',
+      required: false,
+      accept: 'image/*',
+      multiple: true,
+    },
+    {
+      id: 'previousExperience',
+      question: 'Previous boosting experience?',
+      type: 'radio',
+      options: ['Yes', 'No'],
+      required: true,
+    },
+    {
+      id: 'whyBetter',
+      question: 'What makes you better than other players offering this same service?',
+      type: 'textarea',
+      required: true,
+      placeholder: 'Tell us what sets you apart...',
     },
     {
       id: 'availability',
-      question: 'What is your weekly availability (in hours)?',
+      question: 'Average availability per week?',
       type: 'select',
-      options: ['Less than 10 hours', '10-20 hours', '20-30 hours', '30+ hours'],
+      options: ['Less than 10 hours', '10-20 hours', '20-40 hours', '40+ hours'],
       required: true,
-    },
-    {
-      id: 'motivation',
-      question: 'Why do you want to become a booster?',
-      type: 'textarea',
-      required: true,
-    },
-    {
-      id: 'additional',
-      question: 'Any additional information you would like to share?',
-      type: 'textarea',
-      required: false,
     },
   ];
 
@@ -85,6 +173,16 @@ export default function BoosterSignUpPage() {
       ...surveyAnswers,
       [questionId]: newValues,
     });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setUploadedFiles(Array.from(e.target.files));
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleAccountSubmit = (e: React.FormEvent) => {
@@ -126,11 +224,38 @@ export default function BoosterSignUpPage() {
         throw new Error('Account creation failed');
       }
 
+      // Upload screenshot files if any
+      const uploadedFilePaths: string[] = [];
+      if (uploadedFiles.length > 0) {
+        for (const file of uploadedFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const filePath = `${authData.user.id}/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('booster-applications')
+            .upload(filePath, file);
+
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            throw new Error('Failed to upload screenshot: ' + uploadError.message);
+          }
+
+          uploadedFilePaths.push(filePath);
+        }
+      }
+
+      // Prepare final answers with file paths
+      const finalAnswers = {
+        ...surveyAnswers,
+        proofScreenshots: uploadedFilePaths,
+      };
+
       // Update the booster application with questionnaire responses
       // User is now authenticated, so RLS allows this update
       const { error: updateError } = await supabase
         .from('booster_applications')
-        .update({ questionnaire_responses: surveyAnswers })
+        .update({ questionnaire_responses: finalAnswers })
         .eq('user_id', authData.user.id);
 
       if (updateError) {
@@ -311,6 +436,7 @@ export default function BoosterSignUpPage() {
                     id={`survey-${q.id}`}
                     value={(surveyAnswers[q.id] as string) || ''}
                     onChange={(e) => handleSurveyChange(q.id, e.target.value)}
+                    placeholder={q.placeholder}
                     className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
                     aria-required={q.required}
                     required={q.required}
@@ -322,6 +448,7 @@ export default function BoosterSignUpPage() {
                     id={`survey-${q.id}`}
                     value={(surveyAnswers[q.id] as string) || ''}
                     onChange={(e) => handleSurveyChange(q.id, e.target.value)}
+                    placeholder={q.placeholder}
                     rows={4}
                     className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
                     aria-required={q.required}
@@ -381,6 +508,36 @@ export default function BoosterSignUpPage() {
                         {option}
                       </label>
                     ))}
+                  </div>
+                )}
+
+                {q.type === 'file' && (
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      id={`survey-${q.id}`}
+                      accept={q.accept || 'image/*'}
+                      multiple={q.multiple}
+                      onChange={handleFileChange}
+                      className="w-full px-3 py-2 bg-gray-800 border border-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary-600 file:text-white file:cursor-pointer hover:file:bg-primary-500"
+                    />
+                    {uploadedFiles.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-400">Selected files:</p>
+                        {uploadedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-800 px-3 py-2 rounded-lg">
+                            <span className="text-sm text-gray-300 truncate">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeFile(index)}
+                              className="ml-2 text-red-400 hover:text-red-300 text-sm"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

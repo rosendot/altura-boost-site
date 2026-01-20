@@ -11,6 +11,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+// Generate a unique job number (JOB-YYYYMMDD-XXX format)
+function generateJobNumber(): string {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const random = Math.floor(Math.random() * 900) + 100; // 100-999
+  return `JOB-${dateStr}-${random}`;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.text();
@@ -238,11 +246,16 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           const jobStatus = batch.batchNumber === 1 ? 'available' : 'queued';
 
           await supabase.from('jobs').insert({
+            job_number: generateJobNumber(),
             order_id: order.id,
             order_item_id: orderItem.id,
-            service_id: orderItemData.serviceId,
+            order_number: order.order_number,
+            service_name: productName,
+            game_name: gameName,
             status: jobStatus,
-            booster_payout: batch.payout,
+            payout_amount: batch.payout,
+            estimated_hours: 24,
+            requirements: '',
             batch_sequence: batch.batchNumber,
             total_batches: totalBatches,
             unit_count: batch.unitCount,
@@ -260,11 +273,16 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
         for (let q = 0; q < quantity; q++) {
           await supabase.from('jobs').insert({
+            job_number: generateJobNumber(),
             order_id: order.id,
             order_item_id: orderItem.id,
-            service_id: orderItemData.serviceId,
+            order_number: order.order_number,
+            service_name: productName,
+            game_name: gameName,
             status: 'available',
-            booster_payout: payout,
+            payout_amount: payout,
+            estimated_hours: 24,
+            requirements: '',
             batch_sequence: q + 1,
             total_batches: quantity,
             unit_count: 1,

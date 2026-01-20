@@ -11,8 +11,8 @@ function SuccessPageContent() {
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
   useEffect(() => {
-    // Clear cart from localStorage
-    localStorage.removeItem('cart');
+    // Clear cart from localStorage (matches CartContext key)
+    localStorage.removeItem('altura-boost-cart');
 
     // Simulate order processing delay
     setTimeout(() => {
