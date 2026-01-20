@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -11,7 +11,24 @@ export default function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [redirectUrl, setRedirectUrl] = useState('/');
   const router = useRouter();
+
+  // Get redirect URL and message from sessionStorage
+  useEffect(() => {
+    const storedRedirect = sessionStorage.getItem('loginRedirect');
+    const storedMessage = sessionStorage.getItem('loginMessage');
+
+    if (storedRedirect) {
+      setRedirectUrl(storedRedirect);
+    }
+    if (storedMessage) {
+      setMessage(storedMessage);
+      // Clear message after reading so it doesn't persist on refresh
+      sessionStorage.removeItem('loginMessage');
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -40,7 +57,9 @@ export default function LoginPage() {
         throw new Error('Login failed');
       }
 
-      router.push('/');
+      // Clear redirect from sessionStorage and navigate
+      sessionStorage.removeItem('loginRedirect');
+      router.push(redirectUrl);
     } catch (err: any) {
       setError(err.message || 'An error occurred during login');
     } finally {
@@ -63,6 +82,12 @@ export default function LoginPage() {
       {/* Login Form */}
       <div className="max-w-md w-full bg-gray-900 border border-primary-700 rounded-lg p-6 card-glow relative z-10 max-h-[calc(100vh-2rem)] overflow-y-auto">
         <h1 className="text-3xl font-bold mb-4 text-center text-white">Login</h1>
+
+        {message && (
+          <div className="mb-4 p-3 bg-blue-900/50 border border-blue-500 rounded-lg text-blue-200 text-sm" role="status" aria-live="polite">
+            {message}
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-sm" role="alert" aria-live="assertive">

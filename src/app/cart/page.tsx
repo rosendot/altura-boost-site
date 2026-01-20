@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, getTotalItems, getSubtotal, getTax, getTotal } = useCart();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const router = useRouter();
 
   const handleCheckout = async () => {
     setCheckoutLoading(true);
@@ -28,6 +30,13 @@ export default function CartPage() {
       });
 
       if (!response.ok) {
+        // If unauthorized, redirect to login with return URL
+        if (response.status === 401) {
+          sessionStorage.setItem('loginRedirect', '/cart');
+          sessionStorage.setItem('loginMessage', 'Please log in to complete your purchase');
+          router.push('/login');
+          return;
+        }
         const error = await response.json();
         throw new Error(error.error || 'Failed to create checkout session');
       }
