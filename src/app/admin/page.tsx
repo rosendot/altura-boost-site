@@ -229,6 +229,8 @@ export default function AdminPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [applicationFilter, setApplicationFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [appealFilter, setAppealFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [selectedApplication, setSelectedApplication] = useState<BoosterApplication | null>(null);
+  const [applicationImageUrls, setApplicationImageUrls] = useState<Record<string, string>>({});
 
   const { showToast } = useToast();
   const [deactivateStrikeModal, setDeactivateStrikeModal] = useState<{show: boolean, strikeId: string | null}>({show: false, strikeId: null});
@@ -286,6 +288,54 @@ export default function AdminPage() {
       ]);
     }
   }, [userData]);
+
+  // Fetch signed URLs for application screenshots when an application is selected
+  useEffect(() => {
+    const fetchImageUrls = async () => {
+      if (!selectedApplication) {
+        setApplicationImageUrls({});
+        return;
+      }
+
+      const responses = selectedApplication.questionnaire_responses || {};
+      const screenshotPaths: string[] = [];
+
+      // Find all screenshot paths
+      Object.entries(responses).forEach(([key, value]) => {
+        if ((key.toLowerCase().includes('screenshot') || key.toLowerCase().includes('proof')) && Array.isArray(value)) {
+          screenshotPaths.push(...value.filter((v): v is string => typeof v === 'string'));
+        }
+      });
+
+      if (screenshotPaths.length === 0) return;
+
+      const urlMap: Record<string, string> = {};
+
+      // Fetch signed URLs via admin API endpoint (uses service role server-side)
+      for (const path of screenshotPaths) {
+        try {
+          const response = await fetch('/api/admin/storage/signed-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path, bucket: 'booster-applications' }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.signedUrl) {
+              urlMap[path] = data.signedUrl;
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching signed URL for:', path, error);
+        }
+      }
+
+      setApplicationImageUrls(urlMap);
+    };
+
+    fetchImageUrls();
+  }, [selectedApplication]);
 
   const fetchApplications = async () => {
     const supabase = createClient();
@@ -753,37 +803,112 @@ export default function AdminPage() {
                     </button>
                   </div>
 
-                  {/* Applications List */}
-                  <div className="space-y-4">
+                  {/* Applications List - Compact Rows */}
+                  <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
                     {applications.filter(app => app.status === applicationFilter).length === 0 ? (
-                      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" role="status">
+                      <div className="p-6 text-center" role="status">
                         <p className="text-gray-400">No {applicationFilter} applications.</p>
                       </div>
                     ) : (
-                      applications
-                        .filter(app => app.status === applicationFilter)
-                        .map((app) => (
-                          <div key={app.id} className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                            <div className="flex items-start justify-between mb-4">
-                              <div>
-                                <h3 className="text-lg font-semibold text-white">
-                                  {app.users.full_name || 'No name provided'}
-                                </h3>
-                                <p className="text-sm text-gray-400">{app.users.email}</p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Submitted: {new Date(app.submitted_at).toLocaleDateString()}
-                                </p>
+                      <div className="divide-y divide-gray-700">
+                        {applications
+                          .filter(app => app.status === applicationFilter)
+                          .map((app) => (
+                            <button
+                              key={app.id}
+                              onClick={() => setSelectedApplication(app)}
+                              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-700/50 transition text-left focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset"
+                            >
+                              <div className="flex items-center gap-4 min-w-0">
+                                <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white font-semibold text-sm">
+                                    {(app.users?.full_name || app.users?.email || '?').charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-white font-medium truncate">
+                                    {app.users?.full_name || 'No name provided'}
+                                  </p>
+                                  <p className="text-sm text-gray-400 truncate">{app.users?.email || 'No email'}</p>
+                                </div>
                               </div>
-                              <span className="px-3 py-1 bg-yellow-900/50 text-yellow-400 border border-yellow-500 rounded-full text-xs font-semibold">
-                                PENDING
-                              </span>
-                            </div>
+                              <div className="flex items-center gap-4 flex-shrink-0">
+                                <span className="text-xs text-gray-500 hidden sm:block">
+                                  {new Date(app.submitted_at).toLocaleDateString()}
+                                </span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                  app.status === 'approved' ? 'bg-green-900/50 text-green-400 border border-green-500' :
+                                  app.status === 'rejected' ? 'bg-red-900/50 text-red-400 border border-red-500' :
+                                  'bg-yellow-900/50 text-yellow-400 border border-yellow-500'
+                                }`}>
+                                  {app.status.toUpperCase()}
+                                </span>
+                                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
 
-                            {/* Questionnaire Responses */}
-                            <div className="bg-gray-900 rounded-lg p-4 mb-4">
-                              <h4 className="text-sm font-semibold text-white mb-3">Application Responses</h4>
-                              <div className="space-y-3">
-                                {Object.entries(app.questionnaire_responses || {}).map(([key, value]) => (
+                  {/* Application Detail Dialog */}
+                  {selectedApplication && (
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setSelectedApplication(null)}>
+                      <div
+                        className="bg-gray-900 border border-gray-700 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Dialog Header */}
+                        <div className="flex items-start justify-between p-6 border-b border-gray-700">
+                          <div>
+                            <h3 className="text-xl font-semibold text-white">
+                              {selectedApplication.users?.full_name || 'No name provided'}
+                            </h3>
+                            <p className="text-sm text-gray-400">{selectedApplication.users?.email || 'No email'}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Submitted: {new Date(selectedApplication.submitted_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              selectedApplication.status === 'approved' ? 'bg-green-900/50 text-green-400 border border-green-500' :
+                              selectedApplication.status === 'rejected' ? 'bg-red-900/50 text-red-400 border border-red-500' :
+                              'bg-yellow-900/50 text-yellow-400 border border-yellow-500'
+                            }`}>
+                              {selectedApplication.status.toUpperCase()}
+                            </span>
+                            <button
+                              onClick={() => setSelectedApplication(null)}
+                              className="text-gray-400 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                              aria-label="Close dialog"
+                            >
+                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Questionnaire Responses */}
+                        <div className="p-6">
+                          <h4 className="text-sm font-semibold text-white mb-4">Application Responses</h4>
+                          <div className="flex gap-6 bg-gray-800 rounded-lg p-4 items-center">
+                            {/* Left side - Text responses */}
+                            <div className="flex-1 space-y-3">
+                              {Object.entries(selectedApplication.questionnaire_responses || {}).map(([key, value]) => {
+                                const isScreenshots = key.toLowerCase().includes('screenshot') || key.toLowerCase().includes('proof');
+                                const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+                                const isImagePath = (path: string) =>
+                                  typeof path === 'string' && imageExtensions.some(ext => path.toLowerCase().endsWith(ext));
+
+                                // Skip screenshot fields in left column
+                                if (isScreenshots && Array.isArray(value) && value.some(isImagePath)) {
+                                  return null;
+                                }
+
+                                return (
                                   <div key={key}>
                                     <p className="text-xs text-gray-400 capitalize mb-1">
                                       {key.replace(/_/g, ' ')}:
@@ -792,34 +917,110 @@ export default function AdminPage() {
                                       {Array.isArray(value) ? value.join(', ') : String(value || '')}
                                     </p>
                                   </div>
-                                ))}
-                              </div>
+                                );
+                              })}
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="flex gap-3">
-                              <button
-                                onClick={() => handleApplicationAction(app.id, app.user_id, 'approve')}
-                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => {
-                                  const reason = prompt('Enter rejection reason:');
-                                  if (reason) {
-                                    handleApplicationAction(app.id, app.user_id, 'reject', reason);
-                                  }
-                                }}
-                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
-                              >
-                                Reject
-                              </button>
-                            </div>
+                            {/* Right side - Screenshots */}
+                            {(() => {
+                              const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+                              const isImagePath = (path: string) =>
+                                typeof path === 'string' && imageExtensions.some(ext => path.toLowerCase().endsWith(ext));
+
+                              const screenshotEntries = Object.entries(selectedApplication.questionnaire_responses || {}).filter(([key, value]) => {
+                                const isScreenshots = key.toLowerCase().includes('screenshot') || key.toLowerCase().includes('proof');
+                                return isScreenshots && Array.isArray(value) && value.some(isImagePath);
+                              });
+
+                              if (screenshotEntries.length === 0) return null;
+
+                              return (
+                                <div className="w-64 flex-shrink-0">
+                                  <p className="text-xs text-gray-400 mb-2">Proof Screenshots:</p>
+                                  <div className="space-y-2">
+                                    {screenshotEntries.map(([key, value]) => (
+                                      (value as string[]).map((path: string, idx: number) => {
+                                        const signedUrl = applicationImageUrls[path];
+                                        if (!signedUrl) {
+                                          return (
+                                            <div key={`${key}-${idx}`} className="w-full h-64 bg-gray-700 rounded-lg border border-gray-600 flex items-center justify-center">
+                                              <span className="text-gray-400 text-xs">Loading...</span>
+                                            </div>
+                                          );
+                                        }
+                                        return (
+                                          <a
+                                            key={`${key}-${idx}`}
+                                            href={signedUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block"
+                                          >
+                                            <img
+                                              src={signedUrl}
+                                              alt={`Screenshot ${idx + 1}`}
+                                              className="w-full h-64 object-cover rounded-lg border border-gray-600 hover:border-primary-500 transition cursor-pointer"
+                                            />
+                                          </a>
+                                        );
+                                      })
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
-                        ))
-                    )}
-                  </div>
+
+                          {/* Rejection Reason (if rejected) */}
+                          {selectedApplication.status === 'rejected' && selectedApplication.rejection_reason && (
+                            <div className="mt-4 bg-red-900/20 border border-red-500/50 rounded-lg p-4">
+                              <p className="text-xs text-red-400 mb-1">Rejection Reason:</p>
+                              <p className="text-sm text-red-200">{selectedApplication.rejection_reason}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons (only for pending applications) */}
+                        {selectedApplication.status === 'pending' && (
+                          <div className="flex gap-3 p-6 border-t border-gray-700">
+                            <button
+                              onClick={() => {
+                                handleApplicationAction(selectedApplication.id, selectedApplication.user_id, 'approve');
+                                setSelectedApplication(null);
+                              }}
+                              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => {
+                                const reason = prompt('Enter rejection reason:');
+                                if (reason) {
+                                  handleApplicationAction(selectedApplication.id, selectedApplication.user_id, 'reject', reason);
+                                  setSelectedApplication(null);
+                                }
+                              }}
+                              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Close button for non-pending applications */}
+                        {selectedApplication.status !== 'pending' && (
+                          <div className="flex justify-end p-6 border-t border-gray-700">
+                            <button
+                              onClick={() => setSelectedApplication(null)}
+                              className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500"
+                            >
+                              Close
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
