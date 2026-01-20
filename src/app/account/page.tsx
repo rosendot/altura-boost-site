@@ -152,6 +152,7 @@ export default function AccountPage() {
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const [appealError, setAppealError] = useState('');
+  const [showApprovalBanner, setShowApprovalBanner] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -179,6 +180,22 @@ export default function AccountPage() {
 
     fetchUser();
   }, [router]);
+
+  // Show approval banner once per session for approved boosters
+  useEffect(() => {
+    if (userData?.role === 'booster' && userData?.booster_approval_status === 'approved') {
+      const dismissed = sessionStorage.getItem('approvalBannerDismissed');
+      if (!dismissed) {
+        setShowApprovalBanner(true);
+        // Auto-dismiss after 10 seconds
+        const timer = setTimeout(() => {
+          setShowApprovalBanner(false);
+          sessionStorage.setItem('approvalBannerDismissed', 'true');
+        }, 10000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [userData]);
 
   // Fetch orders when orders tab is active and user is customer
   useEffect(() => {
@@ -703,7 +720,7 @@ export default function AccountPage() {
                     </div>
                   )}
 
-                  {userData.role === 'booster' && userData.booster_approval_status === 'approved' && (
+                  {userData.role === 'booster' && userData.booster_approval_status === 'approved' && showApprovalBanner && (
                     <div className="mb-6 bg-green-900/30 border border-green-500 rounded-lg p-6">
                       <div className="flex items-start gap-4">
                         <svg className="w-6 h-6 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -715,6 +732,18 @@ export default function AccountPage() {
                             Congratulations! Your booster application has been approved. You now have access to the Booster Hub where you can accept and manage jobs.
                           </p>
                         </div>
+                        <button
+                          onClick={() => {
+                            setShowApprovalBanner(false);
+                            sessionStorage.setItem('approvalBannerDismissed', 'true');
+                          }}
+                          className="text-green-400 hover:text-green-300 transition"
+                          aria-label="Dismiss"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   )}
