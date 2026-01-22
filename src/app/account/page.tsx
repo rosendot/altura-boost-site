@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ReviewModal from '@/components/ReviewModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import GameAccountsSection from '@/components/GameAccountsSection';
 import { useToast } from '@/contexts/ToastContext';
 
 interface UserData {
@@ -37,6 +38,7 @@ interface Order {
 interface Job {
   id: string;
   job_number: string;
+  order_id: string;
   service_name: string;
   game_name: string;
   status: string;
@@ -51,6 +53,13 @@ interface Job {
     full_name: string | null;
     email: string;
   };
+}
+
+interface JobCredentials {
+  game_platform: string;
+  username: string;
+  password: string;
+  two_factor_codes: string[] | null;
 }
 
 interface Review {
@@ -153,6 +162,11 @@ export default function AccountPage() {
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const [appealError, setAppealError] = useState('');
   const [showApprovalBanner, setShowApprovalBanner] = useState(false);
+
+  // Credential reveal state for booster jobs
+  const [revealedCredentials, setRevealedCredentials] = useState<Record<string, JobCredentials | null>>({});
+  const [revealingCredentials, setRevealingCredentials] = useState<Record<string, boolean>>({});
+  const [credentialTimers, setCredentialTimers] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -492,6 +506,57 @@ export default function AccountPage() {
     fetchCompletedJobs();
   };
 
+  const handleRevealCredentials = async (job: Job) => {
+    const jobId = job.id;
+
+    // Already revealing
+    if (revealingCredentials[jobId]) return;
+
+    setRevealingCredentials((prev) => ({ ...prev, [jobId]: true }));
+
+    try {
+      const response = await fetch(`/api/credentials/${job.order_id}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        setRevealedCredentials((prev) => ({ ...prev, [jobId]: data.credentials }));
+
+        // Start 15 second countdown
+        setCredentialTimers((prev) => ({ ...prev, [jobId]: 15 }));
+
+        const interval = setInterval(() => {
+          setCredentialTimers((prev) => {
+            const newTime = (prev[jobId] || 0) - 1;
+            if (newTime <= 0) {
+              clearInterval(interval);
+              // Hide credentials when timer expires
+              setRevealedCredentials((p) => ({ ...p, [jobId]: null }));
+              return { ...prev, [jobId]: 0 };
+            }
+            return { ...prev, [jobId]: newTime };
+          });
+        }, 1000);
+      } else {
+        const error = await response.json();
+        showToast(error.error || 'Failed to load credentials', 'error');
+      }
+    } catch (error) {
+      console.error('Error fetching credentials:', error);
+      showToast('Failed to load credentials', 'error');
+    } finally {
+      setRevealingCredentials((prev) => ({ ...prev, [jobId]: false }));
+    }
+  };
+
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(`${label} copied to clipboard`, 'success');
+    } catch {
+      showToast('Failed to copy', 'error');
+    }
+  };
+
   const handleUpdatePassword = async () => {
     setPasswordError('');
     setPasswordSuccess('');
@@ -616,6 +681,17 @@ export default function AccountPage() {
                       }`}
                     >
                       Completed Jobs
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('game-accounts')}
+                      aria-pressed={activeTab === 'game-accounts'}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                        activeTab === 'game-accounts'
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      Game Accounts
                     </button>
                   </>
                 )}
@@ -1380,6 +1456,14 @@ export default function AccountPage() {
                 </div>
               )}
 
+              {/* Game Accounts Tab (Customers Only) */}
+              {activeTab === 'game-accounts' && userData.role === 'customer' && (
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6">Game Accounts</h2>
+                  <GameAccountsSection />
+                </div>
+              )}
+
               {/* Reviews Tab (Approved Boosters Only) */}
               {activeTab === 'reviews' && userData.role === 'booster' && userData.booster_approval_status === 'approved' && (
                 <div>
@@ -1706,6 +1790,118 @@ export default function AccountPage() {
                               </div>
                             </div>
                           </div>
+
+                          {/* Customer Account Credentials */}
+                          {job.status !== 'completed' && (
+                            <div className="border-t border-gray-700 pt-4 mt-4">
+                              <div className="bg-gray-900 border border-gray-600 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                    Customer Account Credentials
+                                  </h4>
+                                  {credentialTimers[job.id] > 0 && (
+                                    <span className="text-xs text-yellow-400 flex items-center gap-1">
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                      {credentialTimers[job.id]}s
+                                    </span>
+                                  )}
+                                </div>
+
+                                {revealedCredentials[job.id] ? (
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-gray-400">Platform:</span>
+                                      <span className="text-sm text-white">{revealedCredentials[job.id]?.game_platform}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-gray-400">Username:</span>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm text-white font-mono">{revealedCredentials[job.id]?.username}</span>
+                                        <button
+                                          onClick={() => copyToClipboard(revealedCredentials[job.id]?.username || '', 'Username')}
+                                          className="text-primary-400 hover:text-primary-300 p-1"
+                                          title="Copy username"
+                                        >
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-gray-400">Password:</span>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm text-white font-mono">{revealedCredentials[job.id]?.password}</span>
+                                        <button
+                                          onClick={() => copyToClipboard(revealedCredentials[job.id]?.password || '', 'Password')}
+                                          className="text-primary-400 hover:text-primary-300 p-1"
+                                          title="Copy password"
+                                        >
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {revealedCredentials[job.id]?.two_factor_codes && revealedCredentials[job.id]!.two_factor_codes!.length > 0 && (
+                                      <div>
+                                        <span className="text-xs text-gray-400">2FA Codes:</span>
+                                        <div className="mt-1 flex flex-wrap gap-2">
+                                          {revealedCredentials[job.id]!.two_factor_codes!.map((code, idx) => (
+                                            <button
+                                              key={idx}
+                                              onClick={() => copyToClipboard(code, '2FA code')}
+                                              className="px-2 py-1 bg-gray-800 text-white text-xs font-mono rounded hover:bg-gray-700 transition"
+                                              title="Click to copy"
+                                            >
+                                              {code}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    <p className="text-xs text-yellow-500 mt-2">
+                                      Credentials will hide in {credentialTimers[job.id]} seconds
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <p className="text-xs text-gray-400 mb-3">
+                                      Click to reveal the customer&apos;s game account credentials. You have 2 reveals per day.
+                                    </p>
+                                    <button
+                                      onClick={() => handleRevealCredentials(job)}
+                                      disabled={revealingCredentials[job.id]}
+                                      className="w-full py-2 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                      {revealingCredentials[job.id] ? (
+                                        <>
+                                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                          </svg>
+                                          Loading...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                          </svg>
+                                          Reveal Credentials
+                                        </>
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
 
                           {/* Update Progress Button */}
                           {job.status !== 'completed' && (

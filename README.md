@@ -207,12 +207,12 @@ src/
 #### 3. Generate Encryption Key
 Run this command to generate a secure encryption key for game credentials:
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 Copy the output and paste it in `.env.local`:
 ```env
-GAME_CREDENTIALS_ENCRYPTION_KEY=your-generated-key-here
+CREDENTIAL_ENCRYPTION_KEY=your-generated-key-here
 ```
 
 #### 4. Stripe Configuration

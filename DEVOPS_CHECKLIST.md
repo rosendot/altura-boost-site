@@ -210,7 +210,7 @@ STRIPE_WEBHOOK_SECRET=whsec_live_...
 NEXT_PUBLIC_BASE_URL=https://www.alturaboost.com
 
 # Game Credentials Encryption
-GAME_CREDENTIALS_ENCRYPTION_KEY=[your-64-char-hex-key]
+CREDENTIAL_ENCRYPTION_KEY=[your-base64-key]
 ```
 
 **Action Items:**

@@ -1,16 +1,41 @@
 'use client';
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
+import CheckoutCredentialsForm, { type CredentialSelection } from "@/components/CheckoutCredentialsForm";
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, getTotalItems, getSubtotal, getTax, getTotal } = useCart();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [credentialSelection, setCredentialSelection] = useState<CredentialSelection | null>(null);
   const router = useRouter();
 
+  // Check auth status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/user/me');
+        setIsAuthenticated(response.ok);
+      } catch {
+        setIsAuthenticated(false);
+      } finally {
+        setAuthChecked(true);
+      }
+    };
+    checkAuth();
+  }, []);
+
   const handleCheckout = async () => {
+    // Validate credentials are provided when cart has items
+    if (getTotalItems() > 0 && !credentialSelection) {
+      alert('Please provide your game account credentials to continue.');
+      return;
+    }
+
     setCheckoutLoading(true);
     try {
       // Prepare cart items for API
@@ -26,7 +51,10 @@ export default function CartPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ cartItems }),
+        body: JSON.stringify({
+          cartItems,
+          credentials: credentialSelection,
+        }),
       });
 
       if (!response.ok) {
@@ -160,6 +188,14 @@ export default function CartPage() {
                   </div>
                 </div>
               ))}
+
+              {/* Credentials Form - Show when cart has items */}
+              {authChecked && (
+                <CheckoutCredentialsForm
+                  onSelectionChange={setCredentialSelection}
+                  isAuthenticated={isAuthenticated}
+                />
+              )}
             </div>
           )}
         </section>
@@ -190,12 +226,39 @@ export default function CartPage() {
               </div>
             </div>
 
+            {/* Credential status indicator */}
+            {getTotalItems() > 0 && (
+              <div className={`mb-4 p-3 rounded-lg border ${
+                credentialSelection
+                  ? 'bg-green-900/20 border-green-700'
+                  : 'bg-yellow-900/20 border-yellow-700'
+              }`}>
+                <div className="flex items-center gap-2">
+                  {credentialSelection ? (
+                    <>
+                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-sm text-green-400">Game account ready</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span className="text-sm text-yellow-400">Provide game account below</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
             <button
               onClick={handleCheckout}
-              disabled={getTotalItems() === 0 || checkoutLoading}
-              aria-disabled={getTotalItems() === 0 || checkoutLoading}
+              disabled={getTotalItems() === 0 || checkoutLoading || !credentialSelection}
+              aria-disabled={getTotalItems() === 0 || checkoutLoading || !credentialSelection}
               className={`w-full py-3 rounded-lg mb-3 font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                getTotalItems() === 0 || checkoutLoading
+                getTotalItems() === 0 || checkoutLoading || !credentialSelection
                   ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                   : "gradient-purple text-white hover:opacity-90"
               }`}

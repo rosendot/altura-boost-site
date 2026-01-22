@@ -113,12 +113,26 @@ interface OrderItemData {
   calculatedPayout: number;
 }
 
+interface EncryptedData {
+  iv: string;
+  authTag: string;
+  encryptedData: string;
+}
+
+interface CredentialMetadata {
+  game_platform: string;
+  username: string;
+  password_encrypted: EncryptedData;
+  two_factor_codes_encrypted: EncryptedData | null;
+}
+
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const supabase = createServiceRoleClient();
 
   try {
     const customerId = session.metadata?.customer_id;
     const orderItemsJson = session.metadata?.order_items;
+    const credentialsJson = session.metadata?.credentials;
 
     if (!customerId) {
       console.error('No customer_id in session metadata');
@@ -132,6 +146,16 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         orderItemsData = JSON.parse(orderItemsJson);
       } catch (e) {
         console.error('Failed to parse order_items metadata:', e);
+      }
+    }
+
+    // Parse credentials from metadata
+    let credentialData: CredentialMetadata | null = null;
+    if (credentialsJson) {
+      try {
+        credentialData = JSON.parse(credentialsJson);
+      } catch (e) {
+        console.error('Failed to parse credentials metadata:', e);
       }
     }
 
@@ -165,6 +189,24 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     if (orderError || !order) {
       console.error('Error creating order:', orderError);
       return;
+    }
+
+    // Store game credentials for this order
+    if (credentialData) {
+      const { error: credentialError } = await supabase.from('game_credentials').insert({
+        order_id: order.id,
+        game_platform: credentialData.game_platform,
+        username: credentialData.username,
+        password_encrypted: credentialData.password_encrypted,
+        two_factor_codes_encrypted: credentialData.two_factor_codes_encrypted,
+        // Auto-delete credentials 14 days after order completion (will be updated when order completes)
+        scheduled_deletion_at: null,
+      });
+
+      if (credentialError) {
+        console.error('Error storing game credentials:', credentialError);
+        // Don't fail the order creation, but log the error
+      }
     }
 
     // Create order items and jobs
