@@ -102,8 +102,8 @@ export async function POST(
           { status: 403 }
         );
       }
-    } catch (stripeError) {
-      console.error('Stripe verification failed');
+    } catch (stripeError: any) {
+      console.error('[JobAccept] Stripe error:', stripeError?.type, stripeError?.code);
       return NextResponse.json(
         { error: 'Unable to verify your bank account. Please reconnect in the Earnings tab.' },
         { status: 500 }
@@ -152,8 +152,8 @@ export async function POST(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[JobAccept] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

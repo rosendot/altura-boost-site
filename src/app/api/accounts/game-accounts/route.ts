@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       .order('last_used_at', { ascending: false, nullsFirst: false });
 
     if (accountsError) {
-      console.error('Database operation failed');
+      console.error('[GameAccounts] List query failed');
       return NextResponse.json(
         { error: 'Failed to fetch game accounts' },
         { status: 500, headers: getRateLimitHeaders(rateLimitResult) }
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     }
 
     // Add has_2fa flag based on whether 2FA codes exist
-    const { data: accountsWithFlags, error: flagsError } = await supabase
+    const { data: accountsWithFlags } = await supabase
       .from('customer_game_accounts')
       .select('id, two_factor_codes_encrypted')
       .eq('customer_id', user.id);
@@ -71,12 +71,9 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json(
-      { accounts: accountsEnriched },
-      { headers: getRateLimitHeaders(rateLimitResult) }
-    );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+    return NextResponse.json({ accounts: accountsEnriched }, { headers: getRateLimitHeaders(rateLimitResult) });
+  } catch (error: any) {
+    console.error('[GameAccounts] List error:', error?.type || 'unknown');
     return NextResponse.json({ error: 'Failed to fetch game accounts' }, { status: 500 });
   }
 }
@@ -121,7 +118,6 @@ export async function POST(request: Request) {
 
     // Validate required fields
     if (!account_name || !game_platform || !username || !password) {
-      await logAuthFailure(user.id, 'game_accounts_create', 'Missing required fields', request);
       return NextResponse.json(
         { error: 'Missing required fields: account_name, game_platform, username, password' },
         { status: 400, headers: getRateLimitHeaders(rateLimitResult) }
@@ -237,7 +233,7 @@ export async function POST(request: Request) {
       .single();
 
     if (createError) {
-      console.error('Database operation failed');
+      console.error('[GameAccounts] Create failed');
       return NextResponse.json(
         { error: 'Failed to create game account' },
         { status: 500, headers: getRateLimitHeaders(rateLimitResult) }
@@ -254,8 +250,8 @@ export async function POST(request: Request) {
       },
       { status: 201, headers: getRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[GameAccounts] Create error:', error?.type || 'unknown');
     return NextResponse.json({ error: 'Failed to create game account' }, { status: 500 });
   }
 }

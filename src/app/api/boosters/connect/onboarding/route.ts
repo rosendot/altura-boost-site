@@ -10,7 +10,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: Request) {
   try {
-    console.log('[Stripe Onboarding] Starting onboarding request');
     const supabase = await createClient();
 
     // Get current user
@@ -20,12 +19,9 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.log('[Stripe Onboarding] Auth failed:', userError?.message);
       await logAuthFailure(null, 'stripe_onboarding', 'No authenticated user', request);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    console.log('[Stripe Onboarding] User authenticated:', user.id);
 
     // Rate limiting: 20 onboarding requests per user per hour (prevent abuse)
     const rateLimitResult = checkRateLimit(user.id, {
@@ -35,7 +31,6 @@ export async function POST(request: Request) {
     });
 
     if (!rateLimitResult.allowed) {
-      console.log('[Stripe Onboarding] Rate limit exceeded for user:', user.id);
       await logAuthFailure(user.id, 'stripe_onboarding', 'Rate limit exceeded', request);
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
@@ -54,22 +49,12 @@ export async function POST(request: Request) {
       .single();
 
     if (userDataError || !userData) {
-      console.log('[Stripe Onboarding] User data fetch failed:', userDataError?.message);
       await logAuthFailure(user.id, 'stripe_onboarding', 'User not found', request);
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    console.log('[Stripe Onboarding] User data:', {
-      email: userData.email,
-      role: userData.role,
-      booster_approval_status: userData.booster_approval_status,
-      identity_verification_status: userData.identity_verification_status,
-      has_stripe_connect_id: !!userData.stripe_connect_id,
-    });
-
     // Check if user is an approved booster
     if (userData.role !== 'booster' || userData.booster_approval_status !== 'approved') {
-      console.log('[Stripe Onboarding] User not approved booster');
       await logAuthFailure(user.id, 'stripe_onboarding', 'User is not an approved booster', request);
       return NextResponse.json(
         { error: 'Only approved boosters can connect bank accounts' },
@@ -79,7 +64,6 @@ export async function POST(request: Request) {
 
     // Check if identity verification is complete (required before bank connection)
     if (userData.identity_verification_status !== 'verified') {
-      console.log('[Stripe Onboarding] Identity not verified:', userData.identity_verification_status);
       await logAuthFailure(user.id, 'stripe_onboarding', 'Identity not verified', request);
       return NextResponse.json(
         { error: 'Please complete identity verification before connecting your bank account' },
@@ -91,13 +75,10 @@ export async function POST(request: Request) {
 
     // If no Connect account exists, create one
     if (!accountId) {
-      console.log('[Stripe Onboarding] Creating new Stripe Connect account');
       // Parse name into first/last if available
       const nameParts = userData.full_name?.trim().split(' ') || [];
       const firstName = nameParts[0] || undefined;
       const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined;
-
-      console.log('[Stripe Onboarding] Name parts:', { firstName, lastName });
 
       try {
         const account = await stripe.accounts.create({
@@ -120,14 +101,9 @@ export async function POST(request: Request) {
         });
 
         accountId = account.id;
-        console.log('[Stripe Onboarding] Created Stripe account:', accountId);
       } catch (stripeError: any) {
-        console.error('[Stripe Onboarding] Stripe account creation failed:', {
-          message: stripeError?.message,
-          type: stripeError?.type,
-          code: stripeError?.code,
-          param: stripeError?.param,
-        });
+        // Log Stripe errors for debugging (server-side only)
+        console.error('[Onboarding] Stripe error:', stripeError?.type, stripeError?.code);
         throw stripeError;
       }
 
@@ -138,11 +114,9 @@ export async function POST(request: Request) {
         .eq('id', user.id);
 
       if (updateError) {
-        console.error('[Stripe Onboarding] Database update failed:', updateError.message);
+        console.error('[Onboarding] Database update failed');
         return NextResponse.json({ error: 'Failed to save Connect account' }, { status: 500 });
       }
-
-      console.log('[Stripe Onboarding] Saved Connect ID to database');
 
       // Log account creation
       await logAdminAction(
@@ -156,12 +130,9 @@ export async function POST(request: Request) {
         },
         request
       );
-    } else {
-      console.log('[Stripe Onboarding] Using existing Stripe account:', accountId);
     }
 
     // Create account link for onboarding
-    console.log('[Stripe Onboarding] Creating account link for:', accountId);
     try {
       const accountLink = await stripe.accountLinks.create({
         account: accountId,
@@ -169,8 +140,6 @@ export async function POST(request: Request) {
         return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/account?tab=earnings&connected=true`,
         type: 'account_onboarding',
       });
-
-      console.log('[Stripe Onboarding] Account link created successfully');
 
       // Log onboarding link generation
       await logAdminAction(
@@ -192,23 +161,14 @@ export async function POST(request: Request) {
         }
       );
     } catch (linkError: any) {
-      console.error('[Stripe Onboarding] Account link creation failed:', {
-        message: linkError?.message,
-        type: linkError?.type,
-        code: linkError?.code,
-        param: linkError?.param,
-      });
+      console.error('[Onboarding] Account link error:', linkError?.type, linkError?.code);
       throw linkError;
     }
   } catch (error: any) {
-    console.error('[Stripe Onboarding] Unexpected error:', {
-      message: error?.message,
-      type: error?.type,
-      code: error?.code,
-      stack: error?.stack,
-    });
+    // Log error type/code for debugging without exposing details
+    console.error('[Onboarding] Error:', error?.type || 'unknown', error?.code || '');
 
-    // Handle specific Stripe errors
+    // Handle specific Stripe errors with user-friendly messages
     if (error?.type === 'StripeInvalidRequestError') {
       return NextResponse.json(
         { error: error.message || 'Invalid request to payment processor' },

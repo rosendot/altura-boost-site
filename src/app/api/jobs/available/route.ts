@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       .single();
 
     if (userError) {
-      console.error('Database operation failed');
+      console.error('[AvailableJobs] User query failed');
       return NextResponse.json(
         { error: 'Failed to fetch user data' },
         { status: 500 }
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false });
 
     if (jobsError) {
-      console.error('Database operation failed');
+      console.error('[AvailableJobs] Query failed');
       return NextResponse.json(
         { error: 'Failed to fetch available jobs' },
         { status: 500 }
@@ -97,8 +97,8 @@ export async function GET(request: Request) {
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[AvailableJobs] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

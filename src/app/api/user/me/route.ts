@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       .single();
 
     if (userError) {
-      console.error('Database operation failed');
+      console.error('[UserProfile] Query failed');
       return NextResponse.json(
         { error: 'Failed to fetch user data' },
         {
@@ -66,8 +66,8 @@ export async function GET(request: Request) {
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[UserProfile] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

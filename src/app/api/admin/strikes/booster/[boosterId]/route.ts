@@ -83,7 +83,7 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (strikesError) {
-      console.error('Database operation failed');
+      console.error('[BoosterStrikes] Query failed');
       return NextResponse.json(
         { error: 'Failed to fetch strikes' },
         { status: 500 }
@@ -96,8 +96,8 @@ export async function GET(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[BoosterStrikes] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

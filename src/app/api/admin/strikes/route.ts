@@ -134,7 +134,7 @@ export async function POST(request: Request) {
       .single();
 
     if (strikeError) {
-      console.error('Database operation failed');
+      console.error('[Strike] Create failed');
       return NextResponse.json(
         { error: 'Failed to create strike' },
         { status: 500 }
@@ -167,8 +167,8 @@ export async function POST(request: Request) {
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[Strike] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

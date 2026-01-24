@@ -74,7 +74,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     try {
       decryptedPassword = decryptCredential(account.password_encrypted as EncryptedData);
     } catch {
-      console.error('Decryption failed');
+      console.error('[GameAccount] Decryption failed');
       return NextResponse.json(
         { error: 'Failed to decrypt credentials' },
         { status: 500, headers: getRateLimitHeaders(rateLimitResult) }
@@ -87,7 +87,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       try {
         decrypted2FACodes = decrypt2FACodes(account.two_factor_codes_encrypted as EncryptedData);
       } catch {
-        console.error('2FA decryption failed');
+        console.error('[GameAccount] 2FA decryption failed');
         // Don't fail completely, just return null for 2FA
       }
     }
@@ -108,8 +108,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       },
       { headers: getRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[GameAccount] Get error:', error?.type || 'unknown');
     return NextResponse.json({ error: 'Failed to fetch game account' }, { status: 500 });
   }
 }
@@ -277,7 +277,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       .single();
 
     if (updateError) {
-      console.error('Database operation failed');
+      console.error('[GameAccount] Update failed');
       return NextResponse.json(
         { error: 'Failed to update game account' },
         { status: 500, headers: getRateLimitHeaders(rateLimitResult) }
@@ -288,8 +288,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       { message: 'Game account updated successfully', account: updatedAccount },
       { headers: getRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[GameAccount] Update error:', error?.type || 'unknown');
     return NextResponse.json({ error: 'Failed to update game account' }, { status: 500 });
   }
 }
@@ -343,7 +343,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       .eq('customer_id', user.id);
 
     if (deleteError) {
-      console.error('Database operation failed');
+      console.error('[GameAccount] Delete failed');
       return NextResponse.json(
         { error: 'Failed to delete game account' },
         { status: 500, headers: getRateLimitHeaders(rateLimitResult) }
@@ -354,8 +354,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       { message: 'Game account deleted successfully' },
       { headers: getRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[GameAccount] Delete error:', error?.type || 'unknown');
     return NextResponse.json({ error: 'Failed to delete game account' }, { status: 500 });
   }
 }

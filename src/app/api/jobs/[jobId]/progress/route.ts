@@ -93,7 +93,7 @@ export async function PATCH(
       .single();
 
     if (fetchError || !job) {
-      console.error('Database operation failed');
+      console.error('[JobProgress] Job query failed');
       return NextResponse.json(
         { error: 'Job not found' },
         {
@@ -140,7 +140,7 @@ export async function PATCH(
       .eq('id', jobId);
 
     if (updateError) {
-      console.error('Database operation failed');
+      console.error('[JobProgress] Update failed');
       return NextResponse.json(
         { error: 'Failed to update job progress' },
         {
@@ -162,7 +162,7 @@ export async function PATCH(
       });
 
     if (logError) {
-      console.error('Database operation failed');
+      console.error('[JobProgress] Progress log insert failed');
       // Don't fail the request if logging fails
     }
 
@@ -172,8 +172,8 @@ export async function PATCH(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[JobProgress] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

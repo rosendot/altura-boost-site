@@ -164,7 +164,7 @@ export async function POST(
       .single();
 
     if (jobError || !job) {
-      console.error('Database operation failed');
+      console.error('[JobReview] Job query failed');
       return NextResponse.json(
         { error: 'Job not found' },
         {
@@ -236,7 +236,7 @@ export async function POST(
       .single();
 
     if (reviewError) {
-      console.error('Database operation failed');
+      console.error('[JobReview] Insert failed');
       return NextResponse.json(
         { error: 'Failed to create review' },
         {
@@ -252,8 +252,8 @@ export async function POST(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[JobReview] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

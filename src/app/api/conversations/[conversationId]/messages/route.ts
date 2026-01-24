@@ -96,7 +96,7 @@ export async function GET(
       .order('created_at', { ascending: true });
 
     if (messagesError) {
-      console.error('Database operation failed');
+      console.error('[Messages] Query failed');
       return NextResponse.json(
         { error: 'Failed to fetch messages' },
         { status: 500 }
@@ -121,8 +121,8 @@ export async function GET(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[Messages] Get error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -233,7 +233,7 @@ export async function POST(
       .single();
 
     if (messageError) {
-      console.error('Database operation failed');
+      console.error('[Messages] Insert failed');
       return NextResponse.json(
         { error: 'Failed to send message' },
         { status: 500 }
@@ -246,8 +246,8 @@ export async function POST(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[Messages] Post error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

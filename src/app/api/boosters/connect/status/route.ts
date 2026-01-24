@@ -31,12 +31,7 @@ export async function GET(request: Request) {
     });
 
     if (!rateLimitResult.allowed) {
-      await logAuthFailure(
-        user.id,
-        'stripe_status',
-        'Rate limit exceeded',
-        request
-      );
+      await logAuthFailure(user.id, 'stripe_status', 'Rate limit exceeded', request);
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
         {
@@ -61,10 +56,7 @@ export async function GET(request: Request) {
     // Verify user is a booster or admin
     if (userData.role !== 'booster' && userData.role !== 'admin') {
       await logAuthFailure(user.id, 'stripe_status', 'User is not a booster or admin', request);
-      return NextResponse.json(
-        { error: 'Only boosters can check Connect status' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Only boosters can check Connect status' }, { status: 403 });
     }
 
     // Admins don't need Stripe verification - return as fully verified
@@ -77,9 +69,7 @@ export async function GET(request: Request) {
           charges_enabled: true,
           is_admin: true,
         },
-        {
-          headers: getRateLimitHeaders(rateLimitResult),
-        }
+        { headers: getRateLimitHeaders(rateLimitResult) }
       );
     }
 
@@ -91,39 +81,37 @@ export async function GET(request: Request) {
           verified: false,
           details_submitted: false,
         },
-        {
-          headers: getRateLimitHeaders(rateLimitResult),
-        }
+        { headers: getRateLimitHeaders(rateLimitResult) }
       );
     }
 
     // Fetch account details from Stripe
-    const account = await stripe.accounts.retrieve(userData.stripe_connect_id);
+    try {
+      const account = await stripe.accounts.retrieve(userData.stripe_connect_id);
 
-    // Get external account (bank account) info
-    let bankLast4 = null;
-    if (account.external_accounts && account.external_accounts.data.length > 0) {
-      const bankAccount = account.external_accounts.data[0] as Stripe.BankAccount;
-      bankLast4 = bankAccount.last4;
-    }
-
-    return NextResponse.json(
-      {
-        connected: true,
-        verified: account.charges_enabled && account.details_submitted,
-        details_submitted: account.details_submitted,
-        charges_enabled: account.charges_enabled,
-        bank_last4: bankLast4,
-      },
-      {
-        headers: getRateLimitHeaders(rateLimitResult),
+      // Get external account (bank account) info
+      let bankLast4 = null;
+      if (account.external_accounts && account.external_accounts.data.length > 0) {
+        const bankAccount = account.external_accounts.data[0] as Stripe.BankAccount;
+        bankLast4 = bankAccount.last4;
       }
-    );
+
+      return NextResponse.json(
+        {
+          connected: true,
+          verified: account.charges_enabled && account.details_submitted,
+          details_submitted: account.details_submitted,
+          charges_enabled: account.charges_enabled,
+          bank_last4: bankLast4,
+        },
+        { headers: getRateLimitHeaders(rateLimitResult) }
+      );
+    } catch (stripeError: any) {
+      console.error('[ConnectStatus] Stripe error:', stripeError?.type, stripeError?.code);
+      throw stripeError;
+    }
   } catch (error: any) {
-    console.error('Unexpected error occurred');
-    return NextResponse.json(
-      { error: 'Failed to fetch status' },
-      { status: 500 }
-    );
+    console.error('[ConnectStatus] Error:', error?.type || 'unknown');
+    return NextResponse.json({ error: 'Failed to fetch status' }, { status: 500 });
   }
 }

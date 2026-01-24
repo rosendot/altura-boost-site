@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const signature = headersList.get('stripe-signature');
 
     if (!signature) {
-      console.error('Webhook missing signature');
+      console.error('[StripeWebhook] Missing signature');
       return NextResponse.json({ error: 'No signature' }, { status: 400 });
     }
 
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     });
 
     if (!rateLimitResult.allowed) {
-      console.error('Webhook rate limit exceeded');
+      console.error('[StripeWebhook] Rate limit exceeded');
       return NextResponse.json(
         { error: 'Too many requests' },
         {
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err: any) {
-      console.error('Webhook signature verification failed');
+      console.error('[StripeWebhook] Signature verification failed');
       return NextResponse.json(
         { error: 'Invalid signature' },
         {
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       }
     );
   } catch (error: any) {
-    console.error('Unexpected error occurred');
+    console.error('[StripeWebhook] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -135,7 +135,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     const credentialsJson = session.metadata?.credentials;
 
     if (!customerId) {
-      console.error('No customer_id in session metadata');
+      console.error('[StripeWebhook] Missing customer_id in metadata');
       return;
     }
 
@@ -145,7 +145,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       try {
         orderItemsData = JSON.parse(orderItemsJson);
       } catch (e) {
-        console.error('Failed to parse order_items metadata:', e);
+        console.error('[StripeWebhook] Failed to parse order_items');
       }
     }
 
@@ -155,7 +155,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       try {
         credentialData = JSON.parse(credentialsJson);
       } catch (e) {
-        console.error('Failed to parse credentials metadata:', e);
+        console.error('[StripeWebhook] Failed to parse credentials');
       }
     }
 
@@ -187,7 +187,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       .single();
 
     if (orderError || !order) {
-      console.error('Error creating order:', orderError);
+      console.error('[StripeWebhook] Order insert failed');
       return;
     }
 
@@ -204,7 +204,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       });
 
       if (credentialError) {
-        console.error('Error storing game credentials:', credentialError);
+        console.error('[StripeWebhook] Credential insert failed');
         // Don't fail the order creation, but log the error
       }
     }
@@ -250,7 +250,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         .single();
 
       if (orderItemError || !orderItem) {
-        console.error('Error creating order item:', orderItemError);
+        console.error('[StripeWebhook] Order item insert failed');
         continue;
       }
 
@@ -267,7 +267,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
           .single();
 
         if (serviceError || !service) {
-          console.error('Error fetching service for job creation:', serviceError);
+          console.error('[StripeWebhook] Service query failed');
           continue;
         }
 
@@ -333,8 +333,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       }
     }
 
-  } catch (error) {
-    console.error('Error in handleCheckoutSessionCompleted:', error);
+  } catch (error: any) {
+    console.error('[StripeWebhook] Checkout handler error:', error?.type || 'unknown');
   }
 }
 
@@ -351,7 +351,7 @@ async function handleIdentityVerified(session: Stripe.Identity.VerificationSessi
     const userId = session.metadata?.user_id;
 
     if (!userId) {
-      console.error('No user_id in identity verification session metadata');
+      console.error('[StripeWebhook] Missing user_id in identity metadata');
       return;
     }
 
@@ -362,13 +362,11 @@ async function handleIdentityVerified(session: Stripe.Identity.VerificationSessi
       .eq('id', userId);
 
     if (error) {
-      console.error('Error updating identity verification status:', error);
+      console.error('[StripeWebhook] Identity status update failed');
       return;
     }
-
-    console.log(`Identity verified for user: ${userId}`);
-  } catch (error) {
-    console.error('Error in handleIdentityVerified:', error);
+  } catch (error: any) {
+    console.error('[StripeWebhook] Identity verified handler error:', error?.type || 'unknown');
   }
 }
 
@@ -379,7 +377,7 @@ async function handleIdentityFailed(session: Stripe.Identity.VerificationSession
     const userId = session.metadata?.user_id;
 
     if (!userId) {
-      console.error('No user_id in identity verification session metadata');
+      console.error('[StripeWebhook] Missing user_id in identity metadata');
       return;
     }
 
@@ -390,12 +388,10 @@ async function handleIdentityFailed(session: Stripe.Identity.VerificationSession
       .eq('id', userId);
 
     if (error) {
-      console.error('Error updating identity verification status:', error);
+      console.error('[StripeWebhook] Identity status update failed');
       return;
     }
-
-    console.log(`Identity verification failed for user: ${userId}`);
-  } catch (error) {
-    console.error('Error in handleIdentityFailed:', error);
+  } catch (error: any) {
+    console.error('[StripeWebhook] Identity failed handler error:', error?.type || 'unknown');
   }
 }

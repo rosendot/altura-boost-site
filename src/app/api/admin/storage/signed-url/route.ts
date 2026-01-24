@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       .createSignedUrl(path, 3600); // 1 hour expiry
 
     if (error) {
-      console.error('Error creating signed URL:', error);
+      console.error('[SignedUrl] Storage error');
       return NextResponse.json({ error: 'Failed to create signed URL' }, { status: 500 });
     }
 
@@ -70,8 +70,8 @@ export async function POST(request: Request) {
       { signedUrl: data.signedUrl },
       { headers: getRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch (error: any) {
+    console.error('[SignedUrl] Error:', error?.type || 'unknown');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

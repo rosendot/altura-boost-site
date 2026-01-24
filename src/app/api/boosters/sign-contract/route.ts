@@ -51,18 +51,12 @@ export async function POST(request: Request) {
     // Verify user is a booster
     if (userData.role !== 'booster') {
       await logAuthFailure(user.id, 'sign_contract', 'User is not a booster', request);
-      return NextResponse.json(
-        { error: 'Only boosters can sign the contractor agreement' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Only boosters can sign the contractor agreement' }, { status: 403 });
     }
 
     // Check if already signed
     if (userData.contract_signed_at) {
-      return NextResponse.json(
-        { error: 'Contract has already been signed', already_signed: true },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Contract has already been signed', already_signed: true }, { status: 400 });
     }
 
     // Parse request body
@@ -70,10 +64,7 @@ export async function POST(request: Request) {
     const { version } = body;
 
     if (!version) {
-      return NextResponse.json(
-        { error: 'Contract version is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Contract version is required' }, { status: 400 });
     }
 
     // Get client IP address
@@ -92,11 +83,8 @@ export async function POST(request: Request) {
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Failed to update contract signature:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to record contract signature' },
-        { status: 500 }
-      );
+      console.error('[SignContract] Database update failed');
+      return NextResponse.json({ error: 'Failed to record contract signature' }, { status: 500 });
     }
 
     return NextResponse.json(
@@ -106,15 +94,10 @@ export async function POST(request: Request) {
         signed_at: new Date().toISOString(),
         version,
       },
-      {
-        headers: getRateLimitHeaders(rateLimitResult),
-      }
+      { headers: getRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error) {
-    console.error('Sign contract error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    console.error('[SignContract] Error:', error?.message ? 'parse_error' : 'unknown');
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       .or(`customer_id.eq.${user.id},booster_id.eq.${user.id}`);
 
     if (convError) {
-      console.error('Database operation failed');
+      console.error('[UnreadCount] Conversations query failed');
       return NextResponse.json(
         { error: 'Failed to fetch conversations' },
         { status: 500 }
@@ -90,7 +90,7 @@ export async function GET(request: Request) {
       .neq('sender_id', user.id);
 
     if (countError) {
-      console.error('Database operation failed');
+      console.error('[UnreadCount] Count query failed');
       return NextResponse.json(
         { error: 'Failed to count unread messages' },
         { status: 500 }
@@ -103,8 +103,8 @@ export async function GET(request: Request) {
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[UnreadCount] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

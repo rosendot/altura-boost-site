@@ -121,7 +121,7 @@ export async function POST(
       });
 
     if (uploadError) {
-      console.error('File upload operation failed');
+      console.error('[Upload] Storage upload failed');
       return NextResponse.json(
         { error: 'Failed to upload file' },
         { status: 500 }
@@ -151,7 +151,7 @@ export async function POST(
         .from('message-attachments')
         .remove([filePath]);
 
-      console.error('Database operation failed');
+      console.error('[Upload] Message insert failed');
       return NextResponse.json(
         { error: 'Failed to create message' },
         { status: 500 }
@@ -172,7 +172,7 @@ export async function POST(
       .single();
 
     if (attachmentError) {
-      console.error('Database operation failed');
+      console.error('[Upload] Attachment insert failed');
       // Don't fail the request if attachment record creation fails
       // The file is uploaded and message is created
     }
@@ -188,8 +188,8 @@ export async function POST(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[Upload] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

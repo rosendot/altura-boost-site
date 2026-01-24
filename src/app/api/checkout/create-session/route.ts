@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       .single();
 
     if (userDataError || !userData) {
-      console.error('Database operation failed');
+      console.error('[Checkout] User query failed');
       return NextResponse.json(
         { error: 'User not found' },
         {
@@ -173,7 +173,7 @@ export async function POST(request: Request) {
       .eq('active', true);
 
     if (servicesError || !services) {
-      console.error('Database operation failed');
+      console.error('[Checkout] Services query failed');
       return NextResponse.json(
         { error: 'Failed to fetch services' },
         {
@@ -494,7 +494,7 @@ export async function POST(request: Request) {
       }
     );
   } catch (error: any) {
-    console.error('Unexpected error occurred');
+    console.error('[Checkout] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

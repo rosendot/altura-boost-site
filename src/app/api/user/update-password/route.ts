@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     });
 
     if (updateError) {
-      console.error('Database operation failed');
+      console.error('[UpdatePassword] Auth update failed');
       await logAuthFailure(user.id, 'update_password', 'Password update failed', request);
       return NextResponse.json(
         { error: 'Failed to update password. Please try again.' },
@@ -126,8 +126,8 @@ export async function POST(request: Request) {
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[UpdatePassword] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

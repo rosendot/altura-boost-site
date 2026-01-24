@@ -128,7 +128,7 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error('Database operation failed');
+      console.error('[AppealReview] Update failed');
       await logAuthFailure(
         user.id,
         'appeal_review',
@@ -155,7 +155,7 @@ export async function PATCH(
         .eq('id', appeal.user_id);
 
       if (unsuspendError) {
-        console.error('User update operation failed');
+        console.error('[AppealReview] Unsuspend failed');
       }
 
       // Log successful approval
@@ -182,7 +182,7 @@ export async function PATCH(
         .eq('id', appeal.user_id);
 
       if (rejectError) {
-        console.error('User update operation failed');
+        console.error('[AppealReview] Reject update failed');
       }
 
       // Log successful rejection
@@ -210,8 +210,8 @@ export async function PATCH(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[AppealReview] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

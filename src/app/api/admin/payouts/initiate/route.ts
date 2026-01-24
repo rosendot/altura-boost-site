@@ -130,7 +130,7 @@ export async function POST(request: Request) {
         );
       }
     } catch (stripeError: any) {
-      console.error('Payment account verification failed');
+      console.error('[Payout] Stripe account error:', stripeError?.type, stripeError?.code);
       return NextResponse.json(
         { error: 'Invalid or deleted Stripe Connect account' },
         { status: 500 }
@@ -150,7 +150,7 @@ export async function POST(request: Request) {
       .single();
 
     if (transactionError || !transaction) {
-      console.error('Database operation failed');
+      console.error('[Payout] Transaction create failed');
       return NextResponse.json(
         { error: 'Failed to create transaction record' },
         { status: 500 }
@@ -183,7 +183,7 @@ export async function POST(request: Request) {
         .eq('id', transaction.id);
 
       if (updateError) {
-        console.error('Database operation failed');
+        console.error('[Payout] Transaction update failed');
         await logAdminAction(
           user.id,
           userData.email,
@@ -235,7 +235,7 @@ export async function POST(request: Request) {
         }
       );
     } catch (stripeError: any) {
-      console.error('Payment processing failed');
+      console.error('[Payout] Stripe transfer error:', stripeError?.type, stripeError?.code);
 
       // Mark transaction as failed
       await supabase
@@ -260,7 +260,7 @@ export async function POST(request: Request) {
       );
     }
   } catch (error: any) {
-    console.error('Unexpected error occurred');
+    console.error('[Payout] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

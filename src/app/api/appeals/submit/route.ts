@@ -125,7 +125,7 @@ export async function POST(request: Request) {
       .single();
 
     if (appealError) {
-      console.error('Database operation failed');
+      console.error('[AppealSubmit] Insert failed');
       return NextResponse.json(
         { error: 'Failed to submit appeal' },
         { status: 500 }
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('User update operation failed');
+      console.error('[AppealSubmit] User status update failed');
     }
 
     // Log successful appeal submission
@@ -164,8 +164,8 @@ export async function POST(request: Request) {
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[AppealSubmit] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -72,7 +72,7 @@ export async function PATCH(
       .single();
 
     if (strikeError) {
-      console.error('Database operation failed');
+      console.error('[Strike] Deactivate failed');
       return NextResponse.json(
         { error: 'Failed to deactivate strike' },
         { status: 500 }
@@ -108,8 +108,8 @@ export async function PATCH(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[Strike] Deactivate error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -197,7 +197,7 @@ export async function DELETE(
       .eq('id', strikeId);
 
     if (deleteError) {
-      console.error('Database operation failed');
+      console.error('[Strike] Delete failed');
       return NextResponse.json(
         { error: 'Failed to delete strike' },
         { status: 500 }
@@ -226,8 +226,8 @@ export async function DELETE(
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[Strike] Delete error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

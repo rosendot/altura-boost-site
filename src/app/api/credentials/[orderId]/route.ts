@@ -97,7 +97,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
     try {
       decryptedPassword = decryptCredential(credentials.password_encrypted as EncryptedData);
     } catch {
-      console.error('Decryption failed');
+      console.error('[Credentials] Decryption failed');
       return NextResponse.json(
         { error: 'Failed to decrypt credentials' },
         { status: 500, headers: getRateLimitHeaders(rateLimitResult) }
@@ -110,7 +110,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
       try {
         decrypted2FACodes = decrypt2FACodes(credentials.two_factor_codes_encrypted as EncryptedData);
       } catch {
-        console.error('2FA decryption failed');
+        console.error('[Credentials] 2FA decryption failed');
         // Don't fail completely, just return null for 2FA
       }
     }
@@ -125,7 +125,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
 
     if (logError) {
       // Log error but don't fail the request
-      console.error('Failed to log credential access');
+      console.error('[Credentials] Access log insert failed');
     }
 
     // Also log via audit logger for consistency
@@ -150,8 +150,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
       },
       { headers: getRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[Credentials] Error:', error?.type || 'unknown');
     return NextResponse.json({ error: 'Failed to fetch credentials' }, { status: 500 });
   }
 }

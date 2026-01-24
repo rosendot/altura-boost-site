@@ -86,7 +86,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false });
 
     if (reviewsError) {
-      console.error('Database operation failed');
+      console.error('[AdminReviews] Query failed');
       return NextResponse.json(
         { error: 'Failed to fetch reviews' },
         { status: 500 }
@@ -99,8 +99,8 @@ export async function GET(request: Request) {
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[AdminReviews] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

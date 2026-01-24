@@ -92,7 +92,7 @@ export async function GET(request: Request) {
       .order('last_message_at', { ascending: false });
 
     if (error) {
-      console.error('Database operation failed');
+      console.error('[AdminConversations] Query failed');
       return NextResponse.json(
         { error: 'Failed to fetch conversations' },
         { status: 500 }
@@ -119,8 +119,8 @@ export async function GET(request: Request) {
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[AdminConversations] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

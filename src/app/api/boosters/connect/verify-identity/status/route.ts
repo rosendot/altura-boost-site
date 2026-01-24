@@ -58,59 +58,47 @@ export async function GET(request: Request) {
           status: userData.identity_verification_status || 'not_started',
           verified: false,
         },
-        {
-          headers: getRateLimitHeaders(rateLimitResult),
-        }
+        { headers: getRateLimitHeaders(rateLimitResult) }
       );
     }
 
     // Fetch latest status from Stripe
-    const session = await stripe.identity.verificationSessions.retrieve(
-      userData.identity_verification_id
-    );
+    try {
+      const session = await stripe.identity.verificationSessions.retrieve(userData.identity_verification_id);
 
-    let status = userData.identity_verification_status;
+      let status = userData.identity_verification_status;
 
-    // Map Stripe status to our status
-    // Cast to string to handle all possible Stripe statuses
-    const stripeStatus = session.status as string;
-    if (stripeStatus === 'verified') {
-      status = 'verified';
-    } else if (stripeStatus === 'requires_input') {
-      status = 'failed';
-    } else if (stripeStatus === 'processing' || stripeStatus === 'created') {
-      status = 'pending';
-    } else if (stripeStatus === 'canceled') {
-      status = 'not_started';
-    }
-
-    // Update database if status changed
-    if (status !== userData.identity_verification_status) {
-      await supabase
-        .from('users')
-        .update({ identity_verification_status: status })
-        .eq('id', user.id);
-    }
-
-    return NextResponse.json(
-      {
-        status,
-        verified: status === 'verified',
-        stripe_status: session.status,
-      },
-      {
-        headers: getRateLimitHeaders(rateLimitResult),
+      // Map Stripe status to our status
+      const stripeStatus = session.status as string;
+      if (stripeStatus === 'verified') {
+        status = 'verified';
+      } else if (stripeStatus === 'requires_input') {
+        status = 'failed';
+      } else if (stripeStatus === 'processing' || stripeStatus === 'created') {
+        status = 'pending';
+      } else if (stripeStatus === 'canceled') {
+        status = 'not_started';
       }
-    );
+
+      // Update database if status changed
+      if (status !== userData.identity_verification_status) {
+        await supabase.from('users').update({ identity_verification_status: status }).eq('id', user.id);
+      }
+
+      return NextResponse.json(
+        {
+          status,
+          verified: status === 'verified',
+          stripe_status: session.status,
+        },
+        { headers: getRateLimitHeaders(rateLimitResult) }
+      );
+    } catch (stripeError: any) {
+      console.error('[IdentityStatus] Stripe error:', stripeError?.type, stripeError?.code);
+      throw stripeError;
+    }
   } catch (error: any) {
-    console.error('Identity status check error:', {
-      message: error?.message,
-      type: error?.type,
-      code: error?.code,
-    });
-    return NextResponse.json(
-      { error: 'Failed to check verification status' },
-      { status: 500 }
-    );
+    console.error('[IdentityStatus] Error:', error?.type || 'unknown');
+    return NextResponse.json({ error: 'Failed to check verification status' }, { status: 500 });
   }
 }

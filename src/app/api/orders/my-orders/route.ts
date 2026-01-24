@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false });
 
     if (ordersError) {
-      console.error('Database operation failed');
+      console.error('[MyOrders] Orders query failed');
       return NextResponse.json(
         { error: 'Failed to fetch orders' },
         {
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
       .in('order_id', orders.map(o => o.id));
 
     if (jobsError) {
-      console.error('Database operation failed');
+      console.error('[MyOrders] Jobs query failed');
       return NextResponse.json(
         { error: 'Failed to fetch jobs' },
         {
@@ -127,8 +127,8 @@ export async function GET(request: Request) {
         headers: getRateLimitHeaders(rateLimitResult),
       }
     );
-  } catch (error) {
-    console.error('Unexpected error occurred');
+  } catch (error: any) {
+    console.error('[MyOrders] Error:', error?.type || 'unknown');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -26,12 +26,7 @@ export async function POST(request: Request) {
     });
 
     if (!rateLimitResult.allowed) {
-      await logAuthFailure(
-        user.id,
-        'stripe_disconnect',
-        'Rate limit exceeded',
-        request
-      );
+      await logAuthFailure(user.id, 'stripe_disconnect', 'Rate limit exceeded', request);
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
         {
@@ -56,10 +51,7 @@ export async function POST(request: Request) {
     // Verify user is a booster
     if (userData.role !== 'booster') {
       await logAuthFailure(user.id, 'stripe_disconnect', 'User is not a booster', request);
-      return NextResponse.json(
-        { error: 'Only boosters can disconnect bank accounts' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Only boosters can disconnect bank accounts' }, { status: 403 });
     }
 
     // Remove stripe_connect_id from database
@@ -69,11 +61,8 @@ export async function POST(request: Request) {
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Database operation failed');
-      return NextResponse.json(
-        { error: 'Failed to disconnect account' },
-        { status: 500 }
-      );
+      console.error('[Disconnect] Database update failed');
+      return NextResponse.json({ error: 'Failed to disconnect account' }, { status: 500 });
     }
 
     // Log successful disconnection
@@ -89,17 +78,9 @@ export async function POST(request: Request) {
       request
     );
 
-    return NextResponse.json(
-      { success: true },
-      {
-        headers: getRateLimitHeaders(rateLimitResult),
-      }
-    );
+    return NextResponse.json({ success: true }, { headers: getRateLimitHeaders(rateLimitResult) });
   } catch (error: any) {
-    console.error('Unexpected error occurred');
-    return NextResponse.json(
-      { error: 'Failed to disconnect account' },
-      { status: 500 }
-    );
+    console.error('[Disconnect] Error:', error?.type || 'unknown');
+    return NextResponse.json({ error: 'Failed to disconnect account' }, { status: 500 });
   }
 }
