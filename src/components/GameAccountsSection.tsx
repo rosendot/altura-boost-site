@@ -650,8 +650,7 @@ export default function GameAccountsSection() {
         title="Delete Game Account"
         message={`Are you sure you want to delete "${selectedAccount?.account_name}"? This action cannot be undone.`}
         confirmText={deleting ? 'Deleting...' : 'Delete'}
-        confirmVariant="danger"
-        isLoading={deleting}
+        variant="danger"
       />
     </div>
   );
