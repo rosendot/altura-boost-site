@@ -117,9 +117,6 @@ export async function POST(request: Request) {
             ...(firstName && { first_name: firstName }),
             ...(lastName && { last_name: lastName }),
           },
-          tos_acceptance: {
-            service_agreement: 'recipient',
-          },
         });
 
         accountId = account.id;
