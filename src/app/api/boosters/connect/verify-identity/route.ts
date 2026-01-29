@@ -81,7 +81,7 @@ export async function POST(request: Request) {
           user_id: user.id,
           user_email: userData.email,
         },
-        return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/account?tab=earnings&identity_verified=true`,
+        return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/account/earnings?identity_verified=true`,
       });
 
       // Save verification session ID to database

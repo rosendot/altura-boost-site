@@ -136,8 +136,8 @@ export async function POST(request: Request) {
     try {
       const accountLink = await stripe.accountLinks.create({
         account: accountId,
-        refresh_url: `${process.env.NEXT_PUBLIC_BASE_URL}/account?tab=earnings`,
-        return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/account?tab=earnings&connected=true`,
+        refresh_url: `${process.env.NEXT_PUBLIC_BASE_URL}/account/earnings`,
+        return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/account/earnings?connected=true`,
         type: 'account_onboarding',
       });
 

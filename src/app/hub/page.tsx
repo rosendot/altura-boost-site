@@ -379,7 +379,7 @@ export default function BoosterHub() {
                 Go to your Earnings tab to connect your bank account via Stripe. This is required to receive payouts for completed jobs.
               </p>
               <a
-                href="/account?tab=earnings"
+                href="/account/earnings"
                 className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 Connect Bank Account
@@ -420,7 +420,7 @@ export default function BoosterHub() {
                   Refresh Status
                 </button>
                 <a
-                  href="/account?tab=earnings"
+                  href="/account/earnings"
                   className="inline-block px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   View Earnings

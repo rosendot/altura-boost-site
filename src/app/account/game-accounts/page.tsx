@@ -1,19 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAccount, GameAccount } from '@/contexts/AccountContext';
 import { useToast } from '@/contexts/ToastContext';
-import ConfirmationModal from './ConfirmationModal';
-
-interface GameAccount {
-  id: string;
-  account_name: string;
-  game_platform: string;
-  username: string;
-  has_2fa_codes: boolean;
-  created_at: string;
-  updated_at: string;
-  last_used_at: string | null;
-}
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 interface GameAccountDetails extends GameAccount {
   password: string;
@@ -30,10 +21,11 @@ const PLATFORMS = [
   { value: 'ubisoft', label: 'Ubisoft' },
 ];
 
-export default function GameAccountsSection() {
+export default function GameAccountsPage() {
+  const router = useRouter();
+  const { userData, gameAccounts, gameAccountsLoading, fetchGameAccounts } = useAccount();
   const { showToast } = useToast();
-  const [accounts, setAccounts] = useState<GameAccount[]>([]);
-  const [loading, setLoading] = useState(true);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -57,25 +49,12 @@ export default function GameAccountsSection() {
   const [showPassword, setShowPassword] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
+  // Redirect non-customers
   useEffect(() => {
-    fetchAccounts();
-  }, []);
-
-  const fetchAccounts = async () => {
-    try {
-      const response = await fetch('/api/accounts/game-accounts');
-      if (response.ok) {
-        const data = await response.json();
-        setAccounts(data.accounts || []);
-      } else {
-        showToast('Failed to load game accounts', 'error');
-      }
-    } catch (error) {
-      showToast('Failed to load game accounts', 'error');
-    } finally {
-      setLoading(false);
+    if (userData && userData.role !== 'customer') {
+      router.replace('/account/profile');
     }
-  };
+  }, [userData, router]);
 
   const handleAddAccount = async () => {
     if (!formData.account_name || !formData.username || !formData.password) {
@@ -106,7 +85,7 @@ export default function GameAccountsSection() {
         showToast('Game account saved successfully', 'success');
         setShowAddModal(false);
         resetForm();
-        fetchAccounts();
+        fetchGameAccounts(true);
       } else {
         const data = await response.json();
         showToast(data.error || 'Failed to save game account', 'error');
@@ -153,7 +132,7 @@ export default function GameAccountsSection() {
         showToast('Game account updated successfully', 'success');
         setShowEditModal(false);
         resetForm();
-        fetchAccounts();
+        fetchGameAccounts(true);
       } else {
         const data = await response.json();
         showToast(data.error || 'Failed to update game account', 'error');
@@ -178,7 +157,7 @@ export default function GameAccountsSection() {
         showToast('Game account deleted successfully', 'success');
         setShowDeleteModal(false);
         setSelectedAccount(null);
-        fetchAccounts();
+        fetchGameAccounts(true);
       } else {
         const data = await response.json();
         showToast(data.error || 'Failed to delete game account', 'error');
@@ -264,16 +243,14 @@ export default function GameAccountsSection() {
     return PLATFORMS.find((p) => p.value === value)?.label || value;
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-      </div>
-    );
+  if (!userData || userData.role !== 'customer') {
+    return null;
   }
 
   return (
     <div>
+      <h2 className="text-2xl font-bold text-white mb-6">Game Accounts</h2>
+
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -294,14 +271,35 @@ export default function GameAccountsSection() {
       </div>
 
       {/* Accounts List */}
-      {accounts.length === 0 ? (
+      {gameAccountsLoading ? (
+        <div className="space-y-3">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700/50 animate-pulse">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="h-5 bg-zinc-700 rounded w-32"></div>
+                    <div className="h-5 bg-zinc-700 rounded w-20"></div>
+                  </div>
+                  <div className="h-4 bg-zinc-700 rounded w-40 mt-2"></div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 bg-zinc-700 rounded w-14"></div>
+                  <div className="h-8 bg-zinc-700 rounded w-12"></div>
+                  <div className="h-8 bg-zinc-700 rounded w-16"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : gameAccounts.length === 0 ? (
         <div className="bg-zinc-800/50 rounded-lg p-8 text-center">
           <div className="text-zinc-400 mb-2">No saved game accounts yet</div>
           <p className="text-sm text-zinc-500">Add your game account credentials to use them at checkout</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {accounts.map((account) => (
+          {gameAccounts.map((account) => (
             <div key={account.id} className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700/50">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
